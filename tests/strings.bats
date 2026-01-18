@@ -104,3 +104,69 @@ setup() {
     run shlib::str_to_lower "HELLO123!"
     [[ "${output}" == "hello123!" ]]
 }
+
+@test "shlib::str_contains returns 0 when substring found" {
+    shlib::str_contains "hello world" "world"
+}
+
+@test "shlib::str_contains returns 1 when substring not found" {
+    ! shlib::str_contains "hello world" "foo"
+}
+
+@test "shlib::str_contains handles empty substring" {
+    shlib::str_contains "hello" ""
+}
+
+@test "shlib::str_startswith returns 0 when prefix matches" {
+    shlib::str_startswith "hello world" "hello"
+}
+
+@test "shlib::str_startswith returns 1 when prefix does not match" {
+    ! shlib::str_startswith "hello world" "world"
+}
+
+@test "shlib::str_startswith handles empty prefix" {
+    shlib::str_startswith "hello" ""
+}
+
+@test "shlib::str_endswith returns 0 when suffix matches" {
+    shlib::str_endswith "hello world" "world"
+}
+
+@test "shlib::str_endswith returns 1 when suffix does not match" {
+    ! shlib::str_endswith "hello world" "hello"
+}
+
+@test "shlib::str_endswith handles empty suffix" {
+    shlib::str_endswith "hello" ""
+}
+
+@test "shlib::str_padleft pads with zeros" {
+    run shlib::str_padleft "42" 5 "0"
+    [[ "${output}" == "00042" ]]
+}
+
+@test "shlib::str_padleft pads with default space" {
+    run shlib::str_padleft "hi" 5
+    [[ "${output}" == "   hi" ]]
+}
+
+@test "shlib::str_padleft does not truncate longer strings" {
+    run shlib::str_padleft "hello" 3 "0"
+    [[ "${output}" == "hello" ]]
+}
+
+@test "shlib::str_padright pads with dashes" {
+    run shlib::str_padright "hi" 5 "-"
+    [[ "${output}" == "hi---" ]]
+}
+
+@test "shlib::str_padright pads with default space" {
+    run shlib::str_padright "hi" 5
+    [[ "${output}" == "hi   " ]]
+}
+
+@test "shlib::str_padright does not truncate longer strings" {
+    run shlib::str_padright "hello" 3 "-"
+    [[ "${output}" == "hello" ]]
+}

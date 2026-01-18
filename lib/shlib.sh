@@ -358,3 +358,72 @@ shlib::str_to_upper() {
 shlib::str_to_lower() {
     echo "$1" | tr '[:upper:]' '[:lower:]'
 }
+
+# @description Check if a string contains a substring
+# @arg $1 string The string to search in
+# @arg $2 string The substring to search for
+# @exitcode 0 String contains substring
+# @exitcode 1 String does not contain substring
+# @example
+#   shlib::str_contains "hello world" "world" && echo "found"
+shlib::str_contains() {
+    [[ "$1" == *"$2"* ]]
+}
+
+# @description Check if a string starts with a prefix
+# @arg $1 string The string to check
+# @arg $2 string The prefix to check for
+# @exitcode 0 String starts with prefix
+# @exitcode 1 String does not start with prefix
+# @example
+#   shlib::str_startswith "hello world" "hello" && echo "yes"
+shlib::str_startswith() {
+    [[ "$1" == "$2"* ]]
+}
+
+# @description Check if a string ends with a suffix
+# @arg $1 string The string to check
+# @arg $2 string The suffix to check for
+# @exitcode 0 String ends with suffix
+# @exitcode 1 String does not end with suffix
+# @example
+#   shlib::str_endswith "hello world" "world" && echo "yes"
+shlib::str_endswith() {
+    [[ "$1" == *"$2" ]]
+}
+
+# @description Pad a string on the left to a specified length
+# @arg $1 string The string to pad
+# @arg $2 int The desired total length
+# @arg $3 string The padding character (default: space)
+# @stdout The padded string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_padleft "42" 5 "0"  # outputs "00042"
+shlib::str_padleft() {
+    local str="$1"
+    local len="$2"
+    local pad="${3:- }"
+    while [[ ${#str} -lt $len ]]; do
+        str="${pad}${str}"
+    done
+    echo "$str"
+}
+
+# @description Pad a string on the right to a specified length
+# @arg $1 string The string to pad
+# @arg $2 int The desired total length
+# @arg $3 string The padding character (default: space)
+# @stdout The padded string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_padright "hi" 5 "-"  # outputs "hi---"
+shlib::str_padright() {
+    local str="$1"
+    local len="$2"
+    local pad="${3:- }"
+    while [[ ${#str} -lt $len ]]; do
+        str="${str}${pad}"
+    done
+    echo "$str"
+}

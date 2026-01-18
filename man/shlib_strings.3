@@ -7,7 +7,7 @@ shlib_strings \- String manipulation functions from the shlib library
 .I /path/to/shlib.sh
 .SH DESCRIPTION
 .B shlib_strings
-provides string manipulation functions for trimming whitespace, measuring length, checking emptiness, and case conversion.
+provides string manipulation functions for trimming, searching, padding, and case conversion.
 Requires Bash version 3 or higher.
 .SH FUNCTIONS
 .SS Trimming
@@ -44,6 +44,47 @@ to uppercase.
 Convert
 .I string
 to lowercase.
+.SS Searching
+.TP
+.BI shlib::str_contains " string substring"
+Return 0 if
+.I string
+contains
+.IR substring ,
+1 otherwise.
+.TP
+.BI shlib::str_startswith " string prefix"
+Return 0 if
+.I string
+starts with
+.IR prefix ,
+1 otherwise.
+.TP
+.BI shlib::str_endswith " string suffix"
+Return 0 if
+.I string
+ends with
+.IR suffix ,
+1 otherwise.
+.SS Padding
+.TP
+.BI shlib::str_padleft " string length" " [char]"
+Pad
+.I string
+on the left to
+.I length
+using
+.I char
+(default: space).
+.TP
+.BI shlib::str_padright " string length" " [char]"
+Pad
+.I string
+on the right to
+.I length
+using
+.I char
+(default: space).
 .SH EXAMPLES
 Trim whitespace from user input:
 .PP
@@ -84,6 +125,15 @@ fi
 .TP
 .B shlib::str_is_empty
 Returns 0 if string is empty or whitespace only, 1 otherwise.
+.TP
+.B shlib::str_contains
+Returns 0 if substring found, 1 otherwise.
+.TP
+.B shlib::str_startswith
+Returns 0 if prefix matches, 1 otherwise.
+.TP
+.B shlib::str_endswith
+Returns 0 if suffix matches, 1 otherwise.
 .TP
 .B All other functions
 Always return 0.
