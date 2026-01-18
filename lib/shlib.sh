@@ -443,3 +443,73 @@ shlib::arr_len() {
     # shellcheck disable=SC2086
     eval "echo \${#$1[@]}"
 }
+
+# @description Append one or more elements to an array
+# @arg $1 string The name of the array variable (without $)
+# @arg $@ string Elements to append
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b)
+#   shlib::arr_append my_array c d
+#   # my_array is now (a b c d)
+shlib::arr_append() {
+    local arr_name="$1"
+    shift
+    local elem
+    # shellcheck disable=SC2034
+    for elem in "$@"; do
+        eval "$arr_name+=(\"\$elem\")"
+    done
+}
+
+# @description Delete an element from an array by index
+# @arg $1 string The name of the array variable (without $)
+# @arg $2 int The index to delete
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d)
+#   shlib::arr_delete my_array 1
+#   # my_array is now (a c d)
+shlib::arr_delete() {
+    local arr_name="$1"
+    local index="$2"
+    # shellcheck disable=SC1087
+    eval "unset '$arr_name[$index]'"
+    # shellcheck disable=SC1087
+    eval "$arr_name=(\"\${$arr_name[@]}\")"
+}
+
+# @description Sort an array in place (lexicographic order)
+# @arg $1 string The name of the array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(cherry apple banana)
+#   shlib::arr_sort my_array
+#   # my_array is now (apple banana cherry)
+shlib::arr_sort() {
+    local arr_name="$1"
+    local IFS=$'\n'
+    # shellcheck disable=SC2207,SC1087
+    eval "$arr_name=(\$(printf '%s\n' \"\${$arr_name[@]}\" | sort))"
+}
+
+# @description Reverse an array in place
+# @arg $1 string The name of the array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d)
+#   shlib::arr_reverse my_array
+#   # my_array is now (d c b a)
+shlib::arr_reverse() {
+    local arr_name="$1"
+    # shellcheck disable=SC2034
+    local -a tmp
+    local i len
+    # shellcheck disable=SC1087
+    eval "len=\${#$arr_name[@]}"
+    for ((i = len - 1; i >= 0; i--)); do
+        # shellcheck disable=SC1087
+        eval "tmp+=(\"\${$arr_name[$i]}\")"
+    done
+    eval "$arr_name=(\"\${tmp[@]}\")"
+}

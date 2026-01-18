@@ -20,6 +20,22 @@ as an argument (without the $ prefix), not the array contents.
 .BI shlib::arr_len " array_name"
 Output the number of elements in the array named
 .IR array_name .
+.SS Modification
+.TP
+.BI shlib::arr_append " array_name element..."
+Append one or more elements to the array.
+.TP
+.BI shlib::arr_delete " array_name index"
+Delete the element at
+.I index
+from the array. Remaining elements are re-indexed.
+.SS Ordering
+.TP
+.BI shlib::arr_sort " array_name"
+Sort the array in place (lexicographic order).
+.TP
+.BI shlib::arr_reverse " array_name"
+Reverse the array in place.
 .SH EXAMPLES
 Get the length of an array:
 .PP
