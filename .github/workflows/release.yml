@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          PREV_TAG="${{ steps.prev_tag.outputs.tag }}"
+
+          # Start building the changelog
+          {
+            echo "## What's Changed"
+            echo ""
+
+            # Get commits since last tag (or all commits if first release)
+            if [ -n "$PREV_TAG" ]; then
+              RANGE="${PREV_TAG}..HEAD"
+            else
+              RANGE="HEAD"
+            fi
+
+            # Features (feat:)
+            FEATURES=$(git log $RANGE --pretty=format:"- %s" --grep="^feat" 2>/dev/null || true)
+            if [ -n "$FEATURES" ]; then
+              echo "### Features"
+              echo ""
+              echo "$FEATURES" | sed 's/^- feat[:(]/- /' | sed 's/)//'
+              echo ""
+            fi
+
+            # Bug fixes (fix:)
+            FIXES=$(git log $RANGE --pretty=format:"- %s" --grep="^fix" 2>/dev/null || true)
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo ""
+              echo "$FIXES" | sed 's/^- fix[:(]/- /' | sed 's/)//'
+              echo ""
+            fi
+
+            # Documentation (docs:)
+            DOCS=$(git log $RANGE --pretty=format:"- %s" --grep="^docs" 2>/dev/null || true)
+            if [ -n "$DOCS" ]; then
+              echo "### Documentation"
+              echo ""
+              echo "$DOCS" | sed 's/^- docs[:(]/- /' | sed 's/)//'
+              echo ""
+            fi
+
+            # Refactoring (refactor:)
+            REFACTOR=$(git log $RANGE --pretty=format:"- %s" --grep="^refactor" 2>/dev/null || true)
+            if [ -n "$REFACTOR" ]; then
+              echo "### Refactoring"
+              echo ""
+              echo "$REFACTOR" | sed 's/^- refactor[:(]/- /' | sed 's/)//'
+              echo ""
+            fi
+
+            # Tests (test:)
+            TESTS=$(git log $RANGE --pretty=format:"- %s" --grep="^test" 2>/dev/null || true)
+            if [ -n "$TESTS" ]; then
+              echo "### Tests"
+              echo ""
+              echo "$TESTS" | sed 's/^- test[:(]/- /' | sed 's/)//'
+              echo ""
+            fi
+
+            # Other changes (everything else)
+            OTHER=$(git log $RANGE --pretty=format:"- %s" --invert-grep --grep="^feat" --grep="^fix" --grep="^docs" --grep="^refactor" --grep="^test" 2>/dev/null || true)
+            if [ -n "$OTHER" ]; then
+              echo "### Other Changes"
+              echo ""
+              echo "$OTHER"
+              echo ""
+            fi
+
+            echo "---"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-$(git rev-list --max-parents=0 HEAD)}...${TAG_NAME}"
+          } > changelog.md
+
+          cat changelog.md
+
+      - name: Get release info
+        id: release_info
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          # Determine if pre-release
+          if [[ "$TAG_NAME" == *"-"* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          name: ${{ steps.release_info.outputs.tag_name }}
+          body_path: changelog.md
+          draft: false
+          prerelease: ${{ steps.release_info.outputs.prerelease }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
