@@ -1,0 +1,44 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_ARRAYS 3 "January 2026" "shlib 0.1.0" "Shell Library"
+.SH NAME
+shlib_arrays \- Array manipulation functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_arrays
+provides functions for working with Bash arrays.
+Requires Bash version 3 or higher.
+.PP
+.B Note:
+Array functions take the array variable
+.I name
+as an argument (without the $ prefix), not the array contents.
+.SH FUNCTIONS
+.SS Length
+.TP
+.BI shlib::arr_len " array_name"
+Output the number of elements in the array named
+.IR array_name .
+.SH EXAMPLES
+Get the length of an array:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/lib/shlib.sh
+
+my_array=(apple banana cherry)
+count=$(shlib::arr_len my_array)
+echo "Array has $count elements"  # Array has 3 elements
+.fi
+.RE
+.SH EXIT STATUS
+All functions return 0.
+.SH SEE ALSO
+.BR shlib (7),
+.BR shlib_strings (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.
