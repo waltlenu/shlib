@@ -27,17 +27,32 @@ exists in PATH. Returns 0 if found, 1 otherwise.
 .BI shlib::error " message"
 Print
 .I message
-to stderr with "error:" prefix.
+to stderr with "error:" prefix (without trailing newline).
+.TP
+.BI shlib::errorn " message"
+Print
+.I message
+to stderr with "error:" prefix (with trailing newline).
 .TP
 .BI shlib::warn " message"
 Print
 .I message
-to stderr with "warning:" prefix.
+to stdout with "warning:" prefix (without trailing newline).
+.TP
+.BI shlib::warnn " message"
+Print
+.I message
+to stdout with "warning:" prefix (with trailing newline).
 .TP
 .BI shlib::info " message"
 Print
 .I message
-to stdout with "info:" prefix.
+to stdout with "info:" prefix (without trailing newline).
+.TP
+.BI shlib::infon " message"
+Print
+.I message
+to stdout with "info:" prefix (with trailing newline).
 .SH VARIABLES
 .TP
 .B SHLIB_VERSION

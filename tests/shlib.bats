@@ -39,3 +39,18 @@ setup() {
     run shlib::info "test message"
     [[ "${output}" == "info: test message" ]]
 }
+
+@test "shlib::errorn outputs to stderr" {
+    run shlib::errorn "test message"
+    [[ "${output}" == "error: test message" ]]
+}
+
+@test "shlib::warnn outputs to stderr" {
+    run shlib::warnn "test message"
+    [[ "${output}" == "warning: test message" ]]
+}
+
+@test "shlib::infon outputs message" {
+    run shlib::infon "test message"
+    [[ "${output}" == "info: test message" ]]
+}

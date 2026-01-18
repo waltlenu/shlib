@@ -15,9 +15,9 @@ echo "shlib version: $(shlib::version)"
 echo
 
 # Using logging functions
-shlib::info "This is an informational message"
-shlib::warn "This is a warning message"
-shlib::error "This is an error message"
+shlib::infon "This is an informational message"
+shlib::warnn "This is a warning message"
+shlib::errorn "This is an error message"
 echo
 
 # Check for commands
