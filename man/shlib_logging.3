@@ -1,0 +1,155 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_LOGGING 3 "January 2026" "shlib 0.1.0" "Shell Library"
+.SH NAME
+shlib_logging \-  Logging functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_logging
+is a list of simple BASH printing functions for logging, including colorised, and emojil
+.SH FUNCTIONS
+.SS Headers
+.TP
+.BI shlib::header " message"
+Print
+.I message
+to stdout in bold (without trailing newline).
+.TP
+.BI shlib::headern " message"
+Print
+.I message
+to stdout in bold (with trailing newline).
+.SS Simple Logging
+.TP
+.BI shlib::error " message"
+Print
+.I message
+to stderr with "error:" prefix (without trailing newline).
+.TP
+.BI shlib::errorn " message"
+Print
+.I message
+to stderr with "error:" prefix (with trailing newline).
+.TP
+.BI shlib::warn " message"
+Print
+.I message
+to stdout with "warning:" prefix (without trailing newline).
+.TP
+.BI shlib::warnn " message"
+Print
+.I message
+to stdout with "warning:" prefix (with trailing newline).
+.TP
+.BI shlib::info " message"
+Print
+.I message
+to stdout with "info:" prefix (without trailing newline).
+.TP
+.BI shlib::infon " message"
+Print
+.I message
+to stdout with "info:" prefix (with trailing newline).
+.SS Colorized Logging
+.TP
+.BI shlib::cerror " message"
+Print
+.I message
+to stderr with red "error:" prefix (without trailing newline).
+.TP
+.BI shlib::cerrorn " message"
+Print
+.I message
+to stderr with red "error:" prefix (with trailing newline).
+.TP
+.BI shlib::cwarn " message"
+Print
+.I message
+to stdout with yellow "warning:" prefix (without trailing newline).
+.TP
+.BI shlib::cwarnn " message"
+Print
+.I message
+to stdout with yellow "warning:" prefix (with trailing newline).
+.TP
+.BI shlib::cinfo " message"
+Print
+.I message
+to stdout with blue "info:" prefix (without trailing newline).
+.TP
+.BI shlib::cinfon " message"
+Print
+.I message
+to stdout with blue "info:" prefix (with trailing newline).
+.SH VARIABLES
+.TP
+.B SHLIB_VERSION
+The library version string (readonly).
+.TP
+.B SHLIB_DIR
+Absolute path to the directory containing shlib.sh (readonly).
+.TP
+.B SHLIB_LOADED
+Set to 1 when library is loaded. Used for double-source protection (readonly).
+.TP
+.B SHLIB_COLOR_RED
+ANSI escape code for red color (readonly).
+.TP
+.B SHLIB_COLOR_YELLOW
+ANSI escape code for yellow color (readonly).
+.TP
+.B SHLIB_COLOR_BLUE
+ANSI escape code for blue color (readonly).
+.TP
+.B SHLIB_COLOR_RESET
+ANSI escape code to reset color (readonly).
+.TP
+.B SHLIB_COLOR_BOLD
+ANSI escape code for bold text (readonly).
+.SH EXAMPLES
+Basic usage in a script:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/lib/shlib.sh
+
+shlib::headern "Starting script..."
+
+if shlib::command_exists git; then
+    shlib::cinfon "git is available"
+else
+    shlib::cerrorn "git is required"
+    exit 1
+fi
+.fi
+.RE
+.PP
+Check the library version:
+.PP
+.RS
+.nf
+source /path/to/shlib/lib/shlib.sh
+echo "Using shlib version $(shlib::version)"
+.fi
+.RE
+.SH FILES
+.TP
+.I lib/shlib.sh
+The library file to source.
+.TP
+.I tests/*.bats
+Test files using the Bats testing framework.
+.TP
+.I examples/basic_usage.sh
+Example script demonstrating library usage.
+.SH EXIT STATUS
+Functions that check conditions return 0 on success and 1 on failure.
+Logging functions always return 0.
+.SH SEE ALSO
+.BR shlib (7),
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.
