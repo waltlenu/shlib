@@ -286,8 +286,8 @@ shlib::einfon() {
 # @stdout The trimmed string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::trim "  hello world  "
-shlib::trim() {
+#   shlib::str_trim "  hello world  "
+shlib::str_trim() {
     local str="$1"
     str="${str#"${str%%[![:space:]]*}"}"
     str="${str%"${str##*[![:space:]]}"}"
@@ -299,8 +299,8 @@ shlib::trim() {
 # @stdout The string with leading whitespace removed
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ltrim "  hello world"
-shlib::ltrim() {
+#   shlib::str_ltrim "  hello world"
+shlib::str_ltrim() {
     local str="$1"
     echo "${str#"${str%%[![:space:]]*}"}"
 }
@@ -310,8 +310,8 @@ shlib::ltrim() {
 # @stdout The string with trailing whitespace removed
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::rtrim "hello world  "
-shlib::rtrim() {
+#   shlib::str_rtrim "hello world  "
+shlib::str_rtrim() {
     local str="$1"
     echo "${str%"${str##*[![:space:]]}"}"
 }
@@ -321,8 +321,8 @@ shlib::rtrim() {
 # @stdout The length of the string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::strlen "hello"
-shlib::strlen() {
+#   shlib::str_len "hello"
+shlib::str_len() {
     echo "${#1}"
 }
 
@@ -331,8 +331,8 @@ shlib::strlen() {
 # @exitcode 0 String is empty or whitespace only
 # @exitcode 1 String contains non-whitespace characters
 # @example
-#   shlib::is_empty "   " && echo "empty"
-shlib::is_empty() {
+#   shlib::str_is_empty "   " && echo "empty"
+shlib::str_is_empty() {
     local trimmed
     trimmed="${1#"${1%%[![:space:]]*}"}"
     trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
@@ -344,8 +344,8 @@ shlib::is_empty() {
 # @stdout The uppercase string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::to_upper "hello"
-shlib::to_upper() {
+#   shlib::str_to_upper "hello"
+shlib::str_to_upper() {
     echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
@@ -354,7 +354,7 @@ shlib::to_upper() {
 # @stdout The lowercase string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::to_lower "HELLO"
-shlib::to_lower() {
+#   shlib::str_to_lower "HELLO"
+shlib::str_to_lower() {
     echo "$1" | tr '[:upper:]' '[:lower:]'
 }

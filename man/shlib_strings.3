@@ -12,35 +12,35 @@ Requires Bash version 3 or higher.
 .SH FUNCTIONS
 .SS Trimming
 .TP
-.BI shlib::trim " string"
+.BI shlib::str_trim " string"
 Remove leading and trailing whitespace from
 .IR string .
 .TP
-.BI shlib::ltrim " string"
+.BI shlib::str_ltrim " string"
 Remove leading whitespace from
 .IR string .
 .TP
-.BI shlib::rtrim " string"
+.BI shlib::str_rtrim " string"
 Remove trailing whitespace from
 .IR string .
 .SS Length and Emptiness
 .TP
-.BI shlib::strlen " string"
+.BI shlib::str_len " string"
 Output the length of
 .IR string .
 .TP
-.BI shlib::is_empty " string"
+.BI shlib::str_is_empty " string"
 Return 0 if
 .I string
 is empty or contains only whitespace, 1 otherwise.
 .SS Case Conversion
 .TP
-.BI shlib::to_upper " string"
+.BI shlib::str_to_upper " string"
 Convert
 .I string
 to uppercase.
 .TP
-.BI shlib::to_lower " string"
+.BI shlib::str_to_lower " string"
 Convert
 .I string
 to lowercase.
@@ -53,7 +53,7 @@ Trim whitespace from user input:
 source /path/to/shlib/lib/shlib.sh
 
 input="  hello world  "
-trimmed=$(shlib::trim "$input")
+trimmed=$(shlib::str_trim "$input")
 echo "[$trimmed]"  # [hello world]
 .fi
 .RE
@@ -63,7 +63,7 @@ Validate non-empty input:
 .RS
 .nf
 read -r user_input
-if shlib::is_empty "$user_input"; then
+if shlib::str_is_empty "$user_input"; then
     shlib::errorn "Input cannot be empty"
     exit 1
 fi
@@ -75,14 +75,14 @@ Case-insensitive comparison:
 .RS
 .nf
 answer="YES"
-if [[ $(shlib::to_lower "$answer") == "yes" ]]; then
+if [[ $(shlib::str_to_lower "$answer") == "yes" ]]; then
     echo "Confirmed"
 fi
 .fi
 .RE
 .SH EXIT STATUS
 .TP
-.B shlib::is_empty
+.B shlib::str_is_empty
 Returns 0 if string is empty or whitespace only, 1 otherwise.
 .TP
 .B All other functions
