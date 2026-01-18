@@ -479,6 +479,23 @@ shlib::arr_delete() {
     eval "$arr_name=(\"\${$arr_name[@]}\")"
 }
 
+# @description Remove the last element from an array
+# @arg $1 string The name of the array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d)
+#   shlib::arr_pop my_array
+#   # my_array is now (a b c)
+shlib::arr_pop() {
+    local arr_name="$1"
+    local len
+    # shellcheck disable=SC2086,SC1087
+    eval "len=\${#$arr_name[@]}"
+    [[ $len -eq 0 ]] && return 0
+    # shellcheck disable=SC1087
+    eval "unset '$arr_name[$((len-1))]'"
+}
+
 # @description Sort an array in place (lexicographic order)
 # @arg $1 string The name of the array variable (without $)
 # @exitcode 0 Always succeeds
@@ -512,4 +529,52 @@ shlib::arr_reverse() {
         eval "tmp+=(\"\${$arr_name[$i]}\")"
     done
     eval "$arr_name=(\"\${tmp[@]}\")"
+}
+
+# @description Print array elements on one line with a separator
+# @arg $1 string The name of the array variable (without $)
+# @arg $2 string The separator (default: " ")
+# @stdout Array elements joined by separator
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c)
+#   shlib::arr_print my_array      # outputs "a b c"
+#   shlib::arr_print my_array ","  # outputs "a,b,c"
+shlib::arr_print() {
+    local arr_name="$1"
+    # shellcheck disable=SC2034
+    local sep="${2:- }"
+    local len
+    # shellcheck disable=SC2086,SC1087
+    eval "len=\${#$arr_name[@]}"
+    [[ $len -eq 0 ]] && return 0
+    # shellcheck disable=SC2034
+    local result="" first=1 elem
+    # shellcheck disable=SC1087
+    eval "for elem in \"\${$arr_name[@]}\"; do
+        if [[ \$first -eq 1 ]]; then
+            result=\"\$elem\"
+            first=0
+        else
+            result=\"\$result\$sep\$elem\"
+        fi
+    done"
+    echo "$result"
+}
+
+# @description Print array elements one per line
+# @arg $1 string The name of the array variable (without $)
+# @stdout Each array element on its own line
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c)
+#   shlib::arr_printn my_array
+#   # outputs:
+#   # a
+#   # b
+#   # c
+shlib::arr_printn() {
+    local arr_name="$1"
+    # shellcheck disable=SC1087
+    eval "printf '%s\n' \"\${$arr_name[@]}\""
 }

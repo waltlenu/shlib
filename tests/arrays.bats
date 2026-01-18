@@ -72,6 +72,25 @@ setup() {
     [[ "${arr[1]}" == "b" ]]
 }
 
+@test "shlib::arr_pop removes last element" {
+    local -a arr=(a b c d)
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "3" ]]
+    [[ "${arr[2]}" == "c" ]]
+}
+
+@test "shlib::arr_pop on single element array" {
+    local -a arr=(only)
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "0" ]]
+}
+
+@test "shlib::arr_pop on empty array does nothing" {
+    local -a arr=()
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "0" ]]
+}
+
 @test "shlib::arr_sort sorts alphabetically" {
     local -a arr=(cherry apple banana)
     shlib::arr_sort arr
@@ -115,4 +134,55 @@ setup() {
     shlib::arr_reverse arr
     [[ "${arr[0]}" == "second" ]]
     [[ "${arr[1]}" == "first" ]]
+}
+
+@test "shlib::arr_print with default separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr
+    [[ "${output}" == "a b c" ]]
+}
+
+@test "shlib::arr_print with comma separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr ","
+    [[ "${output}" == "a,b,c" ]]
+}
+
+@test "shlib::arr_print with multi-char separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr " | "
+    [[ "${output}" == "a | b | c" ]]
+}
+
+@test "shlib::arr_print handles single element" {
+    local -a arr=(only)
+    run shlib::arr_print arr ","
+    [[ "${output}" == "only" ]]
+}
+
+@test "shlib::arr_print handles empty array" {
+    local -a arr=()
+    run shlib::arr_print arr
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::arr_printn prints each element on new line" {
+    local -a arr=(a b c)
+    run shlib::arr_printn arr
+    [[ "${lines[0]}" == "a" ]]
+    [[ "${lines[1]}" == "b" ]]
+    [[ "${lines[2]}" == "c" ]]
+}
+
+@test "shlib::arr_printn handles single element" {
+    local -a arr=(only)
+    run shlib::arr_printn arr
+    [[ "${output}" == "only" ]]
+}
+
+@test "shlib::arr_printn handles elements with spaces" {
+    local -a arr=("hello world" "foo bar")
+    run shlib::arr_printn arr
+    [[ "${lines[0]}" == "hello world" ]]
+    [[ "${lines[1]}" == "foo bar" ]]
 }
