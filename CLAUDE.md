@@ -47,6 +47,11 @@ shlib::my_function() {
 
 ## Commands
 
+Format codebase:
+```bash
+shfmt -i4 -w shlib.shfmt
+```
+
 Lint the library:
 ```bash
 shellcheck -s bash shlib.sh
@@ -72,6 +77,7 @@ man man/shlib.7
 - **Always update documentation when code changes**
 - Update man/ man pages simultaneously with code changes
 - **Always update tests when code changes**
+- **Always format code with shfmt**
 
 ## Testing
 

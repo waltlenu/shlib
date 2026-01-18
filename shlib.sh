@@ -493,7 +493,7 @@ shlib::arr_pop() {
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
     # shellcheck disable=SC1087
-    eval "unset '$arr_name[$((len-1))]'"
+    eval "unset '$arr_name[$((len - 1))]'"
 }
 
 # @description Print array elements on one line with a separator
@@ -609,7 +609,7 @@ shlib::spinner() {
     # Spinner loop
     while kill -0 "$cmd_pid" 2>/dev/null; do
         printf '\r%s %s' "${spin_chars[$spin_idx]}" "$message"
-        spin_idx=$(( (spin_idx + 1) % ${#spin_chars[@]} ))
+        spin_idx=$(((spin_idx + 1) % ${#spin_chars[@]}))
         sleep 0.1
     done
 
@@ -665,9 +665,9 @@ shlib::color_table() {
     for i in "${!bg_codes[@]}"; do
         # Use contrasting foreground for visibility
         if [[ ${bg_codes[$i]} -lt 44 ]] || [[ ${bg_codes[$i]} -ge 100 && ${bg_codes[$i]} -lt 104 ]]; then
-            fg=97  # Bright white for dark backgrounds
+            fg=97 # Bright white for dark backgrounds
         else
-            fg=30  # Black for light backgrounds
+            fg=30 # Black for light backgrounds
         fi
         printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${fg_names[$i]}" "${bg_codes[$i]}" "${bg_codes[$i]}" "$fg" " Sample Text "
     done
@@ -719,7 +719,7 @@ shlib::color_table() {
     echo "216 Colors (16-231):"
     for i in {16..231}; do
         printf '\033[48;5;%sm %3s \033[0m' "$i" "$i"
-        [[ $(( (i - 15) % 18 )) -eq 0 ]] && echo
+        [[ $(((i - 15) % 18)) -eq 0 ]] && echo
     done
     echo
     echo "Grayscale (232-255):"
