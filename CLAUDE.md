@@ -69,6 +69,7 @@ man man/shlib.7
 
 - **Always update documentation when code changes**
 - Update man/shlib.7 man page simultaneously with code changes
+- **Always update tests when code changes**
 
 ## Testing
 

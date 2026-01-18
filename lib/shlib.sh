@@ -44,6 +44,19 @@ shlib::command_exists() {
 }
 
 #
+# Color Codes
+#
+
+# shellcheck disable=SC2034
+readonly SHLIB_COLOR_RED='\033[0;31m'
+# shellcheck disable=SC2034
+readonly SHLIB_COLOR_YELLOW='\033[0;33m'
+# shellcheck disable=SC2034
+readonly SHLIB_COLOR_BLUE='\033[0;34m'
+# shellcheck disable=SC2034
+readonly SHLIB_COLOR_RESET='\033[0m'
+
+#
 # Logging Functions
 #
 
@@ -105,4 +118,68 @@ shlib::warnn() {
 #   shlib::infon "Processing complete"
 shlib::infon() {
     echo "info: $*"
+}
+
+#
+# Colorized Logging Functions
+#
+
+# @description Print a colorized error message to stderr (without newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with red "error: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cerror "Something went wrong"
+shlib::cerror() {
+    echo -ne "${SHLIB_COLOR_RED}error:${SHLIB_COLOR_RESET} $*" >&2
+}
+
+# @description Print a colorized warning message to stdout (without newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with yellow "warning: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cwarn "This might cause issues"
+shlib::cwarn() {
+    echo -ne "${SHLIB_COLOR_YELLOW}warning:${SHLIB_COLOR_RESET} $*"
+}
+
+# @description Print a colorized info message to stdout (without newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with blue "info: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cinfo "Processing file"
+shlib::cinfo() {
+    echo -ne "${SHLIB_COLOR_BLUE}info:${SHLIB_COLOR_RESET} $*"
+}
+
+# @description Print a colorized error message to stderr (with newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with red "error: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cerrorn "Something went wrong"
+shlib::cerrorn() {
+    echo -e "${SHLIB_COLOR_RED}error:${SHLIB_COLOR_RESET} $*" >&2
+}
+
+# @description Print a colorized warning message to stdout (with newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with yellow "warning: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cwarnn "This might cause issues"
+shlib::cwarnn() {
+    echo -e "${SHLIB_COLOR_YELLOW}warning:${SHLIB_COLOR_RESET} $*"
+}
+
+# @description Print a colorized info message to stdout (with newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with blue "info: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cinfon "Processing complete"
+shlib::cinfon() {
+    echo -e "${SHLIB_COLOR_BLUE}info:${SHLIB_COLOR_RESET} $*"
 }

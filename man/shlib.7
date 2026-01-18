@@ -15,6 +15,7 @@ The library enables strict mode
 .RB ( "set \-euo pipefail" )
 when sourced. It includes double-source protection to prevent loading multiple times.
 .SH FUNCTIONS
+.SS Core
 .TP
 .B shlib::version
 Print the library version to stdout.
@@ -23,6 +24,7 @@ Print the library version to stdout.
 Check if
 .I command
 exists in PATH. Returns 0 if found, 1 otherwise.
+.SS Logging
 .TP
 .BI shlib::error " message"
 Print
@@ -53,6 +55,37 @@ to stdout with "info:" prefix (without trailing newline).
 Print
 .I message
 to stdout with "info:" prefix (with trailing newline).
+.SS Colorized Logging
+.TP
+.BI shlib::cerror " message"
+Print
+.I message
+to stderr with red "error:" prefix (without trailing newline).
+.TP
+.BI shlib::cerrorn " message"
+Print
+.I message
+to stderr with red "error:" prefix (with trailing newline).
+.TP
+.BI shlib::cwarn " message"
+Print
+.I message
+to stdout with yellow "warning:" prefix (without trailing newline).
+.TP
+.BI shlib::cwarnn " message"
+Print
+.I message
+to stdout with yellow "warning:" prefix (with trailing newline).
+.TP
+.BI shlib::cinfo " message"
+Print
+.I message
+to stdout with blue "info:" prefix (without trailing newline).
+.TP
+.BI shlib::cinfon " message"
+Print
+.I message
+to stdout with blue "info:" prefix (with trailing newline).
 .SH VARIABLES
 .TP
 .B SHLIB_VERSION
@@ -63,6 +96,18 @@ Absolute path to the directory containing shlib.sh (readonly).
 .TP
 .B SHLIB_LOADED
 Set to 1 when library is loaded. Used for double-source protection (readonly).
+.TP
+.B SHLIB_COLOR_RED
+ANSI escape code for red color (readonly).
+.TP
+.B SHLIB_COLOR_YELLOW
+ANSI escape code for yellow color (readonly).
+.TP
+.B SHLIB_COLOR_BLUE
+ANSI escape code for blue color (readonly).
+.TP
+.B SHLIB_COLOR_RESET
+ANSI escape code to reset color (readonly).
 .SH EXAMPLES
 Basic usage in a script:
 .PP

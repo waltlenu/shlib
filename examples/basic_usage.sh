@@ -20,6 +20,12 @@ shlib::warnn "This is a warning message"
 shlib::errorn "This is an error message"
 echo
 
+# Using colorised logging functions
+shlib::cinfon "This is an informational message"
+shlib::cwarnn "This is a warning message"
+shlib::cerrorn "This is an error message"
+echo
+
 # Check for commands
 if shlib::command_exists git; then
     shlib::info "git is installed"
