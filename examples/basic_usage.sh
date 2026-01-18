@@ -28,6 +28,13 @@ shlib::cwarnn "This is a warning message"
 shlib::cerrorn "This is an error message"
 echo
 
+# Using emoji logging functions
+shlib::headern "Emoji Logging functions"
+shlib::einfon "This is an informational message"
+shlib::ewarnn "This is a warning message"
+shlib::eerrorn "This is an error message"
+echo
+
 # Check for commands
 if shlib::command_exists git; then
     shlib::cinfon "git is installed"

@@ -205,3 +205,67 @@ shlib::header() {
 shlib::headern() {
     echo -e "${SHLIB_COLOR_BOLD}$*${SHLIB_COLOR_RESET}"
 }
+
+#
+# Emoji Logging Functions
+#
+
+# @description Print an emoji error message to stderr (without newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with "❌ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::eerror "Something went wrong"
+shlib::eerror() {
+    echo -n "❌ $*" >&2
+}
+
+# @description Print an emoji warning message to stdout (without newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with "⚠️ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ewarn "This might cause issues"
+shlib::ewarn() {
+    echo -n "⚠️  $*"
+}
+
+# @description Print an emoji info message to stdout (without newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with "ℹ️ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::einfo "Processing file"
+shlib::einfo() {
+    echo -n "ℹ️  $*"
+}
+
+# @description Print an emoji error message to stderr (with newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with "❌ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::eerrorn "Something went wrong"
+shlib::eerrorn() {
+    echo "❌ $*" >&2
+}
+
+# @description Print an emoji warning message to stdout (with newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with "⚠️ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ewarnn "This might cause issues"
+shlib::ewarnn() {
+    echo "⚠️  $*"
+}
+
+# @description Print an emoji info message to stdout (with newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with "ℹ️ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::einfon "Processing complete"
+shlib::einfon() {
+    echo "ℹ️  $*"
+}

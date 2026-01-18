@@ -120,3 +120,33 @@ setup() {
     run shlib::cinfon "test message"
     [[ "${output}" == $'\033[0;34minfo:\033[0m test message' ]]
 }
+
+@test "shlib::eerror outputs emoji error to stderr" {
+    run shlib::eerror "test message"
+    [[ "${output}" == "❌ test message" ]]
+}
+
+@test "shlib::eerrorn outputs emoji error to stderr" {
+    run shlib::eerrorn "test message"
+    [[ "${output}" == "❌ test message" ]]
+}
+
+@test "shlib::ewarn outputs emoji warning" {
+    run shlib::ewarn "test message"
+    [[ "${output}" == "⚠️  test message" ]]
+}
+
+@test "shlib::ewarnn outputs emoji warning" {
+    run shlib::ewarnn "test message"
+    [[ "${output}" == "⚠️  test message" ]]
+}
+
+@test "shlib::einfo outputs emoji info" {
+    run shlib::einfo "test message"
+    [[ "${output}" == "ℹ️  test message" ]]
+}
+
+@test "shlib::einfon outputs emoji info" {
+    run shlib::einfon "test message"
+    [[ "${output}" == "ℹ️  test message" ]]
+}

@@ -7,7 +7,7 @@ shlib_logging \-  Logging functions from the shlib library
 .I /path/to/shlib.sh
 .SH DESCRIPTION
 .B shlib_logging
-is a list of simple BASH printing functions for logging, including colorised, and emojil
+is a list of simple BASH printing functions for logging, including colorised and emoji variants.
 .SH FUNCTIONS
 .SS Headers
 .TP
@@ -82,6 +82,37 @@ to stdout with blue "info:" prefix (without trailing newline).
 Print
 .I message
 to stdout with blue "info:" prefix (with trailing newline).
+.SS Emoji Logging
+.TP
+.BI shlib::eerror " message"
+Print
+.I message
+to stderr with "\[u274C] " prefix (without trailing newline).
+.TP
+.BI shlib::eerrorn " message"
+Print
+.I message
+to stderr with "\[u274C] " prefix (with trailing newline).
+.TP
+.BI shlib::ewarn " message"
+Print
+.I message
+to stdout with "\[u26A0]\[uFE0F] " prefix (without trailing newline).
+.TP
+.BI shlib::ewarnn " message"
+Print
+.I message
+to stdout with "\[u26A0]\[uFE0F] " prefix (with trailing newline).
+.TP
+.BI shlib::einfo " message"
+Print
+.I message
+to stdout with "\[u2139]\[uFE0F] " prefix (without trailing newline).
+.TP
+.BI shlib::einfon " message"
+Print
+.I message
+to stdout with "\[u2139]\[uFE0F] " prefix (with trailing newline).
 .SH VARIABLES
 .TP
 .B SHLIB_VERSION
