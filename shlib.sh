@@ -281,49 +281,26 @@ shlib::einfon() {
 # String Manipulation Functions
 #
 
-# @description Remove leading and trailing whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The trimmed string
-# @exitcode 0 Always succeeds
+# @description Check if a string contains a substring
+# @arg $1 string The string to search in
+# @arg $2 string The substring to search for
+# @exitcode 0 String contains substring
+# @exitcode 1 String does not contain substring
 # @example
-#   shlib::str_trim "  hello world  "
-shlib::str_trim() {
-    local str="$1"
-    str="${str#"${str%%[![:space:]]*}"}"
-    str="${str%"${str##*[![:space:]]}"}"
-    echo "$str"
+#   shlib::str_contains "hello world" "world" && echo "found"
+shlib::str_contains() {
+    [[ "$1" == *"$2"* ]]
 }
 
-# @description Remove leading whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The string with leading whitespace removed
-# @exitcode 0 Always succeeds
+# @description Check if a string ends with a suffix
+# @arg $1 string The string to check
+# @arg $2 string The suffix to check for
+# @exitcode 0 String ends with suffix
+# @exitcode 1 String does not end with suffix
 # @example
-#   shlib::str_ltrim "  hello world"
-shlib::str_ltrim() {
-    local str="$1"
-    echo "${str#"${str%%[![:space:]]*}"}"
-}
-
-# @description Remove trailing whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The string with trailing whitespace removed
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_rtrim "hello world  "
-shlib::str_rtrim() {
-    local str="$1"
-    echo "${str%"${str##*[![:space:]]}"}"
-}
-
-# @description Get the length of a string
-# @arg $1 string The string to measure
-# @stdout The length of the string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_len "hello"
-shlib::str_len() {
-    echo "${#1}"
+#   shlib::str_endswith "hello world" "world" && echo "yes"
+shlib::str_endswith() {
+    [[ "$1" == *"$2" ]]
 }
 
 # @description Check if a string is empty or contains only whitespace
@@ -339,57 +316,14 @@ shlib::str_is_empty() {
     [[ -z "$trimmed" ]]
 }
 
-# @description Convert a string to uppercase
-# @arg $1 string The string to convert
-# @stdout The uppercase string
+# @description Get the length of a string
+# @arg $1 string The string to measure
+# @stdout The length of the string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::str_to_upper "hello"
-shlib::str_to_upper() {
-    echo "$1" | tr '[:lower:]' '[:upper:]'
-}
-
-# @description Convert a string to lowercase
-# @arg $1 string The string to convert
-# @stdout The lowercase string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_to_lower "HELLO"
-shlib::str_to_lower() {
-    echo "$1" | tr '[:upper:]' '[:lower:]'
-}
-
-# @description Check if a string contains a substring
-# @arg $1 string The string to search in
-# @arg $2 string The substring to search for
-# @exitcode 0 String contains substring
-# @exitcode 1 String does not contain substring
-# @example
-#   shlib::str_contains "hello world" "world" && echo "found"
-shlib::str_contains() {
-    [[ "$1" == *"$2"* ]]
-}
-
-# @description Check if a string starts with a prefix
-# @arg $1 string The string to check
-# @arg $2 string The prefix to check for
-# @exitcode 0 String starts with prefix
-# @exitcode 1 String does not start with prefix
-# @example
-#   shlib::str_startswith "hello world" "hello" && echo "yes"
-shlib::str_startswith() {
-    [[ "$1" == "$2"* ]]
-}
-
-# @description Check if a string ends with a suffix
-# @arg $1 string The string to check
-# @arg $2 string The suffix to check for
-# @exitcode 0 String ends with suffix
-# @exitcode 1 String does not end with suffix
-# @example
-#   shlib::str_endswith "hello world" "world" && echo "yes"
-shlib::str_endswith() {
-    [[ "$1" == *"$2" ]]
+#   shlib::str_len "hello"
+shlib::str_len() {
+    echo "${#1}"
 }
 
 # @description Pad a string on the left to a specified length
@@ -428,21 +362,75 @@ shlib::str_padright() {
     echo "$str"
 }
 
+# @description Check if a string starts with a prefix
+# @arg $1 string The string to check
+# @arg $2 string The prefix to check for
+# @exitcode 0 String starts with prefix
+# @exitcode 1 String does not start with prefix
+# @example
+#   shlib::str_startswith "hello world" "hello" && echo "yes"
+shlib::str_startswith() {
+    [[ "$1" == "$2"* ]]
+}
+
+# @description Convert a string to lowercase
+# @arg $1 string The string to convert
+# @stdout The lowercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_to_lower "HELLO"
+shlib::str_to_lower() {
+    echo "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+# @description Convert a string to uppercase
+# @arg $1 string The string to convert
+# @stdout The uppercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_to_upper "hello"
+shlib::str_to_upper() {
+    echo "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+# @description Remove leading and trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The trimmed string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_trim "  hello world  "
+shlib::str_trim() {
+    local str="$1"
+    str="${str#"${str%%[![:space:]]*}"}"
+    str="${str%"${str##*[![:space:]]}"}"
+    echo "$str"
+}
+
+# @description Remove leading whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with leading whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_ltrim "  hello world"
+shlib::str_ltrim() {
+    local str="$1"
+    echo "${str#"${str%%[![:space:]]*}"}"
+}
+
+# @description Remove trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with trailing whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_rtrim "hello world  "
+shlib::str_rtrim() {
+    local str="$1"
+    echo "${str%"${str##*[![:space:]]}"}"
+}
+
 #
 # Array Functions
 #
-
-# @description Get the number of elements in an array
-# @arg $1 string The name of the array variable (without $)
-# @stdout The number of elements in the array
-# @exitcode 0 Always succeeds
-# @example
-#   my_array=(a b c d e)
-#   shlib::arr_len my_array  # outputs 5
-shlib::arr_len() {
-    # shellcheck disable=SC2086
-    eval "echo \${#$1[@]}"
-}
 
 # @description Append one or more elements to an array
 # @arg $1 string The name of the array variable (without $)
@@ -479,6 +467,18 @@ shlib::arr_delete() {
     eval "$arr_name=(\"\${$arr_name[@]}\")"
 }
 
+# @description Get the number of elements in an array
+# @arg $1 string The name of the array variable (without $)
+# @stdout The number of elements in the array
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d e)
+#   shlib::arr_len my_array  # outputs 5
+shlib::arr_len() {
+    # shellcheck disable=SC2086
+    eval "echo \${#$1[@]}"
+}
+
 # @description Remove the last element from an array
 # @arg $1 string The name of the array variable (without $)
 # @exitcode 0 Always succeeds
@@ -494,41 +494,6 @@ shlib::arr_pop() {
     [[ $len -eq 0 ]] && return 0
     # shellcheck disable=SC1087
     eval "unset '$arr_name[$((len-1))]'"
-}
-
-# @description Sort an array in place (lexicographic order)
-# @arg $1 string The name of the array variable (without $)
-# @exitcode 0 Always succeeds
-# @example
-#   my_array=(cherry apple banana)
-#   shlib::arr_sort my_array
-#   # my_array is now (apple banana cherry)
-shlib::arr_sort() {
-    local arr_name="$1"
-    local IFS=$'\n'
-    # shellcheck disable=SC2207,SC1087
-    eval "$arr_name=(\$(printf '%s\n' \"\${$arr_name[@]}\" | sort))"
-}
-
-# @description Reverse an array in place
-# @arg $1 string The name of the array variable (without $)
-# @exitcode 0 Always succeeds
-# @example
-#   my_array=(a b c d)
-#   shlib::arr_reverse my_array
-#   # my_array is now (d c b a)
-shlib::arr_reverse() {
-    local arr_name="$1"
-    # shellcheck disable=SC2034
-    local -a tmp
-    local i len
-    # shellcheck disable=SC1087
-    eval "len=\${#$arr_name[@]}"
-    for ((i = len - 1; i >= 0; i--)); do
-        # shellcheck disable=SC1087
-        eval "tmp+=(\"\${$arr_name[$i]}\")"
-    done
-    eval "$arr_name=(\"\${tmp[@]}\")"
 }
 
 # @description Print array elements on one line with a separator
@@ -577,4 +542,39 @@ shlib::arr_printn() {
     local arr_name="$1"
     # shellcheck disable=SC1087
     eval "printf '%s\n' \"\${$arr_name[@]}\""
+}
+
+# @description Reverse an array in place
+# @arg $1 string The name of the array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d)
+#   shlib::arr_reverse my_array
+#   # my_array is now (d c b a)
+shlib::arr_reverse() {
+    local arr_name="$1"
+    # shellcheck disable=SC2034
+    local -a tmp
+    local i len
+    # shellcheck disable=SC1087
+    eval "len=\${#$arr_name[@]}"
+    for ((i = len - 1; i >= 0; i--)); do
+        # shellcheck disable=SC1087
+        eval "tmp+=(\"\${$arr_name[$i]}\")"
+    done
+    eval "$arr_name=(\"\${tmp[@]}\")"
+}
+
+# @description Sort an array in place (lexicographic order)
+# @arg $1 string The name of the array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(cherry apple banana)
+#   shlib::arr_sort my_array
+#   # my_array is now (apple banana cherry)
+shlib::arr_sort() {
+    local arr_name="$1"
+    local IFS=$'\n'
+    # shellcheck disable=SC2207,SC1087
+    eval "$arr_name=(\$(printf '%s\n' \"\${$arr_name[@]}\" | sort))"
 }
