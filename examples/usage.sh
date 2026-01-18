@@ -21,15 +21,15 @@ shlib::headern "Core Functions"
 
 # Check for commands
 if shlib::command_exists git; then
-    shlib::cinfon "git is installed"
+  shlib::cinfon "git is installed"
 else
-    shlib::cwarnn "git is not installed"
+  shlib::cwarnn "git is not installed"
 fi
 
 if shlib::command_exists nonexistent_cmd; then
-    shlib::cinfon "nonexistent_cmd is installed"
+  shlib::cinfon "nonexistent_cmd is installed"
 else
-    shlib::cwarnn "nonexistent_cmd is not installed (expected)"
+  shlib::cwarnn "nonexistent_cmd is not installed (expected)"
 fi
 echo
 
@@ -80,10 +80,10 @@ echo
 
 # Empty check
 if shlib::str_is_empty "   "; then
-    echo "str_is_empty \"   \": true (whitespace only)"
+  echo "str_is_empty \"   \": true (whitespace only)"
 fi
 if ! shlib::str_is_empty "hello"; then
-    echo "str_is_empty \"hello\": false (has content)"
+  echo "str_is_empty \"hello\": false (has content)"
 fi
 echo
 
@@ -94,13 +94,13 @@ echo
 
 # String searching
 if shlib::str_contains "hello world" "world"; then
-    echo "str_contains \"hello world\" \"world\": true"
+  echo "str_contains \"hello world\" \"world\": true"
 fi
 if shlib::str_startswith "hello world" "hello"; then
-    echo "str_startswith \"hello world\" \"hello\": true"
+  echo "str_startswith \"hello world\" \"hello\": true"
 fi
 if shlib::str_endswith "hello world" "world"; then
-    echo "str_endswith \"hello world\" \"world\": true"
+  echo "str_endswith \"hello world\" \"world\": true"
 fi
 echo
 
@@ -168,11 +168,17 @@ echo
 shlib::headern "UI Functions"
 
 # Spinner - runs a command while showing an animation
-if shlib::spinner "Running a command with spinner..." sleep 10; then
-    shlib::einfon "Command completed successfully"
+echo "Running a command with spinner..."
+if shlib::spinner "Simulating work" sleep 1; then
+  shlib::einfon "Command completed successfully"
 else
-    shlib::eerrorn "Command failed"
+  shlib::eerrorn "Command failed"
 fi
+echo
+
+# Color table - display all ANSI colors and escape codes
+echo "Color table (showing first few lines):"
+shlib::color_table
 echo
 
 shlib::einfon "All examples completed!"

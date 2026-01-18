@@ -622,3 +622,120 @@ shlib::spinner() {
 
     return $exit_code
 }
+
+# @description Print a table of all ANSI colors and escape codes
+# @stdout A formatted table showing foreground, background, and style combinations
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::color_table
+shlib::color_table() {
+    local fg
+    local -a fg_codes=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
+    local -a fg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
+    local -a bg_codes=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+    local -a style_codes=(0 1 2 3 4 5 7 8 9)
+    local -a style_names=("Normal" "Bold" "Dim" "Italic" "Underline" "Blink" "Reverse" "Hidden" "Strikethrough")
+    local i j
+
+    # Header
+    printf '\033[1m%s\033[0m\n\n' "ANSI Color and Escape Code Reference"
+
+    # Text Styles
+    printf '\033[1m%s\033[0m\n' "Text Styles"
+    printf '%-15s %-10s %s\n' "Style" "Code" "Example"
+    printf '%s\n' "---------------------------------------"
+    for i in "${!style_codes[@]}"; do
+        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${style_names[$i]}" "${style_codes[$i]}" "${style_codes[$i]}" "Sample Text"
+    done
+    echo
+
+    # Foreground Colors
+    printf '\033[1m%s\033[0m\n' "Foreground Colors"
+    printf '%-20s %-10s %s\n' "Color" "Code" "Example"
+    printf '%s\n' "-----------------------------------------------"
+    for i in "${!fg_codes[@]}"; do
+        printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${fg_names[$i]}" "${fg_codes[$i]}" "${fg_codes[$i]}" "Sample Text"
+    done
+    echo
+
+    # Background Colors
+    printf '\033[1m%s\033[0m\n' "Background Colors"
+    printf '%-20s %-10s %s\n' "Color" "Code" "Example"
+    printf '%s\n' "-----------------------------------------------"
+    for i in "${!bg_codes[@]}"; do
+        # Use contrasting foreground for visibility
+        if [[ ${bg_codes[$i]} -lt 44 ]] || [[ ${bg_codes[$i]} -ge 100 && ${bg_codes[$i]} -lt 104 ]]; then
+            fg=97  # Bright white for dark backgrounds
+        else
+            fg=30  # Black for light backgrounds
+        fi
+        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${fg_names[$i]}" "${bg_codes[$i]}" "${bg_codes[$i]}" "$fg" " Sample Text "
+    done
+    echo
+
+    # Color Matrix (FG x BG)
+    printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
+    printf '%-8s' ""
+    for j in 40 41 42 43 44 45 46 47; do
+        printf ' %-5s' "$j"
+    done
+    echo
+    printf '%s\n' "--------------------------------------------------------"
+    for i in 30 31 32 33 34 35 36 37; do
+        printf '%-8s' "$i"
+        for j in 40 41 42 43 44 45 46 47; do
+            printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
+        done
+        echo
+    done
+    echo
+
+    # Bright Color Matrix
+    printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Bright Colors)"
+    printf '%-8s' ""
+    for j in 100 101 102 103 104 105 106 107; do
+        printf ' %-5s' "$j"
+    done
+    echo
+    printf '%s\n' "----------------------------------------------------------------"
+    for i in 90 91 92 93 94 95 96 97; do
+        printf '%-8s' "$i"
+        for j in 100 101 102 103 104 105 106 107; do
+            printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
+        done
+        echo
+    done
+    echo
+
+    # 256 Color palette
+    printf '\033[1m%s\033[0m\n' "256 Color Palette (\\033[38;5;Nm for FG, \\033[48;5;Nm for BG)"
+    echo "Standard Colors (0-15):"
+    for i in {0..15}; do
+        printf '\033[48;5;%sm %3s \033[0m' "$i" "$i"
+        [[ $i -eq 7 ]] && echo
+    done
+    echo
+    echo
+    echo "216 Colors (16-231):"
+    for i in {16..231}; do
+        printf '\033[48;5;%sm %3s \033[0m' "$i" "$i"
+        [[ $(( (i - 15) % 18 )) -eq 0 ]] && echo
+    done
+    echo
+    echo "Grayscale (232-255):"
+    for i in {232..255}; do
+        printf '\033[48;5;%sm %3s \033[0m' "$i" "$i"
+    done
+    echo
+    echo
+
+    # Usage examples
+    printf '\033[1m%s\033[0m\n' "Usage Examples"
+    printf '%s\n' "-----------------------------------------------"
+    printf '%s\n' "Foreground:   printf '\\033[31mRed text\\033[0m'"
+    printf '%s\n' "Background:   printf '\\033[44mBlue background\\033[0m'"
+    printf '%s\n' "Combined:     printf '\\033[1;33;44mBold yellow on blue\\033[0m'"
+    printf '%s\n' "256 Color FG: printf '\\033[38;5;208mOrange text\\033[0m'"
+    printf '%s\n' "256 Color BG: printf '\\033[48;5;27mBlue background\\033[0m'"
+    printf '%s\n' "Reset:        printf '\\033[0m'"
+}

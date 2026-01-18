@@ -22,6 +22,25 @@ while displaying an animated spinner with
 .IR message .
 The spinner uses Unicode braille characters for smooth animation.
 Returns the exit code of the executed command.
+.SS Color Reference
+.TP
+.B shlib::color_table
+Print a comprehensive reference table of all ANSI color codes and escape sequences.
+The table includes:
+.RS
+.IP \(bu 2
+Text styles (bold, dim, italic, underline, blink, reverse, hidden, strikethrough)
+.IP \(bu 2
+16 standard foreground colors (codes 30-37, 90-97)
+.IP \(bu 2
+16 standard background colors (codes 40-47, 100-107)
+.IP \(bu 2
+Foreground/background combination matrices
+.IP \(bu 2
+256 color palette reference
+.IP \(bu 2
+Usage examples with escape code syntax
+.RE
 .SH EXAMPLES
 Run a command with a spinner:
 .PP
@@ -42,6 +61,18 @@ fi
 
 # Capture command output (redirect before spinner)
 output=$(shlib::spinner "Fetching data" curl -s https://example.com)
+.fi
+.RE
+.PP
+Display the color reference table:
+.PP
+.RS
+.nf
+# Show all available colors and escape codes
+shlib::color_table
+
+# Pipe to less for scrolling
+shlib::color_table | less -R
 .fi
 .RE
 .SH EXIT STATUS

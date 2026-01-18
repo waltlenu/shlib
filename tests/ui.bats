@@ -38,3 +38,43 @@ setup() {
     [[ "$output" == "one two three" ]]
     rm -f "$tmpfile"
 }
+
+@test "shlib::color_table outputs color reference" {
+    run shlib::color_table
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"ANSI Color and Escape Code Reference"* ]]
+}
+
+@test "shlib::color_table includes text styles section" {
+    run shlib::color_table
+    [[ "$output" == *"Text Styles"* ]]
+    [[ "$output" == *"Bold"* ]]
+    [[ "$output" == *"Underline"* ]]
+}
+
+@test "shlib::color_table includes foreground colors" {
+    run shlib::color_table
+    [[ "$output" == *"Foreground Colors"* ]]
+    [[ "$output" == *"Red"* ]]
+    [[ "$output" == *"Blue"* ]]
+}
+
+@test "shlib::color_table includes background colors" {
+    run shlib::color_table
+    [[ "$output" == *"Background Colors"* ]]
+}
+
+@test "shlib::color_table includes color combinations" {
+    run shlib::color_table
+    [[ "$output" == *"Foreground / Background Combinations"* ]]
+}
+
+@test "shlib::color_table includes 256 color palette" {
+    run shlib::color_table
+    [[ "$output" == *"256 Color Palette"* ]]
+}
+
+@test "shlib::color_table includes usage examples" {
+    run shlib::color_table
+    [[ "$output" == *"Usage Examples"* ]]
+}
