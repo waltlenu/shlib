@@ -1,0 +1,65 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_UI 3 "January 2026" "shlib 0.1.0" "Shell Library"
+.SH NAME
+shlib_ui \- User interface functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_ui
+provides user interface functions for terminal interactions such as
+spinners and progress indicators.
+Requires Bash version 3 or higher.
+.SH FUNCTIONS
+.SS Spinner
+.TP
+.BI shlib::spinner " message command [args...]"
+Run
+.I command
+with optional
+.I args
+while displaying an animated spinner with
+.IR message .
+The spinner uses Unicode braille characters for smooth animation.
+Returns the exit code of the executed command.
+.SH EXAMPLES
+Run a command with a spinner:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/shlib.sh
+
+# Show spinner while sleeping
+shlib::spinner "Please wait" sleep 2
+
+# Show spinner while running a build
+if shlib::spinner "Building project" make -j4; then
+    shlib::einfon "Build succeeded"
+else
+    shlib::eerrorn "Build failed"
+fi
+
+# Capture command output (redirect before spinner)
+output=$(shlib::spinner "Fetching data" curl -s https://example.com)
+.fi
+.RE
+.SH EXIT STATUS
+.TP
+.B shlib::spinner
+Returns the exit code of the executed command.
+.SH NOTES
+The spinner animation uses Unicode braille pattern characters.
+Ensure your terminal supports Unicode for proper display.
+.PP
+The spinner hides the cursor during animation and restores it when complete.
+.PP
+Command output (stdout/stderr) is not captured by the spinner itself.
+If you need to capture output, use command substitution around the spinner call.
+.SH SEE ALSO
+.BR shlib (7),
+.BR shlib_logging (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.

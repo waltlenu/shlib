@@ -162,4 +162,17 @@ echo "arr_printn:"
 shlib::arr_printn items
 echo
 
+#
+# UI Functions
+#
+shlib::headern "UI Functions"
+
+# Spinner - runs a command while showing an animation
+if shlib::spinner "Running a command with spinner..." sleep 10; then
+    shlib::einfon "Command completed successfully"
+else
+    shlib::eerrorn "Command failed"
+fi
+echo
+
 shlib::einfon "All examples completed!"
