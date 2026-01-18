@@ -1,0 +1,98 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB 7 "January 2026" "shlib 0.1.0" "Shell Library"
+.SH NAME
+shlib \- a shell library of reusable Bash functions
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib/lib/shlib.sh
+.SH DESCRIPTION
+.B shlib
+is a library of reusable Bash functions that can be sourced into shell scripts.
+It provides common utilities for logging, command checking, and other frequently
+needed operations.
+.PP
+The library enables strict mode
+.RB ( "set \-euo pipefail" )
+when sourced. It includes double-source protection to prevent loading multiple times.
+.SH FUNCTIONS
+.TP
+.B shlib::version
+Print the library version to stdout.
+.TP
+.BI shlib::command_exists " command"
+Check if
+.I command
+exists in PATH. Returns 0 if found, 1 otherwise.
+.TP
+.BI shlib::error " message"
+Print
+.I message
+to stderr with "error:" prefix.
+.TP
+.BI shlib::warn " message"
+Print
+.I message
+to stderr with "warning:" prefix.
+.TP
+.BI shlib::info " message"
+Print
+.I message
+to stdout with "info:" prefix.
+.SH VARIABLES
+.TP
+.B SHLIB_VERSION
+The library version string (readonly).
+.TP
+.B SHLIB_DIR
+Absolute path to the directory containing shlib.sh (readonly).
+.TP
+.B SHLIB_LOADED
+Set to 1 when library is loaded. Used for double-source protection (readonly).
+.SH EXAMPLES
+Basic usage in a script:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/lib/shlib.sh
+
+shlib::info "Starting script..."
+
+if shlib::command_exists git; then
+    shlib::info "git is available"
+else
+    shlib::error "git is required"
+    exit 1
+fi
+.fi
+.RE
+.PP
+Check the library version:
+.PP
+.RS
+.nf
+source /path/to/shlib/lib/shlib.sh
+echo "Using shlib version $(shlib::version)"
+.fi
+.RE
+.SH FILES
+.TP
+.I lib/shlib.sh
+The library file to source.
+.TP
+.I tests/*.bats
+Test files using the Bats testing framework.
+.TP
+.I examples/basic_usage.sh
+Example script demonstrating library usage.
+.SH EXIT STATUS
+Functions that check conditions return 0 on success and 1 on failure.
+Logging functions always return 0.
+.SH SEE ALSO
+.BR bash (1),
+.BR shellcheck (1),
+.BR bats (1)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.
