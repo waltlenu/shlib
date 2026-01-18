@@ -1,5 +1,7 @@
 # shlib
 
+[![CI](https://github.com/waltlenu/shlib/actions/workflows/ci.yml/badge.svg)](https://github.com/waltlenu/shlib/actions/workflows/ci.yml)
+
 A shell library of reusable Bash functions.
 
 ## Installation
@@ -8,6 +10,14 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/waltlenu/shlib.git
+```
+
+## Documentation
+
+View the man page:
+
+```bash
+man man/shlib.7
 ```
 
 ## Usage
@@ -19,20 +29,23 @@ Source the library in your script:
 source /path/to/shlib/shlib.sh
 
 # Use library functions
-shlib::info "Hello from shlib!"
+shlib::einfon "Hello 🌍"
 ```
 
-## Available Functions
+## Contributing
 
-### Core
+### Project Structure
 
-- `shlib::version` - Print the library version
-- `shlib::command_exists <cmd>` - Check if a command exists
-- `shlib::error <message>` - Print an error message to stderr
-- `shlib::warn <message>` - Print a warning message to stderr
-- `shlib::info <message>` - Print an info message
+```
+shlib/
+├── shlib.sh     # The library
+├── man/         # Man pages
+├── tests/       # Bats test files
+├── examples/    # Usage examples
+└── README.md    # This file (!)
+```
 
-## Adding New Functions
+### Adding New Functions
 
 Add functions to `shlib.sh` using the `shlib::` namespace prefix:
 
@@ -42,47 +55,20 @@ shlib::my_function() {
 }
 ```
 
-## Running Tests
+### Linting
+
+This project uses [ShellCheck](https://github.com/koalaman/shellcheck) for linting.
+
+```bash
+shellcheck -s bash tests/
+```
+
+### Testing
 
 This project uses [Bats](https://github.com/bats-core/bats-core) for testing.
 
-### Install Bats
-
-```bash
-# macOS
-brew install bats-core
-
-# Ubuntu/Debian
-apt install bats
-
-# Or clone directly
-git clone https://github.com/bats-core/bats-core.git
-```
-
-### Run Tests
-
 ```bash
 bats tests/
-```
-
-## Documentation
-
-View the man page:
-
-```bash
-man man/shlib.7
-```
-
-## Project Structure
-
-```
-shlib/
-├── shlib.sh              # The library
-├── man/
-│   └── shlib.7           # Man page
-├── tests/                 # Bats test files
-├── examples/              # Usage examples
-└── README.md
 ```
 
 ## License
