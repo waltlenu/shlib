@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source the library
 # shellcheck disable=SC1091
-source "${SCRIPT_DIR}/../lib/shlib.sh"
+source "${SCRIPT_DIR}/../shlib.sh"
 
 # Print version
 echo "shlib version: $(shlib::version)"

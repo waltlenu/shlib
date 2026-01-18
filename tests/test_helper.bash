@@ -6,4 +6,4 @@ TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "${TEST_DIR}")"
 
 # Source the library
-source "${PROJECT_ROOT}/lib/shlib.sh"
+source "${PROJECT_ROOT}/shlib.sh"

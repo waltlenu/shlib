@@ -16,7 +16,7 @@ Source the library in your script:
 
 ```bash
 #!/usr/bin/env bash
-source /path/to/shlib/lib/shlib.sh
+source /path/to/shlib/shlib.sh
 
 # Use library functions
 shlib::info "Hello from shlib!"
@@ -34,7 +34,7 @@ shlib::info "Hello from shlib!"
 
 ## Adding New Functions
 
-Add functions to `lib/shlib.sh` using the `shlib::` namespace prefix:
+Add functions to `shlib.sh` using the `shlib::` namespace prefix:
 
 ```bash
 shlib::my_function() {
@@ -77,8 +77,7 @@ man man/shlib.7
 
 ```
 shlib/
-├── lib/
-│   └── shlib.sh          # The library
+├── shlib.sh              # The library
 ├── man/
 │   └── shlib.7           # Man page
 ├── tests/                 # Bats test files

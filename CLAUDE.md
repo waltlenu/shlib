@@ -4,7 +4,7 @@ This is a Bash shell library providing reusable functions.
 
 ## Project Structure
 
-- `lib/shlib.sh` - The library (single file, source this)
+- `shlib.sh` - The library (single file, source this)
 - `man/shlib.7` - Man page documentation
 - `tests/*.bats` - Bats test files
 - `examples/` - Usage examples
@@ -49,7 +49,7 @@ shlib::my_function() {
 
 Lint the library:
 ```bash
-shellcheck -s bash lib/shlib.sh
+shellcheck -s bash shlib.sh
 ```
 
 Run tests:

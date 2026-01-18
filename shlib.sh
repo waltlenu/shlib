@@ -3,7 +3,7 @@
 # shlib - A shell library of reusable functions
 #
 # Usage:
-#   source /path/to/shlib/lib/shlib.sh
+#   source /path/to/shlib/shlib.sh
 #
 
 # Prevent double-sourcing
