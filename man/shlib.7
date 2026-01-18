@@ -13,6 +13,10 @@ It provides common utilities for frequently needed operations.
 The library enables strict mode
 .RB ( "set \-euo pipefail" )
 when sourced. It includes double-source protection to prevent loading multiple times.
+.SH REQUIREMENTS
+.B shlib
+requires Bash version 3 or higher. The library will fail to load with an error message
+if sourced in an older version of Bash.
 .SH FUNCTIONS
 .SS Core
 .TP

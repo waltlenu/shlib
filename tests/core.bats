@@ -8,6 +8,10 @@ setup() {
     [[ -n "${SHLIB_LOADED}" ]]
 }
 
+@test "bash version is 3 or higher" {
+    [[ "${BASH_VERSINFO[0]}" -ge 3 ]]
+}
+
 @test "SHLIB_VERSION is set" {
     [[ -n "${SHLIB_VERSION}" ]]
 }

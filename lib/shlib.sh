@@ -8,6 +8,13 @@
 
 # Prevent double-sourcing
 [[ -n "${SHLIB_LOADED:-}" ]] && return 0
+
+# Require bash version 3 or higher
+if [[ "${BASH_VERSINFO[0]}" -lt 3 ]]; then
+    echo "shlib: requires bash version 3 or higher (found ${BASH_VERSION})" >&2
+    return 1
+fi
+
 readonly SHLIB_LOADED=1
 
 # Library version
