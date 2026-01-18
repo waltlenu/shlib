@@ -269,3 +269,85 @@ shlib::ewarnn() {
 shlib::einfon() {
     echo "ℹ️  $*"
 }
+
+#
+# String Manipulation Functions
+#
+
+# @description Remove leading and trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The trimmed string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::trim "  hello world  "
+shlib::trim() {
+    local str="$1"
+    str="${str#"${str%%[![:space:]]*}"}"
+    str="${str%"${str##*[![:space:]]}"}"
+    echo "$str"
+}
+
+# @description Remove leading whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with leading whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ltrim "  hello world"
+shlib::ltrim() {
+    local str="$1"
+    echo "${str#"${str%%[![:space:]]*}"}"
+}
+
+# @description Remove trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with trailing whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::rtrim "hello world  "
+shlib::rtrim() {
+    local str="$1"
+    echo "${str%"${str##*[![:space:]]}"}"
+}
+
+# @description Get the length of a string
+# @arg $1 string The string to measure
+# @stdout The length of the string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::strlen "hello"
+shlib::strlen() {
+    echo "${#1}"
+}
+
+# @description Check if a string is empty or contains only whitespace
+# @arg $1 string The string to check
+# @exitcode 0 String is empty or whitespace only
+# @exitcode 1 String contains non-whitespace characters
+# @example
+#   shlib::is_empty "   " && echo "empty"
+shlib::is_empty() {
+    local trimmed
+    trimmed="${1#"${1%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    [[ -z "$trimmed" ]]
+}
+
+# @description Convert a string to uppercase
+# @arg $1 string The string to convert
+# @stdout The uppercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::to_upper "hello"
+shlib::to_upper() {
+    echo "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+# @description Convert a string to lowercase
+# @arg $1 string The string to convert
+# @stdout The lowercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::to_lower "HELLO"
+shlib::to_lower() {
+    echo "$1" | tr '[:upper:]' '[:lower:]'
+}

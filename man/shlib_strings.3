@@ -1,0 +1,95 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_STRINGS 3 "January 2026" "shlib 0.1.0" "Shell Library"
+.SH NAME
+shlib_strings \- String manipulation functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_strings
+provides string manipulation functions for trimming whitespace, measuring length, checking emptiness, and case conversion.
+.SH FUNCTIONS
+.SS Trimming
+.TP
+.BI shlib::trim " string"
+Remove leading and trailing whitespace from
+.IR string .
+.TP
+.BI shlib::ltrim " string"
+Remove leading whitespace from
+.IR string .
+.TP
+.BI shlib::rtrim " string"
+Remove trailing whitespace from
+.IR string .
+.SS Length and Emptiness
+.TP
+.BI shlib::strlen " string"
+Output the length of
+.IR string .
+.TP
+.BI shlib::is_empty " string"
+Return 0 if
+.I string
+is empty or contains only whitespace, 1 otherwise.
+.SS Case Conversion
+.TP
+.BI shlib::to_upper " string"
+Convert
+.I string
+to uppercase.
+.TP
+.BI shlib::to_lower " string"
+Convert
+.I string
+to lowercase.
+.SH EXAMPLES
+Trim whitespace from user input:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/lib/shlib.sh
+
+input="  hello world  "
+trimmed=$(shlib::trim "$input")
+echo "[$trimmed]"  # [hello world]
+.fi
+.RE
+.PP
+Validate non-empty input:
+.PP
+.RS
+.nf
+read -r user_input
+if shlib::is_empty "$user_input"; then
+    shlib::errorn "Input cannot be empty"
+    exit 1
+fi
+.fi
+.RE
+.PP
+Case-insensitive comparison:
+.PP
+.RS
+.nf
+answer="YES"
+if [[ $(shlib::to_lower "$answer") == "yes" ]]; then
+    echo "Confirmed"
+fi
+.fi
+.RE
+.SH EXIT STATUS
+.TP
+.B shlib::is_empty
+Returns 0 if string is empty or whitespace only, 1 otherwise.
+.TP
+.B All other functions
+Always return 0.
+.SH SEE ALSO
+.BR shlib (7),
+.BR shlib_logging (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.
