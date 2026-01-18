@@ -12,6 +12,32 @@ setup() {
     [[ -n "${SHLIB_VERSION}" ]]
 }
 
+@test "SHLIB_DIR is set to correct path" {
+    [[ -n "${SHLIB_DIR}" ]]
+    [[ -d "${SHLIB_DIR}" ]]
+    [[ -f "${SHLIB_DIR}/shlib.sh" ]]
+}
+
+@test "SHLIB_COLOR_RED is set" {
+    [[ "${SHLIB_COLOR_RED}" == '\033[0;31m' ]]
+}
+
+@test "SHLIB_COLOR_YELLOW is set" {
+    [[ "${SHLIB_COLOR_YELLOW}" == '\033[0;33m' ]]
+}
+
+@test "SHLIB_COLOR_BLUE is set" {
+    [[ "${SHLIB_COLOR_BLUE}" == '\033[0;34m' ]]
+}
+
+@test "SHLIB_COLOR_RESET is set" {
+    [[ "${SHLIB_COLOR_RESET}" == '\033[0m' ]]
+}
+
+@test "SHLIB_COLOR_BOLD is set" {
+    [[ "${SHLIB_COLOR_BOLD}" == '\033[1m' ]]
+}
+
 @test "shlib::version outputs version string" {
     result="$(shlib::version)"
     [[ "${result}" == "${SHLIB_VERSION}" ]]
@@ -53,4 +79,44 @@ setup() {
 @test "shlib::infon outputs message" {
     run shlib::infon "test message"
     [[ "${output}" == "info: test message" ]]
+}
+
+@test "shlib::header outputs bold message" {
+    run shlib::header "test header"
+    [[ "${output}" == $'\033[1mtest header\033[0m' ]]
+}
+
+@test "shlib::headern outputs bold message" {
+    run shlib::headern "test header"
+    [[ "${output}" == $'\033[1mtest header\033[0m' ]]
+}
+
+@test "shlib::cerror outputs colorized error to stderr" {
+    run shlib::cerror "test message"
+    [[ "${output}" == $'\033[0;31merror:\033[0m test message' ]]
+}
+
+@test "shlib::cerrorn outputs colorized error to stderr" {
+    run shlib::cerrorn "test message"
+    [[ "${output}" == $'\033[0;31merror:\033[0m test message' ]]
+}
+
+@test "shlib::cwarn outputs colorized warning" {
+    run shlib::cwarn "test message"
+    [[ "${output}" == $'\033[0;33mwarning:\033[0m test message' ]]
+}
+
+@test "shlib::cwarnn outputs colorized warning" {
+    run shlib::cwarnn "test message"
+    [[ "${output}" == $'\033[0;33mwarning:\033[0m test message' ]]
+}
+
+@test "shlib::cinfo outputs colorized info" {
+    run shlib::cinfo "test message"
+    [[ "${output}" == $'\033[0;34minfo:\033[0m test message' ]]
+}
+
+@test "shlib::cinfon outputs colorized info" {
+    run shlib::cinfon "test message"
+    [[ "${output}" == $'\033[0;34minfo:\033[0m test message' ]]
 }

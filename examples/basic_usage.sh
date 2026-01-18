@@ -15,12 +15,14 @@ echo "shlib version: $(shlib::version)"
 echo
 
 # Using logging functions
+shlib::headern "Logging functions"
 shlib::infon "This is an informational message"
 shlib::warnn "This is a warning message"
 shlib::errorn "This is an error message"
 echo
 
 # Using colorised logging functions
+shlib::headern "Colorised Logging functions"
 shlib::cinfon "This is an informational message"
 shlib::cwarnn "This is a warning message"
 shlib::cerrorn "This is an error message"
@@ -28,13 +30,13 @@ echo
 
 # Check for commands
 if shlib::command_exists git; then
-    shlib::info "git is installed"
+    shlib::cinfon "git is installed"
 else
-    shlib::warn "git is not installed"
+    shlib::cwarnn "git is not installed"
 fi
 
 if shlib::command_exists nonexistent_cmd; then
-    shlib::info "nonexistent_cmd is installed"
+    shlib::cinfon "nonexistent_cmd is installed"
 else
-    shlib::info "nonexistent_cmd is not installed (expected)"
+    shlib::cwarnn "nonexistent_cmd is not installed (expected)"
 fi

@@ -55,6 +55,8 @@ readonly SHLIB_COLOR_YELLOW='\033[0;33m'
 readonly SHLIB_COLOR_BLUE='\033[0;34m'
 # shellcheck disable=SC2034
 readonly SHLIB_COLOR_RESET='\033[0m'
+# shellcheck disable=SC2034
+readonly SHLIB_COLOR_BOLD='\033[1m'
 
 #
 # Logging Functions
@@ -182,4 +184,24 @@ shlib::cwarnn() {
 #   shlib::cinfon "Processing complete"
 shlib::cinfon() {
     echo -e "${SHLIB_COLOR_BLUE}info:${SHLIB_COLOR_RESET} $*"
+}
+
+# @description Print a bold header message to stdout (without newline)
+# @arg $@ string The header message to print
+# @stdout The message in bold
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::header "Section Title"
+shlib::header() {
+    echo -ne "${SHLIB_COLOR_BOLD}$*${SHLIB_COLOR_RESET}"
+}
+
+# @description Print a bold header message to stdout (with newline)
+# @arg $@ string The header message to print
+# @stdout The message in bold followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::headern "Section Title"
+shlib::headern() {
+    echo -e "${SHLIB_COLOR_BOLD}$*${SHLIB_COLOR_RESET}"
 }

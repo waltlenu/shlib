@@ -26,6 +26,16 @@ Check if
 exists in PATH. Returns 0 if found, 1 otherwise.
 .SS Logging
 .TP
+.BI shlib::header " message"
+Print
+.I message
+to stdout in bold (without trailing newline).
+.TP
+.BI shlib::headern " message"
+Print
+.I message
+to stdout in bold (with trailing newline).
+.TP
 .BI shlib::error " message"
 Print
 .I message
@@ -108,6 +118,9 @@ ANSI escape code for blue color (readonly).
 .TP
 .B SHLIB_COLOR_RESET
 ANSI escape code to reset color (readonly).
+.TP
+.B SHLIB_COLOR_BOLD
+ANSI escape code for bold text (readonly).
 .SH EXAMPLES
 Basic usage in a script:
 .PP
@@ -116,12 +129,12 @@ Basic usage in a script:
 #!/usr/bin/env bash
 source /path/to/shlib/lib/shlib.sh
 
-shlib::info "Starting script..."
+shlib::headern "Starting script..."
 
 if shlib::command_exists git; then
-    shlib::info "git is available"
+    shlib::cinfon "git is available"
 else
-    shlib::error "git is required"
+    shlib::cerrorn "git is required"
     exit 1
 fi
 .fi
