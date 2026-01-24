@@ -33,31 +33,76 @@ else
 fi
 echo
 
+# List all library functions
+echo "shlib::list_functions (first 10):"
+shlib::list_functions | head -10
+echo "... ($(shlib::list_functions | wc -l | tr -d ' ') total functions)"
+echo
+
 #
 # Logging Functions
 #
 shlib::headern "Logging Functions"
-shlib::infon "This is an info message"
-shlib::warnn "This is a warning message"
-shlib::errorn "This is an error message"
+
+# With newline
+shlib::infon "This is an info message (with newline)"
+shlib::warnn "This is a warning message (with newline)"
+shlib::errorn "This is an error message (with newline)"
+
+# Without newline (need to add our own)
+shlib::info "This is an info message (no newline)"
+echo " <- manually added newline"
+shlib::warn "This is a warning message (no newline)"
+echo " <- manually added newline"
+shlib::error "This is an error message (no newline)"
+echo " <- manually added newline" >&2
 echo
 
 #
 # Colorized Logging Functions
 #
 shlib::headern "Colorized Logging Functions"
-shlib::cinfon "This is a colorized info message"
-shlib::cwarnn "This is a colorized warning message"
-shlib::cerrorn "This is a colorized error message"
+
+# With newline
+shlib::cinfon "This is a colorized info message (with newline)"
+shlib::cwarnn "This is a colorized warning message (with newline)"
+shlib::cerrorn "This is a colorized error message (with newline)"
+
+# Without newline
+shlib::cinfo "Colorized info (no newline)"
+echo " <- added newline"
+shlib::cwarn "Colorized warning (no newline)"
+echo " <- added newline"
+shlib::cerror "Colorized error (no newline)"
+echo " <- added newline" >&2
 echo
 
 #
 # Emoji Logging Functions
 #
 shlib::headern "Emoji Logging Functions"
-shlib::einfon "This is an emoji info message"
-shlib::ewarnn "This is an emoji warning message"
-shlib::eerrorn "This is an emoji error message"
+
+# With newline
+shlib::einfon "This is an emoji info message (with newline)"
+shlib::ewarnn "This is an emoji warning message (with newline)"
+shlib::eerrorn "This is an emoji error message (with newline)"
+
+# Without newline
+shlib::einfo "Emoji info (no newline)"
+echo " <- added newline"
+shlib::ewarn "Emoji warning (no newline)"
+echo " <- added newline"
+shlib::eerror "Emoji error (no newline)"
+echo " <- added newline" >&2
+echo
+
+#
+# Header Functions
+#
+shlib::headern "Header Functions"
+shlib::header "This is a header without newline"
+echo " <- see?"
+shlib::headern "This is a header with newline"
 echo
 
 #
@@ -109,6 +154,23 @@ echo "str_padleft \"42\" 6 \"0\": [$(shlib::str_padleft "42" 6 "0")]"
 echo "str_padright \"hi\" 6 \"-\": [$(shlib::str_padright "hi" 6 "-")]"
 echo
 
+# Splitting
+csv="apple,banana,cherry"
+echo "str_split \"$csv\" by \",\":"
+shlib::str_split fruits_split "$csv" ","
+echo "  Result: (${fruits_split[*]})"
+echo "  Count: ${#fruits_split[@]}"
+
+# Split with default space separator
+sentence="one two three"
+shlib::str_split words "$sentence"
+echo "str_split \"$sentence\" by space: (${words[*]})"
+
+# Split into characters
+shlib::str_split chars "abc" ""
+echo "str_split \"abc\" into chars: (${chars[*]})"
+echo
+
 #
 # Array Functions
 #
@@ -135,6 +197,13 @@ shlib::arr_pop fruits
 echo "After arr_pop: (${fruits[*]})"
 echo
 
+# Insert element at index
+letters=(a b d e)
+echo "Before arr_insert: (${letters[*]})"
+shlib::arr_insert letters 2 "c"
+echo "After arr_insert 2 \"c\": (${letters[*]})"
+echo
+
 # Sort array
 colors=(red green blue yellow)
 echo "Before arr_sort: (${colors[*]})"
@@ -147,6 +216,24 @@ numbers=(1 2 3 4 5)
 echo "Before arr_reverse: (${numbers[*]})"
 shlib::arr_reverse numbers
 echo "After arr_reverse:  (${numbers[*]})"
+echo
+
+# Remove duplicates
+duplicates=(a b a c b d a)
+echo "Before arr_uniq: (${duplicates[*]})"
+shlib::arr_uniq duplicates
+echo "After arr_uniq:  (${duplicates[*]})"
+echo
+
+# Merge arrays
+arr1=(a b c)
+arr2=(d e)
+arr3=(f g h)
+echo "arr1: (${arr1[*]})"
+echo "arr2: (${arr2[*]})"
+echo "arr3: (${arr3[*]})"
+shlib::arr_merge merged arr1 arr2 arr3
+echo "After arr_merge: (${merged[*]})"
 echo
 
 # Print array with separator
