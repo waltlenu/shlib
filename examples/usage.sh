@@ -167,18 +167,38 @@ echo
 #
 shlib::headern "UI Functions"
 
+# ANSI color reference functions
+echo "shlib::ansi_styles:"
+shlib::ansi_styles
+echo
+
+echo "shlib::ansi_fg_colors:"
+shlib::ansi_fg_colors
+echo
+
+echo "shlib::ansi_bg_colors:"
+shlib::ansi_bg_colors
+echo
+
+echo "shlib::ansi_color_matrix:"
+shlib::ansi_color_matrix
+echo
+
+echo "shlib::ansi_color_matrix_bright:"
+shlib::ansi_color_matrix_bright
+echo
+
+echo "shlib::ansi_256_palette:"
+shlib::ansi_256_palette
+echo
+
 # Spinner - runs a command while showing an animation
 echo "Running a command with spinner..."
-if shlib::spinner "Simulating work" sleep 1; then
+if shlib::spinner "Simulating work" sleep 3; then
     shlib::einfon "Command completed successfully"
 else
     shlib::eerrorn "Command failed"
 fi
-echo
-
-# Color table - display all ANSI colors and escape codes
-echo "Color table (showing first few lines):"
-shlib::color_table
 echo
 
 shlib::einfon "All examples completed!"

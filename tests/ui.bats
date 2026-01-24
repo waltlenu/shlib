@@ -39,42 +39,54 @@ setup() {
     rm -f "$tmpfile"
 }
 
-@test "shlib::color_table outputs color reference" {
-    run shlib::color_table
+@test "shlib::ansi_styles outputs text styles" {
+    run shlib::ansi_styles
     [[ "$status" -eq 0 ]]
-    [[ "$output" == *"ANSI Color and Escape Code Reference"* ]]
-}
-
-@test "shlib::color_table includes text styles section" {
-    run shlib::color_table
     [[ "$output" == *"Text Styles"* ]]
     [[ "$output" == *"Bold"* ]]
     [[ "$output" == *"Underline"* ]]
+    [[ "$output" == *"Italic"* ]]
 }
 
-@test "shlib::color_table includes foreground colors" {
-    run shlib::color_table
+@test "shlib::ansi_fg_colors outputs foreground colors" {
+    run shlib::ansi_fg_colors
+    [[ "$status" -eq 0 ]]
     [[ "$output" == *"Foreground Colors"* ]]
+    [[ "$output" == *"Red"* ]]
+    [[ "$output" == *"Blue"* ]]
+    [[ "$output" == *"Bright White"* ]]
+}
+
+@test "shlib::ansi_bg_colors outputs background colors" {
+    run shlib::ansi_bg_colors
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"Background Colors"* ]]
     [[ "$output" == *"Red"* ]]
     [[ "$output" == *"Blue"* ]]
 }
 
-@test "shlib::color_table includes background colors" {
-    run shlib::color_table
-    [[ "$output" == *"Background Colors"* ]]
+@test "shlib::ansi_color_matrix outputs standard color combinations" {
+    run shlib::ansi_color_matrix
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"Foreground / Background Combinations (Standard Colors)"* ]]
+    [[ "$output" == *"40"* ]]
+    [[ "$output" == *"30"* ]]
 }
 
-@test "shlib::color_table includes color combinations" {
-    run shlib::color_table
-    [[ "$output" == *"Foreground / Background Combinations"* ]]
+@test "shlib::ansi_color_matrix_bright outputs bright color combinations" {
+    run shlib::ansi_color_matrix_bright
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"Foreground / Background Combinations (Bright Colors)"* ]]
+    [[ "$output" == *"100"* ]]
+    [[ "$output" == *"90"* ]]
 }
 
-@test "shlib::color_table includes 256 color palette" {
-    run shlib::color_table
+@test "shlib::ansi_256_palette outputs 256 color palette" {
+    run shlib::ansi_256_palette
+    [[ "$status" -eq 0 ]]
     [[ "$output" == *"256 Color Palette"* ]]
+    [[ "$output" == *"Standard Colors (0-15)"* ]]
+    [[ "$output" == *"216 Colors (16-231)"* ]]
+    [[ "$output" == *"Grayscale (232-255)"* ]]
 }
 
-@test "shlib::color_table includes usage examples" {
-    run shlib::color_table
-    [[ "$output" == *"Usage Examples"* ]]
-}

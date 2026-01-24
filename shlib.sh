@@ -623,42 +623,52 @@ shlib::spinner() {
     return $exit_code
 }
 
-# @description Print a table of all ANSI colors and escape codes
-# @stdout A formatted table showing foreground, background, and style combinations
+# @description Display ANSI text styles with codes and examples
+# @stdout A formatted table showing text styles
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::color_table
-shlib::color_table() {
-    local fg
-    local -a fg_codes=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
-    local -a fg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
-    local -a bg_codes=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+#   shlib::ansi_styles
+shlib::ansi_styles() {
     local -a style_codes=(0 1 2 3 4 5 7 8 9)
     local -a style_names=("Normal" "Bold" "Dim" "Italic" "Underline" "Blink" "Reverse" "Hidden" "Strikethrough")
-    local i j
+    local i
 
-    # Header
-    printf '\033[1m%s\033[0m\n\n' "ANSI Color and Escape Code Reference"
-
-    # Text Styles
     printf '\033[1m%s\033[0m\n' "Text Styles"
     printf '%-15s %-10s %s\n' "Style" "Code" "Example"
     printf '%s\n' "---------------------------------------"
     for i in "${!style_codes[@]}"; do
         printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${style_names[$i]}" "${style_codes[$i]}" "${style_codes[$i]}" "Sample Text"
     done
-    echo
+}
 
-    # Foreground Colors
+# @description Display 16 foreground ANSI color codes (30-37, 90-97)
+# @stdout A formatted table showing foreground colors
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ansi_fg_colors
+shlib::ansi_fg_colors() {
+    local -a fg_codes=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
+    local -a fg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
+    local i
+
     printf '\033[1m%s\033[0m\n' "Foreground Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
     for i in "${!fg_codes[@]}"; do
         printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${fg_names[$i]}" "${fg_codes[$i]}" "${fg_codes[$i]}" "Sample Text"
     done
-    echo
+}
 
-    # Background Colors
+# @description Display 16 background ANSI color codes (40-47, 100-107)
+# @stdout A formatted table showing background colors
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ansi_bg_colors
+shlib::ansi_bg_colors() {
+    local -a bg_codes=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+    local -a bg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
+    local fg i
+
     printf '\033[1m%s\033[0m\n' "Background Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
@@ -669,11 +679,18 @@ shlib::color_table() {
         else
             fg=30 # Black for light backgrounds
         fi
-        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${fg_names[$i]}" "${bg_codes[$i]}" "${bg_codes[$i]}" "$fg" " Sample Text "
+        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${bg_names[$i]}" "${bg_codes[$i]}" "${bg_codes[$i]}" "$fg" " Sample Text "
     done
-    echo
+}
 
-    # Color Matrix (FG x BG)
+# @description Display standard foreground/background color combinations matrix
+# @stdout A matrix of standard FG (30-37) x BG (40-47) combinations
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ansi_color_matrix
+shlib::ansi_color_matrix() {
+    local i j
+
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
     printf '%-8s' ""
     for j in 40 41 42 43 44 45 46 47; do
@@ -688,9 +705,16 @@ shlib::color_table() {
         done
         echo
     done
-    echo
+}
 
-    # Bright Color Matrix
+# @description Display bright foreground/background color combinations matrix
+# @stdout A matrix of bright FG (90-97) x BG (100-107) combinations
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ansi_color_matrix_bright
+shlib::ansi_color_matrix_bright() {
+    local i j
+
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Bright Colors)"
     printf '%-8s' ""
     for j in 100 101 102 103 104 105 106 107; do
@@ -705,9 +729,16 @@ shlib::color_table() {
         done
         echo
     done
-    echo
+}
 
-    # 256 Color palette
+# @description Display the 256 color palette
+# @stdout The 256 color palette with standard colors, 216 colors, and grayscale
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ansi_256_palette
+shlib::ansi_256_palette() {
+    local i
+
     printf '\033[1m%s\033[0m\n' "256 Color Palette (\\033[38;5;Nm for FG, \\033[48;5;Nm for BG)"
     echo "Standard Colors (0-15):"
     for i in {0..15}; do
@@ -727,15 +758,4 @@ shlib::color_table() {
         printf '\033[48;5;%sm %3s \033[0m' "$i" "$i"
     done
     echo
-    echo
-
-    # Usage examples
-    printf '\033[1m%s\033[0m\n' "Usage Examples"
-    printf '%s\n' "-----------------------------------------------"
-    printf '%s\n' "Foreground:   printf '\\033[31mRed text\\033[0m'"
-    printf '%s\n' "Background:   printf '\\033[44mBlue background\\033[0m'"
-    printf '%s\n' "Combined:     printf '\\033[1;33;44mBold yellow on blue\\033[0m'"
-    printf '%s\n' "256 Color FG: printf '\\033[38;5;208mOrange text\\033[0m'"
-    printf '%s\n' "256 Color BG: printf '\\033[48;5;27mBlue background\\033[0m'"
-    printf '%s\n' "Reset:        printf '\\033[0m'"
 }

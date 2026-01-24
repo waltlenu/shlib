@@ -22,25 +22,26 @@ while displaying an animated spinner with
 .IR message .
 The spinner uses Unicode braille characters for smooth animation.
 Returns the exit code of the executed command.
-.SS Color Reference
+.SS ANSI Color Reference
 .TP
-.B shlib::color_table
-Print a comprehensive reference table of all ANSI color codes and escape sequences.
-The table includes:
-.RS
-.IP \(bu 2
-Text styles (bold, dim, italic, underline, blink, reverse, hidden, strikethrough)
-.IP \(bu 2
-16 standard foreground colors (codes 30-37, 90-97)
-.IP \(bu 2
-16 standard background colors (codes 40-47, 100-107)
-.IP \(bu 2
-Foreground/background combination matrices
-.IP \(bu 2
-256 color palette reference
-.IP \(bu 2
-Usage examples with escape code syntax
-.RE
+.B shlib::ansi_styles
+Display ANSI text styles with codes and examples.
+Shows Normal, Bold, Dim, Italic, Underline, Blink, Reverse, Hidden, and Strikethrough styles.
+.TP
+.B shlib::ansi_fg_colors
+Display the 16 foreground ANSI color codes (30-37 for standard, 90-97 for bright colors).
+.TP
+.B shlib::ansi_bg_colors
+Display the 16 background ANSI color codes (40-47 for standard, 100-107 for bright colors).
+.TP
+.B shlib::ansi_color_matrix
+Display a matrix of standard foreground (30-37) and background (40-47) color combinations.
+.TP
+.B shlib::ansi_color_matrix_bright
+Display a matrix of bright foreground (90-97) and background (100-107) color combinations.
+.TP
+.B shlib::ansi_256_palette
+Display the 256 color palette including standard colors (0-15), 216 colors (16-231), and grayscale (232-255).
 .SH EXAMPLES
 Run a command with a spinner:
 .PP
@@ -64,15 +65,23 @@ output=$(shlib::spinner "Fetching data" curl -s https://example.com)
 .fi
 .RE
 .PP
-Display the color reference table:
+Display ANSI color references:
 .PP
 .RS
 .nf
-# Show all available colors and escape codes
-shlib::color_table
+# Show text styles
+shlib::ansi_styles
 
-# Pipe to less for scrolling
-shlib::color_table | less -R
+# Show foreground and background colors
+shlib::ansi_fg_colors
+shlib::ansi_bg_colors
+
+# Show color combination matrices
+shlib::ansi_color_matrix
+shlib::ansi_color_matrix_bright
+
+# Show 256 color palette (pipe to less for scrolling)
+shlib::ansi_256_palette | less -R
 .fi
 .RE
 .SH EXIT STATUS
