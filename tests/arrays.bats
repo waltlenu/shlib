@@ -242,3 +242,73 @@ setup() {
     [[ "${arr[1]}" == "foo bar" ]]
     [[ "${arr[2]}" == "baz" ]]
 }
+
+@test "shlib::arr_merge merges two arrays" {
+    local -a arr1=(a b)
+    local -a arr2=(c d)
+    local -a result
+    shlib::arr_merge result arr1 arr2
+    [[ ${#result[@]} -eq 4 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[1]}" == "b" ]]
+    [[ "${result[2]}" == "c" ]]
+    [[ "${result[3]}" == "d" ]]
+}
+
+@test "shlib::arr_merge merges three arrays" {
+    local -a arr1=(a b)
+    local -a arr2=(c)
+    local -a arr3=(d e f)
+    local -a result
+    shlib::arr_merge result arr1 arr2 arr3
+    [[ ${#result[@]} -eq 6 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+    [[ "${result[5]}" == "f" ]]
+}
+
+@test "shlib::arr_merge handles empty source arrays" {
+    local -a arr1=(a b)
+    local -a arr2=()
+    local -a arr3=(c d)
+    local -a result
+    shlib::arr_merge result arr1 arr2 arr3
+    [[ ${#result[@]} -eq 4 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+}
+
+@test "shlib::arr_merge with single source array" {
+    local -a arr1=(a b c)
+    local -a result
+    shlib::arr_merge result arr1
+    [[ ${#result[@]} -eq 3 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+}
+
+@test "shlib::arr_merge with no source arrays" {
+    local -a result
+    shlib::arr_merge result
+    [[ ${#result[@]} -eq 0 ]]
+}
+
+@test "shlib::arr_merge handles elements with spaces" {
+    local -a arr1=("hello world")
+    local -a arr2=("foo bar" "baz")
+    local -a result
+    shlib::arr_merge result arr1 arr2
+    [[ ${#result[@]} -eq 3 ]]
+    [[ "${result[0]}" == "hello world" ]]
+    [[ "${result[1]}" == "foo bar" ]]
+    [[ "${result[2]}" == "baz" ]]
+}
+
+@test "shlib::arr_merge overwrites existing destination" {
+    local -a arr1=(a b)
+    local -a result=(x y z)
+    shlib::arr_merge result arr1
+    [[ ${#result[@]} -eq 2 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[1]}" == "b" ]]
+}

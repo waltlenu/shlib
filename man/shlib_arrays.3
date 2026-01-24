@@ -32,6 +32,11 @@ from the array. Remaining elements are re-indexed.
 .TP
 .BI shlib::arr_pop " array_name"
 Remove the last element from the array.
+.TP
+.BI shlib::arr_merge " dest_array source_array..."
+Merge one or more source arrays into
+.IR dest_array .
+The destination array is overwritten with the combined elements from all source arrays in order.
 .SS Ordering
 .TP
 .BI shlib::arr_sort " array_name"
