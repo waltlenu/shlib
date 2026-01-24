@@ -22,26 +22,6 @@ setup() {
     [[ -f "${SHLIB_DIR}/shlib.sh" ]]
 }
 
-@test "SHLIB_COLOR_RED is set" {
-    [[ "${SHLIB_COLOR_RED}" == '\033[0;31m' ]]
-}
-
-@test "SHLIB_COLOR_YELLOW is set" {
-    [[ "${SHLIB_COLOR_YELLOW}" == '\033[0;33m' ]]
-}
-
-@test "SHLIB_COLOR_BLUE is set" {
-    [[ "${SHLIB_COLOR_BLUE}" == '\033[0;34m' ]]
-}
-
-@test "SHLIB_COLOR_RESET is set" {
-    [[ "${SHLIB_COLOR_RESET}" == '\033[0m' ]]
-}
-
-@test "SHLIB_COLOR_BOLD is set" {
-    [[ "${SHLIB_COLOR_BOLD}" == '\033[1m' ]]
-}
-
 @test "SHLIB_ANSI_COLOR_NAMES has 16 elements" {
     [[ "${#SHLIB_ANSI_COLOR_NAMES[@]}" -eq 16 ]]
 }

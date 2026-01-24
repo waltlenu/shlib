@@ -51,21 +51,6 @@ shlib::command_exists() {
 }
 
 #
-# Color Codes
-#
-
-# shellcheck disable=SC2034
-readonly SHLIB_COLOR_RED='\033[0;31m'
-# shellcheck disable=SC2034
-readonly SHLIB_COLOR_YELLOW='\033[0;33m'
-# shellcheck disable=SC2034
-readonly SHLIB_COLOR_BLUE='\033[0;34m'
-# shellcheck disable=SC2034
-readonly SHLIB_COLOR_RESET='\033[0m'
-# shellcheck disable=SC2034
-readonly SHLIB_COLOR_BOLD='\033[1m'
-
-#
 # ANSI Color Arrays
 #
 
@@ -176,7 +161,7 @@ shlib::infon() {
 # @example
 #   shlib::cerror "Something went wrong"
 shlib::cerror() {
-    echo -ne "${SHLIB_COLOR_RED}error:${SHLIB_COLOR_RESET} $*" >&2
+    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized warning message to stdout (without newline)
@@ -186,7 +171,7 @@ shlib::cerror() {
 # @example
 #   shlib::cwarn "This might cause issues"
 shlib::cwarn() {
-    echo -ne "${SHLIB_COLOR_YELLOW}warning:${SHLIB_COLOR_RESET} $*"
+    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized info message to stdout (without newline)
@@ -196,7 +181,7 @@ shlib::cwarn() {
 # @example
 #   shlib::cinfo "Processing file"
 shlib::cinfo() {
-    echo -ne "${SHLIB_COLOR_BLUE}info:${SHLIB_COLOR_RESET} $*"
+    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized error message to stderr (with newline)
@@ -206,7 +191,7 @@ shlib::cinfo() {
 # @example
 #   shlib::cerrorn "Something went wrong"
 shlib::cerrorn() {
-    echo -e "${SHLIB_COLOR_RED}error:${SHLIB_COLOR_RESET} $*" >&2
+    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized warning message to stdout (with newline)
@@ -216,7 +201,7 @@ shlib::cerrorn() {
 # @example
 #   shlib::cwarnn "This might cause issues"
 shlib::cwarnn() {
-    echo -e "${SHLIB_COLOR_YELLOW}warning:${SHLIB_COLOR_RESET} $*"
+    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized info message to stdout (with newline)
@@ -226,7 +211,7 @@ shlib::cwarnn() {
 # @example
 #   shlib::cinfon "Processing complete"
 shlib::cinfon() {
-    echo -e "${SHLIB_COLOR_BLUE}info:${SHLIB_COLOR_RESET} $*"
+    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a bold header message to stdout (without newline)
@@ -236,7 +221,7 @@ shlib::cinfon() {
 # @example
 #   shlib::header "Section Title"
 shlib::header() {
-    echo -ne "${SHLIB_COLOR_BOLD}$*${SHLIB_COLOR_RESET}"
+    printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
 }
 
 # @description Print a bold header message to stdout (with newline)
@@ -246,7 +231,7 @@ shlib::header() {
 # @example
 #   shlib::headern "Section Title"
 shlib::headern() {
-    echo -e "${SHLIB_COLOR_BOLD}$*${SHLIB_COLOR_RESET}"
+    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
 }
 
 #

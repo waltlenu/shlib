@@ -125,20 +125,12 @@ Absolute path to the directory containing shlib.sh (readonly).
 .B SHLIB_LOADED
 Set to 1 when library is loaded. Used for double-source protection (readonly).
 .TP
-.B SHLIB_COLOR_RED
-ANSI escape code for red color (readonly).
+.B SHLIB_ANSI_FG_CODES
+Array of 16 foreground color codes used by colorized logging functions.
+Index 1=Red, 3=Yellow, 4=Blue (readonly).
 .TP
-.B SHLIB_COLOR_YELLOW
-ANSI escape code for yellow color (readonly).
-.TP
-.B SHLIB_COLOR_BLUE
-ANSI escape code for blue color (readonly).
-.TP
-.B SHLIB_COLOR_RESET
-ANSI escape code to reset color (readonly).
-.TP
-.B SHLIB_COLOR_BOLD
-ANSI escape code for bold text (readonly).
+.B SHLIB_ANSI_STYLE_CODES
+Array of 9 text style codes. Index 0=Normal/Reset, 1=Bold (readonly).
 .SH EXAMPLES
 Basic usage in a script:
 .PP

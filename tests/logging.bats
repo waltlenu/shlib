@@ -46,32 +46,32 @@ setup() {
 
 @test "shlib::cerror outputs colorized error to stderr" {
     run shlib::cerror "test message"
-    [[ "${output}" == $'\033[0;31merror:\033[0m test message' ]]
+    [[ "${output}" == $'\033[31merror:\033[0m test message' ]]
 }
 
 @test "shlib::cerrorn outputs colorized error to stderr" {
     run shlib::cerrorn "test message"
-    [[ "${output}" == $'\033[0;31merror:\033[0m test message' ]]
+    [[ "${output}" == $'\033[31merror:\033[0m test message' ]]
 }
 
 @test "shlib::cwarn outputs colorized warning" {
     run shlib::cwarn "test message"
-    [[ "${output}" == $'\033[0;33mwarning:\033[0m test message' ]]
+    [[ "${output}" == $'\033[33mwarning:\033[0m test message' ]]
 }
 
 @test "shlib::cwarnn outputs colorized warning" {
     run shlib::cwarnn "test message"
-    [[ "${output}" == $'\033[0;33mwarning:\033[0m test message' ]]
+    [[ "${output}" == $'\033[33mwarning:\033[0m test message' ]]
 }
 
 @test "shlib::cinfo outputs colorized info" {
     run shlib::cinfo "test message"
-    [[ "${output}" == $'\033[0;34minfo:\033[0m test message' ]]
+    [[ "${output}" == $'\033[34minfo:\033[0m test message' ]]
 }
 
 @test "shlib::cinfon outputs colorized info" {
     run shlib::cinfon "test message"
-    [[ "${output}" == $'\033[0;34minfo:\033[0m test message' ]]
+    [[ "${output}" == $'\033[34minfo:\033[0m test message' ]]
 }
 
 @test "shlib::eerror outputs emoji error to stderr" {
