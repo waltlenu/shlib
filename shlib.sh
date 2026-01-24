@@ -261,12 +261,12 @@ shlib::headern() {
 
 # @description Print an emoji error message to stderr (without newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "❌ "
+# @stderr The message prefixed with "❌️ "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::eerror "Something went wrong"
 shlib::eerror() {
-    echo -n "❌ $*" >&2
+    echo -n "❌️  $*" >&2
 }
 
 # @description Print an emoji warning message to stdout (without newline)
@@ -291,12 +291,12 @@ shlib::einfo() {
 
 # @description Print an emoji error message to stderr (with newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "❌ " followed by newline
+# @stderr The message prefixed with "❌️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::eerrorn "Something went wrong"
 shlib::eerrorn() {
-    echo "❌ $*" >&2
+    echo "❌️  $*" >&2
 }
 
 # @description Print an emoji warning message to stdout (with newline)

@@ -76,12 +76,12 @@ setup() {
 
 @test "shlib::eerror outputs emoji error to stderr" {
     run shlib::eerror "test message"
-    [[ "${output}" == "❌ test message" ]]
+    [[ "${output}" == "❌️  test message" ]]
 }
 
 @test "shlib::eerrorn outputs emoji error to stderr" {
     run shlib::eerrorn "test message"
-    [[ "${output}" == "❌ test message" ]]
+    [[ "${output}" == "❌️  test message" ]]
 }
 
 @test "shlib::ewarn outputs emoji warning" {
