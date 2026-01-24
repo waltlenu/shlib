@@ -49,7 +49,7 @@ shlib::my_function() {
 
 Format codebase:
 ```bash
-shfmt -i4 -w shlib.shfmt
+shfmt -i 4 -w shlib.shfmt
 ```
 
 Lint the library:
@@ -60,11 +60,6 @@ shellcheck -s bash shlib.sh
 Run tests:
 ```bash
 bats tests/
-```
-
-Run example:
-```bash
-bash examples/basic_usage.sh
 ```
 
 View man page:
@@ -78,6 +73,7 @@ man man/shlib.7
 - Update man/ man pages simultaneously with code changes
 - **Always update tests when code changes**
 - **Always format code with shfmt**
+- **Always update the examples/usage.sh with an example when code changes**
 
 ## Testing
 
