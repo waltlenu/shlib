@@ -66,6 +66,42 @@ readonly SHLIB_COLOR_RESET='\033[0m'
 readonly SHLIB_COLOR_BOLD='\033[1m'
 
 #
+# ANSI Color Arrays
+#
+
+# 16 standard color names (8 normal + 8 bright)
+# shellcheck disable=SC2034
+SHLIB_ANSI_COLOR_NAMES=(
+    "Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White"
+    "Bright Black" "Bright Red" "Bright Green" "Bright Yellow"
+    "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White"
+)
+readonly SHLIB_ANSI_COLOR_NAMES
+
+# Foreground color codes (30-37 normal, 90-97 bright)
+# shellcheck disable=SC2034
+SHLIB_ANSI_FG_CODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
+readonly SHLIB_ANSI_FG_CODES
+
+# Background color codes (40-47 normal, 100-107 bright)
+# shellcheck disable=SC2034
+SHLIB_ANSI_BG_CODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+readonly SHLIB_ANSI_BG_CODES
+
+# Text style codes
+# shellcheck disable=SC2034
+SHLIB_ANSI_STYLE_CODES=(0 1 2 3 4 5 7 8 9)
+readonly SHLIB_ANSI_STYLE_CODES
+
+# Text style names
+# shellcheck disable=SC2034
+SHLIB_ANSI_STYLE_NAMES=(
+    "Normal" "Bold" "Dim" "Italic" "Underline"
+    "Blink" "Reverse" "Hidden" "Strikethrough"
+)
+readonly SHLIB_ANSI_STYLE_NAMES
+
+#
 # Logging Functions
 #
 
@@ -629,15 +665,13 @@ shlib::spinner() {
 # @example
 #   shlib::ansi_styles
 shlib::ansi_styles() {
-    local -a style_codes=(0 1 2 3 4 5 7 8 9)
-    local -a style_names=("Normal" "Bold" "Dim" "Italic" "Underline" "Blink" "Reverse" "Hidden" "Strikethrough")
     local i
 
     printf '\033[1m%s\033[0m\n' "Text Styles"
     printf '%-15s %-10s %s\n' "Style" "Code" "Example"
     printf '%s\n' "---------------------------------------"
-    for i in "${!style_codes[@]}"; do
-        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${style_names[$i]}" "${style_codes[$i]}" "${style_codes[$i]}" "Sample Text"
+    for i in "${!SHLIB_ANSI_STYLE_CODES[@]}"; do
+        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_STYLE_NAMES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "Sample Text"
     done
 }
 
@@ -647,15 +681,13 @@ shlib::ansi_styles() {
 # @example
 #   shlib::ansi_fg_colors
 shlib::ansi_fg_colors() {
-    local -a fg_codes=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
-    local -a fg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
     local i
 
     printf '\033[1m%s\033[0m\n' "Foreground Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
-    for i in "${!fg_codes[@]}"; do
-        printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${fg_names[$i]}" "${fg_codes[$i]}" "${fg_codes[$i]}" "Sample Text"
+    for i in "${!SHLIB_ANSI_FG_CODES[@]}"; do
+        printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_COLOR_NAMES[$i]}" "${SHLIB_ANSI_FG_CODES[$i]}" "${SHLIB_ANSI_FG_CODES[$i]}" "Sample Text"
     done
 }
 
@@ -665,21 +697,19 @@ shlib::ansi_fg_colors() {
 # @example
 #   shlib::ansi_bg_colors
 shlib::ansi_bg_colors() {
-    local -a bg_codes=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
-    local -a bg_names=("Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White" "Bright Black" "Bright Red" "Bright Green" "Bright Yellow" "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White")
     local fg i
 
     printf '\033[1m%s\033[0m\n' "Background Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
-    for i in "${!bg_codes[@]}"; do
+    for i in "${!SHLIB_ANSI_BG_CODES[@]}"; do
         # Use contrasting foreground for visibility
-        if [[ ${bg_codes[$i]} -lt 44 ]] || [[ ${bg_codes[$i]} -ge 100 && ${bg_codes[$i]} -lt 104 ]]; then
+        if [[ ${SHLIB_ANSI_BG_CODES[$i]} -lt 44 ]] || [[ ${SHLIB_ANSI_BG_CODES[$i]} -ge 100 && ${SHLIB_ANSI_BG_CODES[$i]} -lt 104 ]]; then
             fg=97 # Bright white for dark backgrounds
         else
             fg=30 # Black for light backgrounds
         fi
-        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${bg_names[$i]}" "${bg_codes[$i]}" "${bg_codes[$i]}" "$fg" " Sample Text "
+        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${SHLIB_ANSI_COLOR_NAMES[$i]}" "${SHLIB_ANSI_BG_CODES[$i]}" "${SHLIB_ANSI_BG_CODES[$i]}" "$fg" " Sample Text "
     done
 }
 
@@ -693,14 +723,14 @@ shlib::ansi_color_matrix() {
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
     printf '%-8s' ""
-    for j in 40 41 42 43 44 45 46 47; do
+    for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
         printf ' %-5s' "$j"
     done
     echo
     printf '%s\n' "--------------------------------------------------------"
-    for i in 30 31 32 33 34 35 36 37; do
+    for i in "${SHLIB_ANSI_FG_CODES[@]:0:8}"; do
         printf '%-8s' "$i"
-        for j in 40 41 42 43 44 45 46 47; do
+        for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
             printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
         done
         echo
@@ -717,14 +747,14 @@ shlib::ansi_color_matrix_bright() {
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Bright Colors)"
     printf '%-8s' ""
-    for j in 100 101 102 103 104 105 106 107; do
+    for j in "${SHLIB_ANSI_BG_CODES[@]:8:8}"; do
         printf ' %-5s' "$j"
     done
     echo
     printf '%s\n' "----------------------------------------------------------------"
-    for i in 90 91 92 93 94 95 96 97; do
+    for i in "${SHLIB_ANSI_FG_CODES[@]:8:8}"; do
         printf '%-8s' "$i"
-        for j in 100 101 102 103 104 105 106 107; do
+        for j in "${SHLIB_ANSI_BG_CODES[@]:8:8}"; do
             printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
         done
         echo

@@ -68,6 +68,27 @@ ANSI escape code to reset color (readonly).
 .TP
 .B SHLIB_COLOR_BOLD
 ANSI escape code for bold text (readonly).
+.SS ANSI Color Arrays
+.TP
+.B SHLIB_ANSI_COLOR_NAMES
+Array of 16 standard color names: Black, Red, Green, Yellow, Blue, Magenta, Cyan, White,
+and their bright variants (Bright Black, Bright Red, etc.). Index 0-7 are normal colors,
+8-15 are bright colors (readonly).
+.TP
+.B SHLIB_ANSI_FG_CODES
+Array of 16 foreground color codes. Index 0-7 contain codes 30-37 (normal),
+index 8-15 contain codes 90-97 (bright) (readonly).
+.TP
+.B SHLIB_ANSI_BG_CODES
+Array of 16 background color codes. Index 0-7 contain codes 40-47 (normal),
+index 8-15 contain codes 100-107 (bright) (readonly).
+.TP
+.B SHLIB_ANSI_STYLE_CODES
+Array of 9 text style codes: 0 (Normal), 1 (Bold), 2 (Dim), 3 (Italic),
+4 (Underline), 5 (Blink), 7 (Reverse), 8 (Hidden), 9 (Strikethrough) (readonly).
+.TP
+.B SHLIB_ANSI_STYLE_NAMES
+Array of 9 text style names corresponding to SHLIB_ANSI_STYLE_CODES (readonly).
 .SH EXAMPLES
 Basic usage in a script:
 .PP
