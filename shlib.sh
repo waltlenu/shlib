@@ -559,6 +559,45 @@ shlib::arr_pop() {
     eval "unset '$arr_name[$((len - 1))]'"
 }
 
+# @description Insert an element at a specific index in an array
+# @arg $1 string The name of the array variable (without $)
+# @arg $2 int The index at which to insert
+# @arg $3 string The element to insert
+# @exitcode 0 Always succeeds
+# @example
+#   my_array=(a b c d)
+#   shlib::arr_insert my_array 2 "X"
+#   # my_array is now (a b X c d)
+shlib::arr_insert() {
+    local arr_name="$1"
+    local index="$2"
+    local element="$3"
+    local -a result=()
+    local len idx
+
+    # shellcheck disable=SC1087
+    eval "len=\${#$arr_name[@]}"
+
+    # Clamp index to valid range
+    [[ $index -lt 0 ]] && index=0
+    [[ $index -gt $len ]] && index=$len
+
+    # Build new array with element inserted
+    for ((idx = 0; idx < index; idx++)); do
+        # shellcheck disable=SC1087
+        eval "result+=(\"\${$arr_name[$idx]}\")"
+    done
+
+    result+=("$element")
+
+    for ((idx = index; idx < len; idx++)); do
+        # shellcheck disable=SC1087
+        eval "result+=(\"\${$arr_name[$idx]}\")"
+    done
+
+    eval "$arr_name=(\"\${result[@]}\")"
+}
+
 # @description Print array elements on one line with a separator
 # @arg $1 string The name of the array variable (without $)
 # @arg $2 string The separator (default: " ")
@@ -576,7 +615,7 @@ shlib::arr_print() {
     # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
-    # shellcheck disable=SC2034
+    # shellcheck disable=SC2034,SC2178
     local result="" first=1 elem
     # shellcheck disable=SC1087
     eval "for elem in \"\${$arr_name[@]}\"; do
@@ -587,6 +626,7 @@ shlib::arr_print() {
             result=\"\$result\$sep\$elem\"
         fi
     done"
+    # shellcheck disable=SC2128
     echo "$result"
 }
 
