@@ -55,7 +55,6 @@ shlib::command_exists() {
 #
 
 # 16 standard color names (8 normal + 8 bright)
-# shellcheck disable=SC2034
 SHLIB_ANSI_COLOR_NAMES=(
     "Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White"
     "Bright Black" "Bright Red" "Bright Green" "Bright Yellow"
@@ -64,22 +63,18 @@ SHLIB_ANSI_COLOR_NAMES=(
 readonly SHLIB_ANSI_COLOR_NAMES
 
 # Foreground color codes (30-37 normal, 90-97 bright)
-# shellcheck disable=SC2034
 SHLIB_ANSI_FG_CODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
 readonly SHLIB_ANSI_FG_CODES
 
 # Background color codes (40-47 normal, 100-107 bright)
-# shellcheck disable=SC2034
 SHLIB_ANSI_BG_CODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
 readonly SHLIB_ANSI_BG_CODES
 
 # Text style codes
-# shellcheck disable=SC2034
 SHLIB_ANSI_STYLE_CODES=(0 1 2 3 4 5 7 8 9)
 readonly SHLIB_ANSI_STYLE_CODES
 
 # Text style names
-# shellcheck disable=SC2034
 SHLIB_ANSI_STYLE_NAMES=(
     "Normal" "Bold" "Dim" "Italic" "Underline"
     "Blink" "Reverse" "Hidden" "Strikethrough"
@@ -465,7 +460,7 @@ shlib::arr_append() {
     local arr_name="$1"
     shift
     local elem
-    # shellcheck disable=SC2034
+
     for elem in "$@"; do
         eval "$arr_name+=(\"\$elem\")"
     done
@@ -496,7 +491,6 @@ shlib::arr_delete() {
 #   my_array=(a b c d e)
 #   shlib::arr_len my_array  # outputs 5
 shlib::arr_len() {
-    # shellcheck disable=SC2086
     eval "echo \${#$1[@]}"
 }
 
@@ -510,7 +504,7 @@ shlib::arr_len() {
 shlib::arr_pop() {
     local arr_name="$1"
     local len
-    # shellcheck disable=SC2086,SC1087
+    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
     # shellcheck disable=SC1087
@@ -531,7 +525,7 @@ shlib::arr_print() {
     # shellcheck disable=SC2034
     local sep="${2:- }"
     local len
-    # shellcheck disable=SC2086,SC1087
+    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
     # shellcheck disable=SC2034
@@ -596,7 +590,7 @@ shlib::arr_reverse() {
 shlib::arr_sort() {
     local arr_name="$1"
     local IFS=$'\n'
-    # shellcheck disable=SC2207,SC1087
+    # shellcheck disable=SC1087
     eval "$arr_name=(\$(printf '%s\n' \"\${$arr_name[@]}\" | sort))"
 }
 
