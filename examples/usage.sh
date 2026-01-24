@@ -19,6 +19,17 @@ echo
 #
 shlib::headern "Core Functions"
 
+# List all library functions
+echo "shlib::list_functions (first 10):"
+shlib::list_functions | head -10
+echo "... ($(shlib::list_functions | wc -l | tr -d ' ') total functions)"
+echo
+
+# List all library variables
+echo "shlib::list_variables:"
+shlib::list_variables
+echo
+
 # Check for commands
 if shlib::command_exists git; then
     shlib::cinfon "git is installed"
@@ -31,12 +42,6 @@ if shlib::command_exists nonexistent_cmd; then
 else
     shlib::cwarnn "nonexistent_cmd is not installed (expected)"
 fi
-echo
-
-# List all library functions
-echo "shlib::list_functions (first 10):"
-shlib::list_functions | head -10
-echo "... ($(shlib::list_functions | wc -l | tr -d ' ') total functions)"
 echo
 
 #

@@ -63,6 +63,19 @@ shlib::list_functions() {
     done | sort
 }
 
+# @description List all shlib global variables
+# @stdout One variable name per line, sorted alphabetically
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::list_variables
+shlib::list_variables() {
+    compgen -v | while read -r name; do
+        if [[ "$name" == SHLIB_* ]]; then
+            echo "$name"
+        fi
+    done | sort
+}
+
 #
 # ANSI Color Arrays
 #
