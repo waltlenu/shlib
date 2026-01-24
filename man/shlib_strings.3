@@ -85,6 +85,18 @@ on the right to
 using
 .I char
 (default: space).
+.SS Splitting
+.TP
+.BI shlib::str_split " array_name string" " [separator]"
+Split
+.I string
+into an array using
+.I separator
+(default: space). The result is stored in the array variable named by
+.IR array_name .
+If
+.I separator
+is empty, the string is split into individual characters.
 .SH EXAMPLES
 Trim whitespace from user input:
 .PP
@@ -119,6 +131,18 @@ answer="YES"
 if [[ $(shlib::str_to_lower "$answer") == "yes" ]]; then
     echo "Confirmed"
 fi
+.fi
+.RE
+.PP
+Split a CSV line:
+.PP
+.RS
+.nf
+line="apple,banana,cherry"
+shlib::str_split fruits "$line" ","
+for fruit in "${fruits[@]}"; do
+    echo "$fruit"
+done
 .fi
 .RE
 .SH EXIT STATUS
