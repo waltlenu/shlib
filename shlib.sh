@@ -22,7 +22,7 @@ fi
 readonly SHLIB_LOADED=1
 
 # Library version
-readonly SHLIB_VERSION="0.1.2"
+readonly SHLIB_VERSION="0.1.3"
 
 # Detect library directory
 # shellcheck disable=SC2034,SC2155
