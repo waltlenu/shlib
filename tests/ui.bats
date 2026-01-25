@@ -90,3 +90,69 @@ setup() {
     [[ "$output" == *"Grayscale (232-255)"* ]]
 }
 
+@test "shlib::hr draws horizontal rule" {
+    run shlib::hr
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"─"* ]]
+}
+
+@test "shlib::hr draws rule with label" {
+    run shlib::hr "Test"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"Test"* ]]
+    [[ "$output" == *"─"* ]]
+}
+
+@test "shlib::hr respects custom width" {
+    run shlib::hr "" 20
+    [[ "$status" -eq 0 ]]
+    [[ ${#output} -eq 20 ]]
+}
+
+@test "shlib::hr uses custom character" {
+    run shlib::hr "" 10 "="
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "==========" ]]
+}
+
+@test "shlib::hrn adds newline" {
+    result=$(shlib::hrn "" 5 "-" | wc -l)
+    [[ "$result" -eq 1 ]]
+}
+
+@test "shlib::status_ok shows green checkmark" {
+    run shlib::status_ok "Done"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✔"* ]]
+    [[ "$output" == *"Done"* ]]
+}
+
+@test "shlib::status_okn adds newline" {
+    result=$(shlib::status_okn "Done" | wc -l)
+    [[ "$result" -eq 1 ]]
+}
+
+@test "shlib::status_fail shows red X" {
+    run shlib::status_fail "Error"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✖"* ]]
+    [[ "$output" == *"Error"* ]]
+}
+
+@test "shlib::status_failn adds newline" {
+    result=$(shlib::status_failn "Error" | wc -l)
+    [[ "$result" -eq 1 ]]
+}
+
+@test "shlib::status_pending shows hourglass" {
+    run shlib::status_pending "Waiting"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"⏳"* ]]
+    [[ "$output" == *"Waiting"* ]]
+}
+
+@test "shlib::status_pendingn adds newline" {
+    result=$(shlib::status_pendingn "Waiting" | wc -l)
+    [[ "$result" -eq 1 ]]
+}
+

@@ -6,6 +6,10 @@
 #   source /path/to/shlib/shlib.sh
 #
 
+# ShellCheck:
+# - https://www.shellcheck.net/wiki/SC1087
+# shellcheck disable=SC1087
+
 # Prevent double-sourcing
 [[ -n "${SHLIB_LOADED:-}" ]] && return 0
 
@@ -38,16 +42,6 @@ set -euo pipefail
 #   shlib::version
 shlib::version() {
     echo "${SHLIB_VERSION}"
-}
-
-# @description Check if a command exists in PATH
-# @arg $1 string The command name to check
-# @exitcode 0 Command exists
-# @exitcode 1 Command not found
-# @example
-#   shlib::command_exists git
-shlib::command_exists() {
-    command -v "$1" &>/dev/null
 }
 
 # @description List all shlib functions
@@ -106,6 +100,20 @@ SHLIB_ANSI_STYLE_NAMES=(
     "Blink" "Reverse" "Hidden" "Strikethrough"
 )
 readonly SHLIB_ANSI_STYLE_NAMES
+
+#
+# Execution
+#
+
+# @description Check if a command exists in PATH
+# @arg $1 string The command name to check
+# @exitcode 0 Command exists
+# @exitcode 1 Command not found
+# @example
+#   shlib::command_exists git
+shlib::command_exists() {
+    command -v "$1" &>/dev/null
+}
 
 #
 # Logging Functions
@@ -233,26 +241,6 @@ shlib::cwarnn() {
 #   shlib::cinfon "Processing complete"
 shlib::cinfon() {
     printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
-}
-
-# @description Print a bold header message to stdout (without newline)
-# @arg $@ string The header message to print
-# @stdout The message in bold
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::header "Section Title"
-shlib::header() {
-    printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
-}
-
-# @description Print a bold header message to stdout (with newline)
-# @arg $@ string The header message to print
-# @stdout The message in bold followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::headern "Section Title"
-shlib::headern() {
-    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
 }
 
 #
@@ -551,9 +539,7 @@ shlib::arr_append() {
 shlib::arr_delete() {
     local arr_name="$1"
     local index="$2"
-    # shellcheck disable=SC1087
     eval "unset '$arr_name[$index]'"
-    # shellcheck disable=SC1087
     eval "$arr_name=(\"\${$arr_name[@]}\")"
 }
 
@@ -578,10 +564,8 @@ shlib::arr_len() {
 shlib::arr_pop() {
     local arr_name="$1"
     local len
-    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
-    # shellcheck disable=SC1087
     eval "unset '$arr_name[$((len - 1))]'"
 }
 
@@ -601,7 +585,6 @@ shlib::arr_insert() {
     local -a result=()
     local len idx
 
-    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
 
     # Clamp index to valid range
@@ -610,14 +593,12 @@ shlib::arr_insert() {
 
     # Build new array with element inserted
     for ((idx = 0; idx < index; idx++)); do
-        # shellcheck disable=SC1087
         eval "result+=(\"\${$arr_name[$idx]}\")"
     done
 
     result+=("$element")
 
     for ((idx = index; idx < len; idx++)); do
-        # shellcheck disable=SC1087
         eval "result+=(\"\${$arr_name[$idx]}\")"
     done
 
@@ -638,12 +619,10 @@ shlib::arr_print() {
     # shellcheck disable=SC2034
     local sep="${2:- }"
     local len
-    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
     # shellcheck disable=SC2034,SC2178
     local result="" first=1 elem
-    # shellcheck disable=SC1087
     eval "for elem in \"\${$arr_name[@]}\"; do
         if [[ \$first -eq 1 ]]; then
             result=\"\$elem\"
@@ -669,7 +648,6 @@ shlib::arr_print() {
 #   # c
 shlib::arr_printn() {
     local arr_name="$1"
-    # shellcheck disable=SC1087
     eval "printf '%s\n' \"\${$arr_name[@]}\""
 }
 
@@ -685,10 +663,8 @@ shlib::arr_reverse() {
     # shellcheck disable=SC2034
     local -a tmp
     local i len
-    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     for ((i = len - 1; i >= 0; i--)); do
-        # shellcheck disable=SC1087
         eval "tmp+=(\"\${$arr_name[$i]}\")"
     done
     eval "$arr_name=(\"\${tmp[@]}\")"
@@ -704,7 +680,6 @@ shlib::arr_reverse() {
 shlib::arr_sort() {
     local arr_name="$1"
     local IFS=$'\n'
-    # shellcheck disable=SC1087
     eval "$arr_name=(\$(printf '%s\n' \"\${$arr_name[@]}\" | sort))"
 }
 
@@ -720,12 +695,10 @@ shlib::arr_uniq() {
     local -a result=()
     local len idx elem found j
 
-    # shellcheck disable=SC1087
     eval "len=\${#$arr_name[@]}"
     [[ $len -eq 0 ]] && return 0
 
     for ((idx = 0; idx < len; idx++)); do
-        # shellcheck disable=SC1087
         eval "elem=\${$arr_name[$idx]}"
         found=0
         for ((j = 0; j < ${#result[@]}; j++)); do
@@ -761,10 +734,8 @@ shlib::arr_merge() {
 
     local src_name len idx
     for src_name in "$@"; do
-        # shellcheck disable=SC1087
         eval "len=\${#$src_name[@]}"
         for ((idx = 0; idx < len; idx++)); do
-            # shellcheck disable=SC1087
             eval "$dest_name+=(\"\${$src_name[$idx]}\")"
         done
     done
@@ -773,6 +744,82 @@ shlib::arr_merge() {
 #
 # UI Functions
 #
+
+# @description Print a bold header message to stdout (without newline)
+# @arg $@ string The header message to print
+# @stdout The message in bold
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::header "Section Title"
+shlib::header() {
+    printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
+}
+
+# @description Print a bold header message to stdout (with newline)
+# @arg $@ string The header message to print
+# @stdout The message in bold followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::headern "Section Title"
+shlib::headern() {
+    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
+}
+
+# @description Draw a horizontal rule/divider line
+# @arg $1 string Optional label to display in the middle
+# @arg $2 int Width of the rule (default: 40)
+# @arg $3 string Character to use (default: ─)
+# @stdout A horizontal divider line
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::hr
+#   shlib::hr "Section"
+#   shlib::hr "Title" 60 "="
+shlib::hr() {
+    local label="${1:-}"
+    local width="${2:-40}"
+    local char="${3:-─}"
+    local i line=""
+
+    if [[ -z "$label" ]]; then
+        # No label, just draw the line
+        for ((i = 0; i < width; i++)); do
+            line="${line}${char}"
+        done
+    else
+        # Calculate padding for centered label
+        local label_len=${#label}
+        local padding=$(((width - label_len - 2) / 2))
+        local left_pad="" right_pad=""
+
+        for ((i = 0; i < padding; i++)); do
+            left_pad="${left_pad}${char}"
+        done
+
+        # Account for odd widths
+        local right_padding=$((width - padding - label_len - 2))
+        for ((i = 0; i < right_padding; i++)); do
+            right_pad="${right_pad}${char}"
+        done
+
+        line="${left_pad} ${label} ${right_pad}"
+    fi
+
+    printf '%s' "$line"
+}
+
+# @description Draw a horizontal rule with newline
+# @arg $1 string Optional label to display in the middle
+# @arg $2 int Width of the rule (default: 40)
+# @arg $3 string Character to use (default: ─)
+# @stdout A horizontal divider line followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::hrn "Section Title"
+shlib::hrn() {
+    shlib::hr "$@"
+    echo
+}
 
 # @description Run a command with a spinner animation
 # @arg $1 string The message to display next to the spinner
@@ -812,6 +859,69 @@ shlib::spinner() {
     printf '\r\033[K\033[?25h'
 
     return $exit_code
+}
+
+# @description Print a success status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Green checkmark followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_ok "Task completed"
+shlib::status_ok() {
+    printf '\033[32m✔\033[0m  %s' "$*"
+}
+
+# @description Print a success status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Green checkmark followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_okn "Task completed"
+shlib::status_okn() {
+    shlib::status_ok "$@"
+    echo
+}
+
+# @description Print a failure status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Red X followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_fail "Task failed"
+shlib::status_fail() {
+    printf '\033[31m✖\033[0m  %s' "$*"
+}
+
+# @description Print a failure status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Red X followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_failn "Task failed"
+shlib::status_failn() {
+    shlib::status_fail "$@"
+    echo
+}
+
+# @description Print a pending status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Yellow hourglass followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_pending "Waiting..."
+shlib::status_pending() {
+    printf '\033[33m⏳\033[0m %s' "$*"
+}
+
+# @description Print a pending status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Yellow hourglass followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::status_pendingn "Waiting..."
+shlib::status_pendingn() {
+    shlib::status_pending "$@"
+    echo
 }
 
 # @description Display ANSI text styles with codes and examples

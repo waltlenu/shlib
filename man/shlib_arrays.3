@@ -25,14 +25,6 @@ Output the number of elements in the array named
 .BI shlib::arr_append " array_name element..."
 Append one or more elements to the array.
 .TP
-.BI shlib::arr_delete " array_name index"
-Delete the element at
-.I index
-from the array. Remaining elements are re-indexed.
-.TP
-.BI shlib::arr_pop " array_name"
-Remove the last element from the array.
-.TP
 .BI shlib::arr_insert " array_name index element"
 Insert
 .I element
@@ -42,6 +34,14 @@ in the array. Existing elements are shifted to the right.
 If
 .I index
 is beyond the array length, the element is appended.
+.TP
+.BI shlib::arr_pop " array_name"
+Remove the last element from the array.
+.TP
+.BI shlib::arr_delete " array_name index"
+Delete the element at
+.I index
+from the array. Remaining elements are re-indexed.
 .TP
 .BI shlib::arr_merge " dest_array source_array..."
 Merge one or more source arrays into

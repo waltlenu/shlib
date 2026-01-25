@@ -22,6 +22,49 @@ while displaying an animated spinner with
 .IR message .
 The spinner uses Unicode braille characters for smooth animation.
 Returns the exit code of the executed command.
+.SS Horizontal Rules
+.TP
+.BI shlib::hr " [label] [width] [char]"
+Draw a horizontal divider line. If
+.I label
+is provided, it is centered in the line.
+.I width
+defaults to 40,
+.I char
+defaults to \(lq\-\(rq (box-drawing horizontal line).
+.TP
+.BI shlib::hrn " [label] [width] [char]"
+Same as
+.B shlib::hr
+but with a trailing newline.
+.SS Status Indicators
+.TP
+.BI shlib::status_ok " message"
+Print a green checkmark (\[u2714]) followed by
+.IR message .
+.TP
+.BI shlib::status_okn " message"
+Same as
+.B shlib::status_ok
+but with a trailing newline.
+.TP
+.BI shlib::status_fail " message"
+Print a red X (\[u2716]) followed by
+.IR message .
+.TP
+.BI shlib::status_failn " message"
+Same as
+.B shlib::status_fail
+but with a trailing newline.
+.TP
+.BI shlib::status_pending " message"
+Print a yellow hourglass (\[u23f3]) followed by
+.IR message .
+.TP
+.BI shlib::status_pendingn " message"
+Same as
+.B shlib::status_pending
+but with a trailing newline.
 .SS ANSI Color Reference
 .TP
 .B shlib::ansi_styles

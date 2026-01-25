@@ -30,6 +30,11 @@ echo "shlib::list_variables:"
 shlib::list_variables
 echo
 
+#
+# Command execution Functions
+#
+
+shlib::headern "Command execution Functions"
 # Check for commands
 if shlib::command_exists git; then
     shlib::cinfon "git is installed"
@@ -99,15 +104,6 @@ shlib::ewarn "Emoji warning (no newline)"
 echo " <- added newline"
 shlib::eerror "Emoji error (no newline)"
 echo " <- added newline" >&2
-echo
-
-#
-# Header Functions
-#
-shlib::headern "Header Functions"
-shlib::header "This is a header without newline"
-echo " <- see?"
-shlib::headern "This is a header with newline"
 echo
 
 #
@@ -257,7 +253,37 @@ echo
 #
 # UI Functions
 #
+
 shlib::headern "UI Functions"
+shlib::headern "Header Functions"
+shlib::header "This is a header without newline"
+echo " <- see?"
+shlib::headern "This is a header with newline"
+echo
+
+# Horizontal rules
+echo "shlib::hr (horizontal rules):"
+shlib::hrn
+shlib::hrn "Section Title"
+shlib::hrn "Custom" 30 "="
+shlib::hrn "" 50 "─"
+echo
+
+# Status indicators
+echo "shlib::status_* (status indicators):"
+shlib::status_okn "Task completed successfully"
+shlib::status_failn "Task failed with error"
+shlib::status_pendingn "Task is pending..."
+echo
+
+# Spinner - runs a command while showing an animation
+echo "Running a command with spinner..."
+if shlib::spinner "Simulating work" sleep 3; then
+    shlib::einfon "Command completed successfully"
+else
+    shlib::eerrorn "Command failed"
+fi
+echo
 
 # ANSI color reference functions
 echo "shlib::ansi_styles:"
@@ -282,15 +308,6 @@ echo
 
 echo "shlib::ansi_256_palette:"
 shlib::ansi_256_palette
-echo
-
-# Spinner - runs a command while showing an animation
-echo "Running a command with spinner..."
-if shlib::spinner "Simulating work" sleep 3; then
-    shlib::einfon "Command completed successfully"
-else
-    shlib::eerrorn "Command failed"
-fi
 echo
 
 shlib::einfon "All examples completed!"

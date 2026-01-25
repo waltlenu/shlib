@@ -23,29 +23,26 @@ if sourced in an older version of Bash.
 .B shlib::version
 Print the library version to stdout.
 .TP
-.BI shlib::command_exists " command"
-Check if
-.I command
-exists in PATH. Returns 0 if found, 1 otherwise.
-.TP
 .B shlib::list_functions
 List all shlib functions, one per line, sorted alphabetically.
 .TP
 .B shlib::list_variables
 List all shlib global variables (SHLIB_*), one per line, sorted alphabetically.
-.SS Outputs
+.SS Execution
+.TP
+.B shlib_exec(3)
+Command execution functions (command_exists, etc.)
+.SS Data Types
+.TP
+.B shlib_arrays(3)
+Array manipulation functions (append, insert, pop, delete, merge, sort, reverse, etc.)
+.TP
+.B shlib_strings(3)
+String manipulation functions (case conversion, searching, padding, splitting, trimming, etc.)
+.SS User Interface
 .TP
 .B shlib_logging(3)
 Simple printing functions, colorised, with emoji
-.SS Strings
-.TP
-.B shlib_strings(3)
-String manipulation functions (trim, case conversion, etc.)
-.SS Arrays
-.TP
-.B shlib_arrays(3)
-Array manipulation functions (length, etc.)
-.SS User Interface
 .TP
 .B shlib_ui(3)
 UI functions (spinner, etc.)
@@ -115,7 +112,7 @@ The library file to source.
 .I tests/*.bats
 Test files using the Bats testing framework.
 .TP
-.I examples/basic_usage.sh
+.I examples/usage.sh
 Example script demonstrating library usage.
 .SH EXIT STATUS
 Functions that check conditions return 0 on success and 1 on failure.

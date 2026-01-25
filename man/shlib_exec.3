@@ -1,0 +1,60 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_EXEC 3 "January 2026" "shlib 0.1.2" "Shell Library"
+.SH NAME
+shlib_exec \- Command execution functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_exec
+provides functions for command execution.
+Requires Bash version 3 or higher.
+.SH FUNCTIONS
+.SS Validation
+.TP
+.BI shlib::command_exists " command"
+Check if
+.I command
+exists in PATH. Returns 0 if found, 1 otherwise.
+.SH EXAMPLES
+Check if a command exists:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/shlib.sh
+
+# Check if a command exists
+shlib::command_exists "commandname"
+.fi
+.RE
+.SH EXIT STATUS
+.TP
+.B shlib::spinner
+Returns the exit code of the executed command.
+.SH NOTES
+The spinner animation uses Unicode braille pattern characters.
+Ensure your terminal supports Unicode for proper display.
+.PP
+The spinner hides the cursor during animation and restores it when complete.
+.PP
+Command output (stdout/stderr) is not captured by the spinner itself.
+If you need to capture output, use command substitution around the spinner call.
+.PP
+The ANSI color reference functions use the global arrays
+.BR SHLIB_ANSI_COLOR_NAMES ,
+.BR SHLIB_ANSI_FG_CODES ,
+.BR SHLIB_ANSI_BG_CODES ,
+.BR SHLIB_ANSI_STYLE_CODES ,
+and
+.BR SHLIB_ANSI_STYLE_NAMES .
+See
+.BR shlib (7)
+for details on these arrays.
+.SH SEE ALSO
+.BR shlib (7),
+.BR shlib_logging (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.

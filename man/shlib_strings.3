@@ -10,19 +10,6 @@ shlib_strings \- String manipulation functions from the shlib library
 provides string manipulation functions for trimming, searching, padding, and case conversion.
 Requires Bash version 3 or higher.
 .SH FUNCTIONS
-.SS Trimming
-.TP
-.BI shlib::str_trim " string"
-Remove leading and trailing whitespace from
-.IR string .
-.TP
-.BI shlib::str_ltrim " string"
-Remove leading whitespace from
-.IR string .
-.TP
-.BI shlib::str_rtrim " string"
-Remove trailing whitespace from
-.IR string .
 .SS Length and Emptiness
 .TP
 .BI shlib::str_len " string"
@@ -97,6 +84,19 @@ into an array using
 If
 .I separator
 is empty, the string is split into individual characters.
+.SS Trimming
+.TP
+.BI shlib::str_trim " string"
+Remove leading and trailing whitespace from
+.IR string .
+.TP
+.BI shlib::str_ltrim " string"
+Remove leading whitespace from
+.IR string .
+.TP
+.BI shlib::str_rtrim " string"
+Remove trailing whitespace from
+.IR string .
 .SH EXAMPLES
 Trim whitespace from user input:
 .PP
