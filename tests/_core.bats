@@ -80,14 +80,6 @@ setup() {
     [[ "${result}" == "${SHLIB_VERSION}" ]]
 }
 
-@test "shlib::command_exists finds existing command" {
-    shlib::command_exists bash
-}
-
-@test "shlib::command_exists returns false for missing command" {
-    ! shlib::command_exists nonexistent_command_12345
-}
-
 @test "shlib::list_functions returns function names" {
     run shlib::list_functions
     [[ "$status" -eq 0 ]]

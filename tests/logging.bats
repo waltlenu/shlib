@@ -4,16 +4,6 @@ setup() {
     load 'test_helper'
 }
 
-@test "shlib::header outputs bold message" {
-    run shlib::header "test header"
-    [[ "${output}" == $'\033[1mtest header\033[0m' ]]
-}
-
-@test "shlib::headern outputs bold message" {
-    run shlib::headern "test header"
-    [[ "${output}" == $'\033[1mtest header\033[0m' ]]
-}
-
 @test "shlib::error outputs to stderr" {
     run shlib::error "test message"
     [[ "${output}" == "error: test message" ]]

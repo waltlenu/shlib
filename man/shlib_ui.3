@@ -11,6 +11,17 @@ provides user interface functions for terminal interactions such as
 spinners and progress indicators.
 Requires Bash version 3 or higher.
 .SH FUNCTIONS
+.SS Headers
+.TP
+.BI shlib::header " message"
+Print
+.I message
+to stdout in bold (without trailing newline).
+.TP
+.BI shlib::headern " message"
+Print
+.I message
+to stdout in bold (with trailing newline).
 .SS Spinner
 .TP
 .BI shlib::spinner " message command [args...]"

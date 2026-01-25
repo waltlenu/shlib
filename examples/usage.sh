@@ -159,16 +159,19 @@ echo
 csv="apple,banana,cherry"
 echo "str_split \"$csv\" by \",\":"
 shlib::str_split fruits_split "$csv" ","
+# shellcheck disable=SC2154
 echo "  Result: (${fruits_split[*]})"
 echo "  Count: ${#fruits_split[@]}"
 
 # Split with default space separator
 sentence="one two three"
 shlib::str_split words "$sentence"
+# shellcheck disable=SC2154
 echo "str_split \"$sentence\" by space: (${words[*]})"
 
 # Split into characters
 shlib::str_split chars "abc" ""
+# shellcheck disable=SC2154
 echo "str_split \"abc\" into chars: (${chars[*]})"
 echo
 
@@ -234,6 +237,7 @@ echo "arr1: (${arr1[*]})"
 echo "arr2: (${arr2[*]})"
 echo "arr3: (${arr3[*]})"
 shlib::arr_merge merged arr1 arr2 arr3
+# shellcheck disable=SC2154
 echo "After arr_merge: (${merged[*]})"
 echo
 

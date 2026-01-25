@@ -30,27 +30,8 @@ shlib::command_exists "commandname"
 .RE
 .SH EXIT STATUS
 .TP
-.B shlib::spinner
-Returns the exit code of the executed command.
-.SH NOTES
-The spinner animation uses Unicode braille pattern characters.
-Ensure your terminal supports Unicode for proper display.
-.PP
-The spinner hides the cursor during animation and restores it when complete.
-.PP
-Command output (stdout/stderr) is not captured by the spinner itself.
-If you need to capture output, use command substitution around the spinner call.
-.PP
-The ANSI color reference functions use the global arrays
-.BR SHLIB_ANSI_COLOR_NAMES ,
-.BR SHLIB_ANSI_FG_CODES ,
-.BR SHLIB_ANSI_BG_CODES ,
-.BR SHLIB_ANSI_STYLE_CODES ,
-and
-.BR SHLIB_ANSI_STYLE_NAMES .
-See
-.BR shlib (7)
-for details on these arrays.
+.B shlib::command_exists
+Returns 0 if command exists, 1 otherwise.
 .SH SEE ALSO
 .BR shlib (7),
 .BR shlib_logging (3)
