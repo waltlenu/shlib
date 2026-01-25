@@ -113,7 +113,25 @@ The library file to source.
 Test files using the Bats testing framework.
 .TP
 .I examples/usage.sh
-Example script demonstrating library usage.
+Main example script that runs all individual examples.
+.TP
+.I examples/core.sh
+Example script for core functions (version, list_functions, list_variables).
+.TP
+.I examples/exec.sh
+Example script for execution functions (command_exists).
+.TP
+.I examples/logging.sh
+Example script for logging functions (simple, colorized, emoji).
+.TP
+.I examples/strings.sh
+Example script for string manipulation functions.
+.TP
+.I examples/arrays.sh
+Example script for array functions.
+.TP
+.I examples/ui.sh
+Example script for UI functions (headers, hr, status, spinner, ANSI).
 .SH EXIT STATUS
 Functions that check conditions return 0 on success and 1 on failure.
 Logging functions always return 0.
