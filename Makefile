@@ -23,7 +23,7 @@ SHFMT_OPTS := -i 4 -ci -bn
 SHELL_FILES := shlib.sh
 TEST_FILES := $(wildcard tests/*.bats)
 EXAMPLE_FILES := $(wildcard examples/*.sh)
-ALL_SHELL_FILES := $(SHELL_FILES) $(EXAMPLE_FILES)
+ALL_SHELL_FILES := $(SHELL_FILES) $(EXAMPLE_FILES) $(TEST_FILES)
 
 # Docker
 DOCKER_IMAGE := shlib

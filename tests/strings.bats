@@ -68,11 +68,13 @@ setup() {
 }
 
 @test "shlib::str_is_empty returns 1 for non-empty string" {
-    ! shlib::str_is_empty "hello"
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::str_is_empty "hello"
 }
 
 @test "shlib::str_is_empty returns 1 for string with content and whitespace" {
-    ! shlib::str_is_empty "  hello  "
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::str_is_empty "  hello  "
 }
 
 @test "shlib::str_to_upper converts to uppercase" {
@@ -110,7 +112,8 @@ setup() {
 }
 
 @test "shlib::str_contains returns 1 when substring not found" {
-    ! shlib::str_contains "hello world" "foo"
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::str_contains "hello world" "foo"
 }
 
 @test "shlib::str_contains handles empty substring" {
@@ -122,7 +125,8 @@ setup() {
 }
 
 @test "shlib::str_startswith returns 1 when prefix does not match" {
-    ! shlib::str_startswith "hello world" "world"
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::str_startswith "hello world" "world"
 }
 
 @test "shlib::str_startswith handles empty prefix" {
@@ -134,7 +138,8 @@ setup() {
 }
 
 @test "shlib::str_endswith returns 1 when suffix does not match" {
-    ! shlib::str_endswith "hello world" "hello"
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::str_endswith "hello world" "hello"
 }
 
 @test "shlib::str_endswith handles empty suffix" {
@@ -173,6 +178,7 @@ setup() {
 
 @test "shlib::str_split splits by comma" {
     shlib::str_split result "a,b,c" ","
+    # shellcheck disable=SC2154
     [[ ${#result[@]} -eq 3 ]]
     [[ "${result[0]}" == "a" ]]
     [[ "${result[1]}" == "b" ]]

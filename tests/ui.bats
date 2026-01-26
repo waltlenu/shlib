@@ -165,4 +165,3 @@ setup() {
     result=$(shlib::status_pendingn "Waiting" | wc -l)
     [[ "$result" -eq 1 ]]
 }
-

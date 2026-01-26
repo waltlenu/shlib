@@ -9,5 +9,6 @@ setup() {
 }
 
 @test "shlib::command_exists returns false for missing command" {
-    ! shlib::command_exists nonexistent_command_12345
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::command_exists nonexistent_command_12345
 }

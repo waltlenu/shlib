@@ -4,6 +4,10 @@ setup() {
     load 'test_helper'
 }
 
+@test "bats version is 1.5.0 or higher" {
+    bats_require_minimum_version "1.5.0"
+}
+
 @test "library loads successfully" {
     [[ -n "${SHLIB_LOADED}" ]]
 }
@@ -97,7 +101,7 @@ setup() {
     run shlib::list_functions
     while IFS= read -r line; do
         [[ "$line" == shlib::* ]]
-    done <<< "$output"
+    done <<<"$output"
 }
 
 @test "shlib::list_variables returns variable names" {
@@ -118,5 +122,5 @@ setup() {
     run shlib::list_variables
     while IFS= read -r line; do
         [[ "$line" == SHLIB_* ]]
-    done <<< "$output"
+    done <<<"$output"
 }

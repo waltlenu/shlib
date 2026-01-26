@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-#
-# shlib - A shell library of reusable functions
+
+# shlib - A library of reusable Bash shell functions
 #
 # Usage:
 #   source /path/to/shlib/shlib.sh
-#
 
-# ShellCheck:
+# ShellCheck Exclusions:
 # - https://www.shellcheck.net/wiki/SC1087
 # shellcheck disable=SC1087
 
@@ -21,6 +20,9 @@ fi
 
 readonly SHLIB_LOADED=1
 
+# Enable strict mode (can be disabled by the caller if needed)
+set -euo pipefail
+
 # Library version
 readonly SHLIB_VERSION="0.1.3"
 
@@ -28,8 +30,36 @@ readonly SHLIB_VERSION="0.1.3"
 # shellcheck disable=SC2034,SC2155
 readonly SHLIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Enable strict mode (can be disabled by the caller if needed)
-set -euo pipefail
+#
+# Global variables
+#
+
+# 16 standard color names (8 normal + 8 bright)
+SHLIB_ANSI_COLOR_NAMES=(
+    "Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White"
+    "Bright Black" "Bright Red" "Bright Green" "Bright Yellow"
+    "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White"
+)
+readonly SHLIB_ANSI_COLOR_NAMES
+
+# Foreground color codes (30-37 normal, 90-97 bright)
+SHLIB_ANSI_FG_CODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
+readonly SHLIB_ANSI_FG_CODES
+
+# Background color codes (40-47 normal, 100-107 bright)
+SHLIB_ANSI_BG_CODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+readonly SHLIB_ANSI_BG_CODES
+
+# Text style codes
+SHLIB_ANSI_STYLE_CODES=(0 1 2 3 4 5 7 8 9)
+readonly SHLIB_ANSI_STYLE_CODES
+
+# Text style names
+SHLIB_ANSI_STYLE_NAMES=(
+    "Normal" "Bold" "Dim" "Italic" "Underline"
+    "Blink" "Reverse" "Hidden" "Strikethrough"
+)
+readonly SHLIB_ANSI_STYLE_NAMES
 
 #
 # Core Functions
@@ -69,37 +99,6 @@ shlib::list_variables() {
         fi
     done | sort
 }
-
-#
-# ANSI Color Arrays
-#
-
-# 16 standard color names (8 normal + 8 bright)
-SHLIB_ANSI_COLOR_NAMES=(
-    "Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White"
-    "Bright Black" "Bright Red" "Bright Green" "Bright Yellow"
-    "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White"
-)
-readonly SHLIB_ANSI_COLOR_NAMES
-
-# Foreground color codes (30-37 normal, 90-97 bright)
-SHLIB_ANSI_FG_CODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
-readonly SHLIB_ANSI_FG_CODES
-
-# Background color codes (40-47 normal, 100-107 bright)
-SHLIB_ANSI_BG_CODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
-readonly SHLIB_ANSI_BG_CODES
-
-# Text style codes
-SHLIB_ANSI_STYLE_CODES=(0 1 2 3 4 5 7 8 9)
-readonly SHLIB_ANSI_STYLE_CODES
-
-# Text style names
-SHLIB_ANSI_STYLE_NAMES=(
-    "Normal" "Bold" "Dim" "Italic" "Underline"
-    "Blink" "Reverse" "Hidden" "Strikethrough"
-)
-readonly SHLIB_ANSI_STYLE_NAMES
 
 #
 # Execution
