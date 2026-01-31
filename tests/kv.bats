@@ -10,10 +10,6 @@ setup() {
     load 'test_helper'
 }
 
-#
-# shlib::kv_set tests
-#
-
 @test "shlib::kv_set sets a key-value pair" {
     declare -A kv
     shlib::kv_set kv "host" "localhost"
@@ -46,10 +42,6 @@ setup() {
     [[ -n "${kv[key]+exists}" ]]
 }
 
-#
-# shlib::kv_get tests
-#
-
 @test "shlib::kv_get retrieves existing key" {
     declare -A kv
     kv[host]="localhost"
@@ -80,10 +72,6 @@ setup() {
     [[ "${output}" == "" ]]
 }
 
-#
-# shlib::kv_get_default tests
-#
-
 @test "shlib::kv_get_default returns value when key exists" {
     declare -A kv
     kv[port]="3000"
@@ -110,10 +98,6 @@ setup() {
     [[ "${output}" == "hello world" ]]
 }
 
-#
-# shlib::kv_delete tests
-#
-
 @test "shlib::kv_delete removes a key" {
     declare -A kv
     kv[host]="localhost"
@@ -135,10 +119,6 @@ setup() {
     shlib::kv_delete kv "key"
     [[ ${#kv[@]} -eq 0 ]]
 }
-
-#
-# shlib::kv_exists tests
-#
 
 @test "shlib::kv_exists returns 0 when key exists" {
     declare -A kv
@@ -164,10 +144,6 @@ setup() {
     [[ "${status}" -eq 1 ]]
 }
 
-#
-# shlib::kv_clear tests
-#
-
 @test "shlib::kv_clear removes all entries" {
     declare -A kv
     kv[host]="localhost"
@@ -181,10 +157,6 @@ setup() {
     shlib::kv_clear kv
     [[ ${#kv[@]} -eq 0 ]]
 }
-
-#
-# shlib::kv_len tests
-#
 
 @test "shlib::kv_len returns correct count" {
     declare -A kv
@@ -207,10 +179,6 @@ setup() {
     run shlib::kv_len kv
     [[ "${output}" == "1" ]]
 }
-
-#
-# shlib::kv_keys tests
-#
 
 @test "shlib::kv_keys extracts all keys" {
     declare -A kv
@@ -245,10 +213,6 @@ setup() {
     [[ "${keys[0]}" == "only" ]]
 }
 
-#
-# shlib::kv_values tests
-#
-
 @test "shlib::kv_values extracts all values" {
     declare -A kv
     kv[a]="one"
@@ -281,10 +245,6 @@ setup() {
     [[ "${values[0]}" == "hello world" ]]
 }
 
-#
-# shlib::kv_print tests
-#
-
 @test "shlib::kv_print with default separators" {
     declare -A kv
     kv[host]="localhost"
@@ -315,10 +275,6 @@ setup() {
     [[ "${output}" == *"b=2"* ]]
 }
 
-#
-# shlib::kv_printn tests
-#
-
 @test "shlib::kv_printn prints one pair per line" {
     declare -A kv
     kv[host]="localhost"
@@ -339,10 +295,6 @@ setup() {
     run shlib::kv_printn kv
     [[ "${output}" == "" ]]
 }
-
-#
-# shlib::kv_has_value tests
-#
 
 @test "shlib::kv_has_value returns 0 when value exists" {
     declare -A kv
@@ -375,10 +327,6 @@ setup() {
     kv[b]="same"
     shlib::kv_has_value kv "same"
 }
-
-#
-# shlib::kv_find tests
-#
 
 @test "shlib::kv_find returns keys with matching value" {
     declare -A roles
@@ -423,10 +371,6 @@ setup() {
     [[ "${result[0]}" == "a" ]]
 }
 
-#
-# shlib::kv_copy tests
-#
-
 @test "shlib::kv_copy copies all entries" {
     declare -A src
     src[host]="localhost"
@@ -464,10 +408,6 @@ setup() {
     shlib::kv_copy dest src
     [[ "${dest[msg]}" == "hello world" ]]
 }
-
-#
-# shlib::kv_merge tests
-#
 
 @test "shlib::kv_merge combines multiple arrays" {
     declare -A a
@@ -525,10 +465,6 @@ setup() {
     [[ ${#result[@]} -eq 0 ]]
 }
 
-#
-# shlib::kv_map tests
-#
-
 @test "shlib::kv_map transforms all values" {
     declare -A kv
     kv[name]="hello"
@@ -556,4 +492,82 @@ setup() {
     kv[path]="/old/path"
     shlib::kv_map kv "sed 's/old/new/'"
     [[ "${kv[path]}" == "/new/path" ]]
+}
+
+@test "shlib::kv_set with numeric key" {
+    declare -A kv
+    shlib::kv_set kv "123" "numeric key"
+    [[ "${kv[123]}" == "numeric key" ]]
+}
+
+@test "shlib::kv_get with numeric key" {
+    declare -A kv
+    kv[123]="numeric value"
+    run shlib::kv_get kv "123"
+    [[ "${output}" == "numeric value" ]]
+}
+
+@test "shlib::kv_set handles value with quotes" {
+    declare -A kv
+    shlib::kv_set kv "msg" 'hello "world"'
+    [[ "${kv[msg]}" == 'hello "world"' ]]
+}
+
+@test "shlib::kv_set handles value with backslash" {
+    declare -A kv
+    shlib::kv_set kv "path" 'C:\Users\test'
+    [[ "${kv[path]}" == 'C:\Users\test' ]]
+}
+
+@test "shlib::kv_find searching for empty string value" {
+    declare -A kv
+    kv[empty1]=""
+    kv[empty2]=""
+    kv[filled]="value"
+    local -a result
+    shlib::kv_find result kv ""
+    [[ ${#result[@]} -eq 2 ]]
+}
+
+@test "shlib::kv_map preserves keys when transforming values" {
+    declare -A kv
+    kv[key1]="value1"
+    kv[key2]="value2"
+    shlib::kv_map kv 'tr a-z A-Z'
+    [[ -n "${kv[key1]+exists}" ]]
+    [[ -n "${kv[key2]+exists}" ]]
+    [[ "${kv[key1]}" == "VALUE1" ]]
+    [[ "${kv[key2]}" == "VALUE2" ]]
+}
+
+@test "shlib::kv_set handles key with underscore and hyphen" {
+    declare -A kv
+    shlib::kv_set kv "my_key-name" "value"
+    [[ "${kv['my_key-name']}" == "value" ]]
+}
+
+@test "shlib::kv_has_value with value containing special chars" {
+    declare -A kv
+    kv[special]='value*with[chars]'
+    shlib::kv_has_value kv 'value*with[chars]'
+}
+
+@test "shlib::kv_merge with overlapping keys" {
+    declare -A a
+    a[x]="original"
+    a[y]="keep"
+    declare -A b
+    b[x]="override"
+    declare -A result
+    shlib::kv_merge result a b
+    [[ "${result[x]}" == "override" ]]
+    [[ "${result[y]}" == "keep" ]]
+}
+
+@test "shlib::kv_copy handles values with newlines" {
+    declare -A src
+    src[multi]=$'line1\nline2'
+    declare -A dest
+    shlib::kv_copy dest src
+    [[ "${dest[multi]}" == $'line1\nline2' ]]
 }

@@ -93,3 +93,63 @@ setup() {
     run shlib::einfon "test message"
     [[ "${output}" == "ℹ️  test message" ]]
 }
+
+@test "shlib::error with empty message" {
+    run shlib::error ""
+    [[ "${output}" == "error: " ]]
+}
+
+@test "shlib::warn with empty message" {
+    run shlib::warn ""
+    [[ "${output}" == "warning: " ]]
+}
+
+@test "shlib::info with empty message" {
+    run shlib::info ""
+    [[ "${output}" == "info: " ]]
+}
+
+@test "shlib::error with multiple arguments concatenates" {
+    run shlib::error "a" "b" "c"
+    [[ "${output}" == "error: a b c" ]]
+}
+
+@test "shlib::warn with multiple arguments concatenates" {
+    run shlib::warn "a" "b" "c"
+    [[ "${output}" == "warning: a b c" ]]
+}
+
+@test "shlib::info with multiple arguments concatenates" {
+    run shlib::info "a" "b" "c"
+    [[ "${output}" == "info: a b c" ]]
+}
+
+@test "shlib::error with special characters" {
+    run shlib::error "line1\nline2"
+    [[ "${output}" == *"line1"* ]]
+}
+
+@test "shlib::info with tab character" {
+    run shlib::info $'tab\there'
+    [[ "${output}" == "info: tab	here" ]]
+}
+
+@test "shlib::cerror with empty message" {
+    run shlib::cerror ""
+    [[ "${output}" == $'\033[31merror:\033[0m ' ]]
+}
+
+@test "shlib::cwarn with empty message" {
+    run shlib::cwarn ""
+    [[ "${output}" == $'\033[33mwarning:\033[0m ' ]]
+}
+
+@test "shlib::cinfo with empty message" {
+    run shlib::cinfo ""
+    [[ "${output}" == $'\033[34minfo:\033[0m ' ]]
+}
+
+@test "shlib::eerror with empty message" {
+    run shlib::eerror ""
+    [[ "${output}" == "❌️  " ]]
+}

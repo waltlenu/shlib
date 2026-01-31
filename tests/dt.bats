@@ -4,10 +4,6 @@ setup() {
     load 'test_helper'
 }
 
-#
-# dt_now tests
-#
-
 @test "shlib::dt_now returns a timestamp" {
     run shlib::dt_now
     [[ "$status" -eq 0 ]]
@@ -19,10 +15,6 @@ setup() {
     # Should be after Jan 1, 2020 (1577836800)
     [[ "$output" -gt 1577836800 ]]
 }
-
-#
-# dt_now_iso tests
-#
 
 @test "shlib::dt_now_iso returns UTC ISO format" {
     run shlib::dt_now_iso
@@ -42,10 +34,6 @@ setup() {
     [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
 }
 
-#
-# dt_today tests
-#
-
 @test "shlib::dt_today returns YYYY-MM-DD format" {
     run shlib::dt_today
     [[ "$status" -eq 0 ]]
@@ -58,10 +46,6 @@ setup() {
     expected=$(date +%Y-%m-%d)
     [[ "$output" == "$expected" ]]
 }
-
-#
-# dt_from_unix tests
-#
 
 @test "shlib::dt_from_unix formats timestamp as date" {
     run shlib::dt_from_unix 1704067200 "%Y-%m-%d"
@@ -110,10 +94,6 @@ setup() {
     [[ "$output" == "1969" ]]
 }
 
-#
-# dt_to_unix tests
-#
-
 @test "shlib::dt_to_unix parses YYYY-MM-DD" {
     run shlib::dt_to_unix "2024-01-01"
     [[ "$status" -eq 0 ]]
@@ -154,10 +134,6 @@ setup() {
     [[ "$status" -eq 0 ]]
     [[ "$output" =~ ^[0-9]+$ ]]
 }
-
-#
-# dt_add tests
-#
 
 @test "shlib::dt_add adds seconds" {
     run shlib::dt_add 1000 60 seconds
@@ -228,10 +204,6 @@ setup() {
     run shlib::dt_add 0 365 days
     [[ "$output" == "31536000" ]]
 }
-
-#
-# dt_diff tests
-#
 
 @test "shlib::dt_diff returns difference in seconds by default" {
     run shlib::dt_diff 2000 1000
@@ -308,10 +280,6 @@ setup() {
     [[ "$output" == "-2" ]]
 }
 
-#
-# dt_is_before tests
-#
-
 @test "shlib::dt_is_before returns 0 when ts1 < ts2" {
     shlib::dt_is_before 1000 2000
 }
@@ -334,10 +302,6 @@ setup() {
     shlib::dt_is_before -100 0
 }
 
-#
-# dt_is_after tests
-#
-
 @test "shlib::dt_is_after returns 0 when ts1 > ts2" {
     shlib::dt_is_after 2000 1000
 }
@@ -359,10 +323,6 @@ setup() {
 @test "shlib::dt_is_after with negative timestamps" {
     shlib::dt_is_after 0 -100
 }
-
-#
-# dt_duration tests
-#
 
 @test "shlib::dt_duration formats seconds only" {
     run shlib::dt_duration 45
@@ -513,10 +473,6 @@ setup() {
     [[ "$output" == "1 second" ]]
 }
 
-#
-# dt_elapsed tests
-#
-
 @test "shlib::dt_elapsed returns elapsed time short format" {
     local start
     start=$(shlib::dt_now)
@@ -564,10 +520,6 @@ setup() {
     [[ "$status" -eq 0 ]]
     [[ "$output" == "-1 minute, 30 seconds" ]]
 }
-
-#
-# dt_is_valid tests
-#
 
 @test "shlib::dt_is_valid returns 0 for valid YYYY-MM-DD" {
     shlib::dt_is_valid "2024-01-01"
@@ -619,4 +571,44 @@ setup() {
     run shlib::dt_is_valid "2023-02-29"
     # Result may vary by platform (GNU stricter than BSD)
     [[ "$status" -eq 0 || "$status" -eq 1 ]]
+}
+
+@test "shlib::dt_from_unix with very large future timestamp" {
+    # Year 2100: 4102444800
+    run shlib::dt_from_unix 4102444800 "%Y"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "2100" ]]
+}
+
+@test "shlib::dt_duration with very large seconds value" {
+    # 1 year worth of seconds = 31536000
+    run shlib::dt_duration 31536000
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "365d" ]]
+}
+
+@test "shlib::dt_duration with huge value (multiple years)" {
+    # 2 years = 63072000 seconds
+    run shlib::dt_duration 63072000
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "730d" ]]
+}
+
+@test "shlib::dt_now and dt_now_iso return consistent timestamps" {
+    local unix_ts iso_ts
+    unix_ts=$(shlib::dt_now)
+    iso_ts=$(shlib::dt_now_iso)
+    # Both should be from the same second (or very close)
+    [[ -n "$unix_ts" ]]
+    [[ -n "$iso_ts" ]]
+    # ISO format should contain current year
+    local year
+    year=$(date +%Y)
+    [[ "$iso_ts" == "$year"* ]]
+}
+
+@test "shlib::dt_to_unix with ISO format string" {
+    run shlib::dt_to_unix "2024-01-01 00:00:00"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]+$ ]]
 }

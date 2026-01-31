@@ -20,10 +20,22 @@ setup() {
     [[ -n "${SHLIB_VERSION}" ]]
 }
 
+@test "SHLIB_LOADED is readonly" {
+    run bash -c 'source shlib.sh; SHLIB_LOADED=0 2>&1'
+    # Should fail with readonly error
+    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
+}
+
 @test "SHLIB_DIR is set to correct path" {
     [[ -n "${SHLIB_DIR}" ]]
     [[ -d "${SHLIB_DIR}" ]]
     [[ -f "${SHLIB_DIR}/shlib.sh" ]]
+}
+
+@test "SHLIB_VERSION is readonly" {
+    run bash -c 'source shlib.sh; SHLIB_VERSION="test" 2>&1'
+    # Should fail with readonly error
+    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
 }
 
 @test "SHLIB_ANSI_COLOR_NAMES has 16 elements" {
@@ -82,6 +94,12 @@ setup() {
 @test "shlib::version outputs version string" {
     result="$(shlib::version)"
     [[ "${result}" == "${SHLIB_VERSION}" ]]
+}
+
+@test "shlib::version format matches semver pattern" {
+    run shlib::version
+    # Match X.Y.Z pattern
+    [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }
 
 @test "shlib::list_functions returns function names" {

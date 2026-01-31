@@ -165,3 +165,85 @@ setup() {
     result=$(shlib::status_pendingn "Waiting" | wc -l)
     [[ "$result" -eq 1 ]]
 }
+
+@test "shlib::header with empty string" {
+    run shlib::header ""
+    [[ "$status" -eq 0 ]]
+    # Output should just be the ANSI codes with empty content
+    [[ "${output}" == $'\033[1m\033[0m' ]]
+}
+
+@test "shlib::headern with empty string" {
+    run shlib::headern ""
+    [[ "$status" -eq 0 ]]
+}
+
+@test "shlib::hr with very small width" {
+    run shlib::hr "" 1
+    [[ "$status" -eq 0 ]]
+    [[ ${#output} -eq 1 ]]
+}
+
+@test "shlib::hr with width of 2" {
+    run shlib::hr "" 2 "-"
+    [[ "$status" -eq 0 ]]
+    [[ "${output}" == "--" ]]
+}
+
+@test "shlib::hr with label and very narrow width" {
+    run shlib::hr "Hi" 6 "-"
+    [[ "$status" -eq 0 ]]
+    # Label centered: should contain "Hi" surrounded by separator
+    [[ "${output}" == *"Hi"* ]]
+}
+
+@test "shlib::hr with label longer than width" {
+    run shlib::hr "VeryLongLabel" 5 "-"
+    [[ "$status" -eq 0 ]]
+    # The label should still be present even if wider than width
+    [[ "${output}" == *"VeryLongLabel"* ]]
+}
+
+@test "shlib::status_ok with empty message" {
+    run shlib::status_ok ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✔"* ]]
+}
+
+@test "shlib::status_fail with empty message" {
+    run shlib::status_fail ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✖"* ]]
+}
+
+@test "shlib::status_pending with empty message" {
+    run shlib::status_pending ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"⏳"* ]]
+}
+
+@test "shlib::spinner with command that writes to stderr" {
+    run shlib::spinner "Testing" bash -c 'echo stderr_output >&2; exit 0'
+    [[ "$status" -eq 0 ]]
+}
+
+@test "shlib::ansi_styles produces non-empty output" {
+    run shlib::ansi_styles
+    [[ "$status" -eq 0 ]]
+    [[ -n "$output" ]]
+    [[ ${#output} -gt 100 ]]
+}
+
+@test "shlib::ansi_fg_colors produces non-empty output" {
+    run shlib::ansi_fg_colors
+    [[ "$status" -eq 0 ]]
+    [[ -n "$output" ]]
+    [[ ${#output} -gt 100 ]]
+}
+
+@test "shlib::ansi_bg_colors produces non-empty output" {
+    run shlib::ansi_bg_colors
+    [[ "$status" -eq 0 ]]
+    [[ -n "$output" ]]
+    [[ ${#output} -gt 100 ]]
+}

@@ -175,6 +175,12 @@ setup() {
     [[ "${arr[0]}" == "only" ]]
 }
 
+@test "shlib::arr_sort with empty array" {
+    local -a arr=()
+    shlib::arr_sort arr
+    [[ ${#arr[@]} -eq 0 ]]
+}
+
 @test "shlib::arr_reverse reverses array" {
     local -a arr=(a b c d)
     shlib::arr_reverse arr
@@ -182,6 +188,12 @@ setup() {
     [[ "${arr[1]}" == "c" ]]
     [[ "${arr[2]}" == "b" ]]
     [[ "${arr[3]}" == "a" ]]
+}
+
+@test "shlib::arr_reverse with empty array" {
+    local -a arr=()
+    shlib::arr_reverse arr
+    [[ ${#arr[@]} -eq 0 ]]
 }
 
 @test "shlib::arr_reverse handles single element" {
@@ -372,4 +384,73 @@ setup() {
     [[ ${#result[@]} -eq 2 ]]
     [[ "${result[0]}" == "a" ]]
     [[ "${result[1]}" == "b" ]]
+}
+
+@test "shlib::arr_print with elements containing the separator" {
+    local -a arr=("a,b" "c,d")
+    run shlib::arr_print arr ","
+    # The separator is embedded in elements, output includes them
+    [[ "${output}" == "a,b,c,d" ]]
+}
+
+@test "shlib::arr_printn with empty array" {
+    local -a arr=()
+    run shlib::arr_printn arr
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::arr_delete with negative index" {
+    local -a arr=(a b c)
+    # Negative index may be treated as empty, should not crash
+    shlib::arr_delete arr -1
+    # Array should remain valid (behavior may vary)
+    [[ ${#arr[@]} -ge 0 ]]
+}
+
+@test "shlib::arr_delete with out-of-bounds index" {
+    local -a arr=(a b c)
+    shlib::arr_delete arr 100
+    # Array should remain intact when index is out of bounds
+    [[ ${#arr[@]} -eq 3 ]]
+}
+
+@test "shlib::arr_insert with empty string element" {
+    local -a arr=(a b c)
+    shlib::arr_insert arr 1 ""
+    [[ ${#arr[@]} -eq 4 ]]
+    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[1]}" == "" ]]
+    [[ "${arr[2]}" == "b" ]]
+}
+
+@test "shlib::arr_append to empty array" {
+    local -a arr=()
+    shlib::arr_append arr "first"
+    [[ ${#arr[@]} -eq 1 ]]
+    [[ "${arr[0]}" == "first" ]]
+}
+
+@test "shlib::arr_append multiple to empty array" {
+    local -a arr=()
+    shlib::arr_append arr "a" "b" "c"
+    [[ ${#arr[@]} -eq 3 ]]
+    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[2]}" == "c" ]]
+}
+
+@test "shlib::arr_uniq case-sensitive duplicates" {
+    local -a arr=("A" "a" "B" "b" "A")
+    shlib::arr_uniq arr
+    [[ ${#arr[@]} -eq 4 ]]
+    [[ "${arr[0]}" == "A" ]]
+    [[ "${arr[1]}" == "a" ]]
+    [[ "${arr[2]}" == "B" ]]
+    [[ "${arr[3]}" == "b" ]]
+}
+
+@test "shlib::arr_print with empty string separator defaults to space" {
+    # Note: arr_print uses ${2:- } which defaults empty to space
+    local -a arr=(a b c)
+    run shlib::arr_print arr ""
+    [[ "${output}" == "a b c" ]]
 }

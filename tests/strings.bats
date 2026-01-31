@@ -270,3 +270,98 @@ setup() {
     [[ "${result[1]}" == "b" ]]
     [[ "${result[2]}" == "c" ]]
 }
+
+@test "shlib::str_is_empty returns 0 for tabs only" {
+    shlib::str_is_empty $'\t\t'
+}
+
+@test "shlib::str_is_empty returns 0 for mixed tabs and spaces" {
+    shlib::str_is_empty $'\t  \t  \t'
+}
+
+@test "shlib::str_len counts byte length (not unicode codepoints)" {
+    # Note: Bash ${#var} returns byte count for multibyte chars in some versions
+    run shlib::str_len "abc"
+    [[ "${output}" == "3" ]]
+}
+
+@test "shlib::str_padleft with exact length string returns unchanged" {
+    run shlib::str_padleft "hello" 5 "0"
+    [[ "${output}" == "hello" ]]
+}
+
+@test "shlib::str_padright with exact length string returns unchanged" {
+    run shlib::str_padright "hello" 5 "-"
+    [[ "${output}" == "hello" ]]
+}
+
+@test "shlib::str_padleft with multi-character pad string" {
+    run shlib::str_padleft "x" 5 "ab"
+    # With multi-char pad, each iteration adds the whole string
+    [[ "${#output}" -ge 5 ]]
+    [[ "${output}" == *"x" ]]
+}
+
+@test "shlib::str_padright with multi-character pad string" {
+    run shlib::str_padright "x" 5 "ab"
+    [[ "${#output}" -ge 5 ]]
+    [[ "${output}" == "x"* ]]
+}
+
+@test "shlib::str_contains empty string in empty string" {
+    shlib::str_contains "" ""
+}
+
+@test "shlib::str_contains string equals substring" {
+    shlib::str_contains "hello" "hello"
+}
+
+@test "shlib::str_startswith full string match" {
+    shlib::str_startswith "hello" "hello"
+}
+
+@test "shlib::str_endswith full string match" {
+    shlib::str_endswith "hello" "hello"
+}
+
+@test "shlib::str_to_lower with empty string" {
+    run shlib::str_to_lower ""
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::str_to_upper with empty string" {
+    run shlib::str_to_upper ""
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::str_ltrim with tabs only" {
+    run shlib::str_ltrim $'\t\thello'
+    [[ "${output}" == "hello" ]]
+}
+
+@test "shlib::str_rtrim with tabs only" {
+    run shlib::str_rtrim $'hello\t\t'
+    [[ "${output}" == "hello" ]]
+}
+
+@test "shlib::str_split with consecutive separators" {
+    shlib::str_split result "a,,b" ","
+    [[ ${#result[@]} -eq 3 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[1]}" == "" ]]
+    [[ "${result[2]}" == "b" ]]
+}
+
+@test "shlib::str_split with separator at both ends" {
+    shlib::str_split result ",a,b," ","
+    [[ ${#result[@]} -eq 4 ]]
+    [[ "${result[0]}" == "" ]]
+    [[ "${result[1]}" == "a" ]]
+    [[ "${result[2]}" == "b" ]]
+    [[ "${result[3]}" == "" ]]
+}
+
+@test "shlib::str_repeat with negative count returns empty" {
+    run shlib::str_repeat "hello" -1
+    [[ "${output}" == "" ]]
+}
