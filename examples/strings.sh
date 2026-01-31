@@ -57,6 +57,11 @@ echo "str_padleft \"42\" 6 \"0\": [$(shlib::str_padleft "42" 6 "0")]"
 echo "str_padright \"hi\" 6 \"-\": [$(shlib::str_padright "hi" 6 "-")]"
 echo
 
+# Repeating
+echo "str_repeat \"ab\" 3: $(shlib::str_repeat "ab" 3)"
+echo "str_repeat \"-\" 10: $(shlib::str_repeat "-" 10)"
+echo
+
 # Splitting
 csv="apple,banana,cherry"
 echo "str_split \"$csv\" by \",\":"

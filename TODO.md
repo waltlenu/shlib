@@ -1,7 +1,5 @@
 # TODO
 
-- associative array functions
-- repeat string function
 - date/time functions
 - add timestamps to logging functions
 - random string functions
