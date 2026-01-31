@@ -92,6 +92,10 @@ This project uses [Bats](https://github.com/bats-core/bats-core) for testing.
 bats tests/
 ```
 
+### TODO
+
+Plenty of features missing see [TODO](TODO.md) file.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
