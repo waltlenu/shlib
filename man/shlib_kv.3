@@ -1,0 +1,180 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_KV 3 "January 2026" "shlib 0.1.3" "Shell Library"
+.SH NAME
+shlib_kv \- Key-value (associative array) functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_kv
+provides functions for working with Bash associative arrays (key-value stores).
+Requires Bash version 4.0 or higher for associative array support.
+.PP
+.B Note:
+Associative arrays must be declared with
+.BR "declare -A" .
+Key-value functions take the array variable
+.I name
+as an argument (without the $ prefix), not the array contents.
+.SH FUNCTIONS
+.SS Basic Operations
+.TP
+.BI shlib::kv_set " array_name key value"
+Set a key-value pair in the associative array.
+.TP
+.BI shlib::kv_get " array_name key"
+Get the value associated with
+.IR key .
+Outputs the value to stdout and returns 0 if found, returns 1 if not found.
+.TP
+.BI shlib::kv_get_default " array_name key default"
+Get the value associated with
+.IR key ,
+or return
+.I default
+if the key does not exist.
+.TP
+.BI shlib::kv_delete " array_name key"
+Delete a key from the associative array.
+.TP
+.BI shlib::kv_exists " array_name key"
+Check if a key exists. Returns 0 if exists, 1 if not.
+.TP
+.BI shlib::kv_clear " array_name"
+Remove all entries from the associative array.
+.SS Inspection
+.TP
+.BI shlib::kv_len " array_name"
+Output the number of key-value pairs in the array.
+.TP
+.BI shlib::kv_keys " dest_array_name array_name"
+Get all keys from the associative array into a regular indexed array.
+.TP
+.BI shlib::kv_values " dest_array_name array_name"
+Get all values from the associative array into a regular indexed array.
+.TP
+.BI shlib::kv_print " array_name" " [kv_sep] [pair_sep]"
+Print key-value pairs on one line.
+.I kv_sep
+separates key from value (default: "=").
+.I pair_sep
+separates pairs (default: " ").
+.TP
+.BI shlib::kv_printn " array_name" " [kv_sep]"
+Print key-value pairs one per line.
+.I kv_sep
+separates key from value (default: "=").
+.SS Search
+.TP
+.BI shlib::kv_has_value " array_name value"
+Check if a value exists in the array. Returns 0 if found, 1 if not.
+.TP
+.BI shlib::kv_find " dest_array_name array_name value"
+Find all keys that have the specified
+.IR value .
+Results are stored in
+.IR dest_array_name .
+.SS Manipulation
+.TP
+.BI shlib::kv_copy " dest_array_name src_array_name"
+Copy all entries from the source associative array to the destination.
+The destination is cleared first.
+.TP
+.BI shlib::kv_merge " dest_array_name source_array..."
+Merge multiple source associative arrays into the destination.
+Later arrays override values from earlier arrays for the same key.
+The destination is cleared first.
+.TP
+.BI shlib::kv_map " array_name command"
+Apply a transformation command to all values.
+The command receives each value via stdin and should output the transformed value to stdout.
+.SH EXAMPLES
+Basic usage:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/shlib.sh
+
+# Declare an associative array (requires bash 4+)
+declare -A config
+
+# Set values
+shlib::kv_set config "host" "localhost"
+shlib::kv_set config "port" "8080"
+
+# Get a value
+host=$(shlib::kv_get config "host")
+
+# Get with default
+timeout=$(shlib::kv_get_default config "timeout" "30")
+
+# Check existence
+if shlib::kv_exists config "debug"; then
+    echo "Debug mode enabled"
+fi
+
+# Print all entries
+shlib::kv_printn config
+.fi
+.RE
+.PP
+Merging configurations:
+.PP
+.RS
+.nf
+declare -A defaults
+defaults[log_level]="info"
+defaults[port]="80"
+
+declare -A overrides
+overrides[port]="8080"
+
+declare -A final
+shlib::kv_merge final defaults overrides
+# final now has: log_level=info port=8080
+.fi
+.RE
+.PP
+Finding keys by value:
+.PP
+.RS
+.nf
+declare -A users
+users[alice]="admin"
+users[bob]="user"
+users[carol]="admin"
+
+shlib::kv_find admins users "admin"
+# admins array now contains: alice carol
+.fi
+.RE
+.SH FILES
+.TP
+.I examples/kv.sh
+Example script demonstrating key-value functions.
+.SH EXIT STATUS
+Most functions return 0 on success.
+.TP
+.B shlib::kv_get
+Returns 1 if the key is not found.
+.TP
+.B shlib::kv_exists
+Returns 1 if the key does not exist.
+.TP
+.B shlib::kv_has_value
+Returns 1 if the value is not found.
+.SH NOTES
+Associative arrays in Bash do not preserve insertion order.
+The order of keys returned by
+.BR shlib::kv_keys ,
+.BR shlib::kv_print ,
+and similar functions may vary.
+.SH SEE ALSO
+.BR shlib (7),
+.BR shlib_arrays (3),
+.BR shlib_strings (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.

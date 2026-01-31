@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1087
 
 # shlib - A library of reusable Bash shell functions
 #
 # Usage:
 #   source /path/to/shlib/shlib.sh
-
+#
 # ShellCheck Exclusions:
 # - https://www.shellcheck.net/wiki/SC1087
-# shellcheck disable=SC1087
 
 # Prevent double-sourcing
 [[ -n "${SHLIB_LOADED:-}" ]] && return 0
@@ -737,6 +737,360 @@ shlib::arr_merge() {
         for ((idx = 0; idx < len; idx++)); do
             eval "$dest_name+=(\"\${$src_name[$idx]}\")"
         done
+    done
+}
+
+#
+# Key-Value (Associative Array) Functions
+#
+# Note: These functions require Bash 4.0 or higher for associative array support.
+# Associative arrays are declared with: declare -A myarray
+#
+
+# @description Set a key-value pair in an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The key to set
+# @arg $3 string The value to set
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   shlib::kv_set config "host" "localhost"
+shlib::kv_set() {
+    local arr_name="$1"
+    local key="$2"
+    local value="$3"
+    eval "$arr_name[\"\$key\"]=\"\$value\""
+}
+
+# @description Get a value by key from an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The key to look up
+# @stdout The value associated with the key
+# @exitcode 0 Key exists
+# @exitcode 1 Key not found
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   shlib::kv_get config "host"  # outputs: localhost
+shlib::kv_get() {
+    local arr_name="$1"
+    local key="$2"
+    local exists
+    eval "exists=\${$arr_name[\"\$key\"]+exists}"
+    if [[ -n "$exists" ]]; then
+        eval "echo \"\${$arr_name[\"\$key\"]}\""
+        return 0
+    fi
+    return 1
+}
+
+# @description Get a value by key with a fallback default
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The key to look up
+# @arg $3 string The default value if key not found
+# @stdout The value associated with the key, or default if not found
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   shlib::kv_get_default config "port" "8080"  # outputs: 8080
+shlib::kv_get_default() {
+    local arr_name="$1"
+    local key="$2"
+    local default="$3"
+    local exists
+    eval "exists=\${$arr_name[\"\$key\"]+exists}"
+    if [[ -n "$exists" ]]; then
+        eval "echo \"\${$arr_name[\"\$key\"]}\""
+    else
+        echo "$default"
+    fi
+}
+
+# @description Delete a key from an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The key to delete
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   shlib::kv_delete config "host"
+shlib::kv_delete() {
+    local arr_name="$1"
+    local key="$2"
+    eval "unset '$arr_name[\"\$key\"]'"
+}
+
+# @description Check if a key exists in an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The key to check
+# @exitcode 0 Key exists
+# @exitcode 1 Key does not exist
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   shlib::kv_exists config "host" && echo "exists"
+shlib::kv_exists() {
+    local arr_name="$1"
+    local key="$2"
+    local exists
+    eval "exists=\${$arr_name[\"\$key\"]+exists}"
+    [[ -n "$exists" ]]
+}
+
+# @description Remove all entries from an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_clear config
+shlib::kv_clear() {
+    local arr_name="$1"
+    eval "$arr_name=()"
+}
+
+# @description Get the count of entries in an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @stdout The number of key-value pairs
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_len config  # outputs: 2
+shlib::kv_len() {
+    eval "echo \${#$1[@]}"
+}
+
+# @description Get all keys from an associative array into a regular array
+# @arg $1 string The name of the destination array variable (without $)
+# @arg $2 string The name of the associative array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_keys keys config
+#   # keys is now an array of: host port (order may vary)
+shlib::kv_keys() {
+    local dest_name="$1"
+    local arr_name="$2"
+    eval "$dest_name=(\"\${!$arr_name[@]}\")"
+}
+
+# @description Get all values from an associative array into a regular array
+# @arg $1 string The name of the destination array variable (without $)
+# @arg $2 string The name of the associative array variable (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_values values config
+#   # values is now an array of: localhost 8080 (order may vary)
+shlib::kv_values() {
+    local dest_name="$1"
+    local arr_name="$2"
+    eval "$dest_name=(\"\${$arr_name[@]}\")"
+}
+
+# @description Print key-value pairs on one line with separators
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string Key-value separator (default: "=")
+# @arg $3 string Pair separator (default: " ")
+# @stdout Key-value pairs joined by separators
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_print config           # outputs: host=localhost port=8080
+#   shlib::kv_print config ":" ", "  # outputs: host:localhost, port:8080
+shlib::kv_print() {
+    local arr_name="$1"
+    local kv_sep="${2:-=}"
+    local pair_sep="${3:- }"
+    local -a keys
+    local key first=1 output_str=""
+
+    eval "keys=(\"\${!$arr_name[@]}\")"
+    [[ ${#keys[@]} -eq 0 ]] && return 0
+
+    for key in "${keys[@]}"; do
+        local value
+        eval "value=\"\${$arr_name[\"\$key\"]}\""
+        if [[ $first -eq 1 ]]; then
+            output_str="${key}${kv_sep}${value}"
+            first=0
+        else
+            output_str="${output_str}${pair_sep}${key}${kv_sep}${value}"
+        fi
+    done
+    echo "$output_str"
+}
+
+# @description Print key-value pairs one per line
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string Key-value separator (default: "=")
+# @stdout Each key-value pair on its own line
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   config[port]="8080"
+#   shlib::kv_printn config
+#   # outputs:
+#   # host=localhost
+#   # port=8080
+shlib::kv_printn() {
+    local arr_name="$1"
+    local kv_sep="${2:-=}"
+    local -a keys
+    local key
+
+    eval "keys=(\"\${!$arr_name[@]}\")"
+    for key in "${keys[@]}"; do
+        local value
+        eval "value=\"\${$arr_name[\"\$key\"]}\""
+        echo "${key}${kv_sep}${value}"
+    done
+}
+
+# @description Check if a value exists in an associative array
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The value to search for
+# @exitcode 0 Value exists
+# @exitcode 1 Value does not exist
+# @example
+#   declare -A config
+#   config[host]="localhost"
+#   shlib::kv_has_value config "localhost" && echo "found"
+shlib::kv_has_value() {
+    local arr_name="$1"
+    local search_value="$2"
+    local -a keys
+    local key
+
+    eval "keys=(\"\${!$arr_name[@]}\")"
+    for key in "${keys[@]}"; do
+        local value
+        eval "value=\"\${$arr_name[\"\$key\"]}\""
+        if [[ "$value" == "$search_value" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# @description Find all keys with a specific value
+# @arg $1 string The name of the destination array variable (without $)
+# @arg $2 string The name of the associative array variable (without $)
+# @arg $3 string The value to search for
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A roles
+#   roles[alice]="admin"
+#   roles[bob]="user"
+#   roles[carol]="admin"
+#   shlib::kv_find admins roles "admin"
+#   # admins is now: alice carol
+shlib::kv_find() {
+    local dest_name="$1"
+    local arr_name="$2"
+    local search_value="$3"
+    local -a keys
+    local key
+
+    eval "$dest_name=()"
+    eval "keys=(\"\${!$arr_name[@]}\")"
+    for key in "${keys[@]}"; do
+        local value
+        eval "value=\"\${$arr_name[\"\$key\"]}\""
+        if [[ "$value" == "$search_value" ]]; then
+            eval "$dest_name+=(\"\$key\")"
+        fi
+    done
+}
+
+# @description Copy an associative array to another
+# @arg $1 string The name of the destination associative array (without $)
+# @arg $2 string The name of the source associative array (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A original
+#   original[host]="localhost"
+#   declare -A copy
+#   shlib::kv_copy copy original
+shlib::kv_copy() {
+    local dest_name="$1"
+    local src_name="$2"
+    local -a keys
+    local key
+
+    eval "$dest_name=()"
+    eval "keys=(\"\${!$src_name[@]}\")"
+    for key in "${keys[@]}"; do
+        local value
+        eval "value=\"\${$src_name[\"\$key\"]}\""
+        eval "$dest_name[\"\$key\"]=\"\$value\""
+    done
+}
+
+# @description Merge multiple associative arrays (later arrays override earlier)
+# @arg $1 string The name of the destination associative array (without $)
+# @arg $@ string Names of source associative arrays to merge (without $)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A defaults
+#   defaults[host]="localhost"
+#   defaults[port]="80"
+#   declare -A overrides
+#   overrides[port]="8080"
+#   declare -A result
+#   shlib::kv_merge result defaults overrides
+#   # result is now: host=localhost port=8080
+shlib::kv_merge() {
+    local dest_name="$1"
+    shift
+
+    eval "$dest_name=()"
+    local src_name
+    for src_name in "$@"; do
+        local -a keys
+        local key
+        eval "keys=(\"\${!$src_name[@]}\")"
+        for key in "${keys[@]}"; do
+            local value
+            eval "value=\"\${$src_name[\"\$key\"]}\""
+            eval "$dest_name[\"\$key\"]=\"\$value\""
+        done
+    done
+}
+
+# @description Apply a transformation command to all values
+# @arg $1 string The name of the associative array variable (without $)
+# @arg $2 string The command to apply (receives value via stdin, outputs to stdout)
+# @exitcode 0 Always succeeds
+# @example
+#   declare -A data
+#   data[name]="hello"
+#   data[greeting]="world"
+#   shlib::kv_map data 'tr a-z A-Z'
+#   # data is now: name=HELLO greeting=WORLD
+shlib::kv_map() {
+    local arr_name="$1"
+    local cmd="$2"
+    local -a keys
+    local key
+
+    eval "keys=(\"\${!$arr_name[@]}\")"
+    for key in "${keys[@]}"; do
+        local value new_value
+        eval "value=\"\${$arr_name[\"\$key\"]}\""
+        # shellcheck disable=SC2034
+        new_value=$(echo "$value" | eval "$cmd")
+        eval "$arr_name[\"\$key\"]=\"\$new_value\""
     done
 }
 

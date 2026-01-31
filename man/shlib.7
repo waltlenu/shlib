@@ -37,6 +37,9 @@ Command execution functions (command_exists, etc.)
 .B shlib_arrays(3)
 Array manipulation functions (append, insert, pop, delete, merge, sort, reverse, etc.)
 .TP
+.B shlib_kv(3)
+Key-value (associative array) functions (set, get, delete, merge, find, etc.). Requires Bash 4+.
+.TP
 .B shlib_strings(3)
 String manipulation functions (case conversion, searching, padding, splitting, trimming, etc.)
 .SS User Interface
@@ -130,6 +133,9 @@ Example script for string manipulation functions.
 .I examples/arrays.sh
 Example script for array functions.
 .TP
+.I examples/kv.sh
+Example script for key-value (associative array) functions.
+.TP
 .I examples/ui.sh
 Example script for UI functions (headers, hr, status, spinner, ANSI).
 .SH EXIT STATUS
@@ -137,6 +143,7 @@ Functions that check conditions return 0 on success and 1 on failure.
 Logging functions always return 0.
 .SH SEE ALSO
 .BR shlib_arrays (3),
+.BR shlib_kv (3),
 .BR shlib_logging (3),
 .BR shlib_strings (3),
 .BR shlib_ui (3)

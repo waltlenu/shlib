@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Example: Run all shlib examples
 #
@@ -8,8 +9,8 @@
 #   - logging.sh  Logging functions (simple, colorized, emoji)
 #   - strings.sh  String manipulation functions
 #   - arrays.sh   Array functions
+#   - kv.sh       Key-value (associative array) functions (requires bash 4+)
 #   - ui.sh       UI functions (headers, hr, status, spinner, ANSI)
-#
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,6 +30,7 @@ scripts=(
     "logging.sh"
     "strings.sh"
     "arrays.sh"
+    "kv.sh"
     "ui.sh"
 )
 

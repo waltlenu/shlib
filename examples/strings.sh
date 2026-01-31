@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Example: String manipulation functions from shlib
 #

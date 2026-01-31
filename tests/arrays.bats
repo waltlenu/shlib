@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2034
 
 # ShellCheck Exclusions:
 # - https://www.shellcheck.net/wiki/SC2034
-# shellcheck disable=SC2034
 
 setup() {
     load 'test_helper'

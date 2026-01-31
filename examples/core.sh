@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Example: Core functions from shlib
 #

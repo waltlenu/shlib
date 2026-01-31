@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Example: UI functions from shlib
 #
