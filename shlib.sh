@@ -1427,3 +1427,293 @@ shlib::ansi_256_palette() {
     done
     echo
 }
+
+#
+# Date and Time Functions
+#
+
+# @description Get current Unix timestamp
+# @stdout The current Unix timestamp in seconds
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_now  # outputs: 1704067200
+shlib::dt_now() {
+    date +%s
+}
+
+# @description Get current datetime in ISO 8601 format
+# @arg $1 string Optional: "local" for local time, default is UTC
+# @stdout Current datetime in ISO 8601 format
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_now_iso         # outputs: 2024-01-01T12:00:00Z
+#   shlib::dt_now_iso local   # outputs: 2024-01-01T07:00:00-05:00
+shlib::dt_now_iso() {
+    local zone="${1:-}"
+    if [[ "$zone" == "local" ]]; then
+        date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/'
+    else
+        date -u +%Y-%m-%dT%H:%M:%SZ
+    fi
+}
+
+# @description Get current date as YYYY-MM-DD
+# @stdout Current date in YYYY-MM-DD format
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_today  # outputs: 2024-01-01
+shlib::dt_today() {
+    date +%Y-%m-%d
+}
+
+# @description Format Unix timestamp with format string
+# @arg $1 int Unix timestamp
+# @arg $2 string Format string (strftime compatible)
+# @stdout Formatted date/time string
+# @exitcode 0 Success
+# @exitcode 1 Invalid timestamp or format
+# @example
+#   shlib::dt_from_unix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
+#   shlib::dt_from_unix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
+shlib::dt_from_unix() {
+    local timestamp="$1"
+    local format="$2"
+
+    # Try BSD date first (macOS)
+    if date -r "$timestamp" +"$format" 2>/dev/null; then
+        return 0
+    fi
+
+    # Try GNU date (Linux)
+    if date -d "@$timestamp" +"$format" 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+
+# @description Parse date string to Unix timestamp
+# @arg $1 string Date string to parse
+# @arg $2 string Optional format string for BSD date (e.g., "%Y-%m-%d")
+# @stdout Unix timestamp
+# @exitcode 0 Success
+# @exitcode 1 Invalid date string
+# @example
+#   shlib::dt_to_unix "2024-01-01"              # outputs: 1704067200
+#   shlib::dt_to_unix "01/15/2024" "%m/%d/%Y"   # with format for BSD
+shlib::dt_to_unix() {
+    local datestr="$1"
+    local format="${2:-}"
+
+    # Try GNU date first (more flexible parsing)
+    if date -d "$datestr" +%s 2>/dev/null; then
+        return 0
+    fi
+
+    # Try BSD date with format
+    if [[ -n "$format" ]]; then
+        if date -j -f "$format" "$datestr" +%s 2>/dev/null; then
+            return 0
+        fi
+    fi
+
+    # Try common formats with BSD date
+    local fmt
+    for fmt in "%Y-%m-%d" "%Y-%m-%d %H:%M:%S" "%Y/%m/%d" "%m/%d/%Y"; do
+        if date -j -f "$fmt" "$datestr" +%s 2>/dev/null; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# @description Add time units to timestamp
+# @arg $1 int Unix timestamp
+# @arg $2 int Amount to add (can be negative)
+# @arg $3 string Unit: seconds, minutes, hours, days, weeks
+# @stdout New Unix timestamp
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_add 1704067200 1 days    # add 1 day
+#   shlib::dt_add 1704067200 -2 hours  # subtract 2 hours
+shlib::dt_add() {
+    local timestamp="$1"
+    local amount="$2"
+    local unit="$3"
+    local multiplier=1
+
+    case "$unit" in
+        second | seconds) multiplier=1 ;;
+        minute | minutes) multiplier=60 ;;
+        hour | hours) multiplier=3600 ;;
+        day | days) multiplier=86400 ;;
+        week | weeks) multiplier=604800 ;;
+        *) multiplier=1 ;;
+    esac
+
+    echo $((timestamp + amount * multiplier))
+}
+
+# @description Calculate difference between timestamps
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @arg $3 string Optional unit: seconds (default), minutes, hours, days, weeks
+# @stdout Difference (ts1 - ts2) in specified unit (integer division)
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_diff 1704153600 1704067200          # outputs: 86400 (seconds)
+#   shlib::dt_diff 1704153600 1704067200 hours    # outputs: 24
+#   shlib::dt_diff 1704153600 1704067200 days     # outputs: 1
+shlib::dt_diff() {
+    local ts1="$1"
+    local ts2="$2"
+    local unit="${3:-seconds}"
+    local diff=$((ts1 - ts2))
+    local divisor=1
+
+    case "$unit" in
+        second | seconds) divisor=1 ;;
+        minute | minutes) divisor=60 ;;
+        hour | hours) divisor=3600 ;;
+        day | days) divisor=86400 ;;
+        week | weeks) divisor=604800 ;;
+        *) divisor=1 ;;
+    esac
+
+    echo $((diff / divisor))
+}
+
+# @description Check if timestamp A is before timestamp B
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @exitcode 0 ts1 < ts2
+# @exitcode 1 ts1 >= ts2
+# @example
+#   shlib::dt_is_before 1704067200 1704153600 && echo "earlier"
+shlib::dt_is_before() {
+    [[ "$1" -lt "$2" ]]
+}
+
+# @description Check if timestamp A is after timestamp B
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @exitcode 0 ts1 > ts2
+# @exitcode 1 ts1 <= ts2
+# @example
+#   shlib::dt_is_after 1704153600 1704067200 && echo "later"
+shlib::dt_is_after() {
+    [[ "$1" -gt "$2" ]]
+}
+
+# @description Format seconds as human-readable duration
+# @arg $1 int Number of seconds
+# @arg $2 string Optional format: short (default), long, compact
+# @stdout Human-readable duration string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::dt_duration 90061              # outputs: 1d 1h 1m 1s
+#   shlib::dt_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
+#   shlib::dt_duration 90061 compact      # outputs: 1d1h1m1s
+shlib::dt_duration() {
+    local seconds="$1"
+    local format="${2:-short}"
+    local negative=""
+
+    # Handle negative durations
+    if [[ $seconds -lt 0 ]]; then
+        negative="-"
+        seconds=$((-seconds))
+    fi
+
+    local days=$((seconds / 86400))
+    local hours=$(((seconds % 86400) / 3600))
+    local mins=$(((seconds % 3600) / 60))
+    local secs=$((seconds % 60))
+
+    local output=""
+
+    case "$format" in
+        long)
+            local parts=()
+            [[ $days -gt 0 ]] && parts+=("$days day$([[ $days -ne 1 ]] && echo "s")")
+            [[ $hours -gt 0 ]] && parts+=("$hours hour$([[ $hours -ne 1 ]] && echo "s")")
+            [[ $mins -gt 0 ]] && parts+=("$mins minute$([[ $mins -ne 1 ]] && echo "s")")
+            [[ $secs -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("$secs second$([[ $secs -ne 1 ]] && echo "s")")
+
+            local i
+            for ((i = 0; i < ${#parts[@]}; i++)); do
+                [[ $i -gt 0 ]] && output+=", "
+                output+="${parts[$i]}"
+            done
+            ;;
+        compact)
+            [[ $days -gt 0 ]] && output+="${days}d"
+            [[ $hours -gt 0 ]] && output+="${hours}h"
+            [[ $mins -gt 0 ]] && output+="${mins}m"
+            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+            ;;
+        short | *)
+            [[ $days -gt 0 ]] && output+="${days}d "
+            [[ $hours -gt 0 ]] && output+="${hours}h "
+            [[ $mins -gt 0 ]] && output+="${mins}m "
+            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+            output="${output% }" # trim trailing space
+            ;;
+    esac
+
+    echo "${negative}${output}"
+}
+
+# @description Format elapsed time since start timestamp
+# @arg $1 int Start Unix timestamp
+# @arg $2 string Optional format: short (default), long, compact
+# @stdout Elapsed time as human-readable duration
+# @exitcode 0 Always succeeds
+# @example
+#   start=$(shlib::dt_now)
+#   sleep 5
+#   shlib::dt_elapsed "$start"  # outputs: 5s
+shlib::dt_elapsed() {
+    local start="$1"
+    local format="${2:-short}"
+    local now
+    now=$(date +%s)
+    local elapsed=$((now - start))
+    shlib::dt_duration "$elapsed" "$format"
+}
+
+# @description Check if date string is valid
+# @arg $1 string Date string to validate
+# @arg $2 string Optional format string for BSD date
+# @exitcode 0 Valid date
+# @exitcode 1 Invalid date
+# @example
+#   shlib::dt_is_valid "2024-01-01" && echo "valid"
+#   shlib::dt_is_valid "not-a-date" || echo "invalid"
+shlib::dt_is_valid() {
+    local datestr="$1"
+    local format="${2:-}"
+
+    # Try GNU date first
+    if date -d "$datestr" +%s &>/dev/null; then
+        return 0
+    fi
+
+    # Try BSD date with format
+    if [[ -n "$format" ]]; then
+        if date -j -f "$format" "$datestr" +%s &>/dev/null; then
+            return 0
+        fi
+    fi
+
+    # Try common formats with BSD date
+    local fmt
+    for fmt in "%Y-%m-%d" "%Y-%m-%d %H:%M:%S" "%Y/%m/%d" "%m/%d/%Y"; do
+        if date -j -f "$fmt" "$datestr" +%s &>/dev/null; then
+            return 0
+        fi
+    done
+
+    return 1
+}

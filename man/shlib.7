@@ -42,6 +42,10 @@ Key-value (associative array) functions (set, get, delete, merge, find, etc.). R
 .TP
 .B shlib_strings(3)
 String manipulation functions (case conversion, searching, padding, splitting, trimming, etc.)
+.SS Date and Time
+.TP
+.B shlib_dt(3)
+Date and time functions (timestamps, formatting, parsing, arithmetic, duration, etc.)
 .SS User Interface
 .TP
 .B shlib_logging(3)
@@ -138,11 +142,15 @@ Example script for key-value (associative array) functions.
 .TP
 .I examples/ui.sh
 Example script for UI functions (headers, hr, status, spinner, ANSI).
+.TP
+.I examples/dt.sh
+Example script for date and time functions.
 .SH EXIT STATUS
 Functions that check conditions return 0 on success and 1 on failure.
 Logging functions always return 0.
 .SH SEE ALSO
 .BR shlib_arrays (3),
+.BR shlib_dt (3),
 .BR shlib_kv (3),
 .BR shlib_logging (3),
 .BR shlib_strings (3),

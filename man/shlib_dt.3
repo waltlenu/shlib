@@ -1,0 +1,227 @@
+.\" shlib - A shell library of reusable functions
+.TH SHLIB_DT 3 "January 2026" "shlib 0.1.3" "Shell Library"
+.SH NAME
+shlib_dt \- Date and time functions from the shlib library
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.sh
+.SH DESCRIPTION
+.B shlib_dt
+provides date and time functions for getting timestamps, formatting, parsing,
+arithmetic, comparisons, and duration formatting.
+Requires Bash version 3 or higher.
+.PP
+Functions automatically detect and handle differences between BSD (macOS) and
+GNU (Linux) date commands for cross-platform compatibility.
+.SH FUNCTIONS
+.SS Current Date/Time
+.TP
+.B shlib::dt_now
+Output the current Unix timestamp in seconds.
+.TP
+.BI shlib::dt_now_iso " [local]"
+Output the current datetime in ISO 8601 format.
+With
+.I local
+argument, outputs local time with timezone offset.
+Default is UTC (ending in Z).
+.TP
+.B shlib::dt_today
+Output the current date in YYYY-MM-DD format.
+.SS Formatting and Parsing
+.TP
+.BI shlib::dt_from_unix " timestamp format"
+Format a Unix
+.I timestamp
+using the strftime-compatible
+.IR format .
+Returns exit code 1 if formatting fails.
+.TP
+.BI shlib::dt_to_unix " datestr" " [format]"
+Parse a date string to Unix timestamp.
+The optional
+.I format
+is used for BSD date parsing (e.g., "%Y-%m-%d").
+GNU date parses most formats automatically.
+Returns exit code 1 if parsing fails.
+.SS Arithmetic
+.TP
+.BI shlib::dt_add " timestamp amount unit"
+Add
+.I amount
+time units to
+.IR timestamp .
+Amount can be negative to subtract.
+Valid units: seconds, minutes, hours, days, weeks (or singular forms).
+.TP
+.BI shlib::dt_diff " ts1 ts2" " [unit]"
+Calculate the difference between two timestamps (ts1 - ts2).
+Optional
+.I unit
+can be: seconds (default), minutes, hours, days, weeks.
+Performs integer division.
+.SS Comparisons
+.TP
+.BI shlib::dt_is_before " ts1 ts2"
+Return 0 if
+.I ts1
+is before
+.IR ts2 ,
+1 otherwise.
+.TP
+.BI shlib::dt_is_after " ts1 ts2"
+Return 0 if
+.I ts1
+is after
+.IR ts2 ,
+1 otherwise.
+.SS Duration
+.TP
+.BI shlib::dt_duration " seconds" " [format]"
+Format
+.I seconds
+as a human-readable duration.
+Format options:
+.RS
+.IP "short" 10
+(default) "1d 2h 3m 4s"
+.IP "long" 10
+"1 day, 2 hours, 3 minutes, 4 seconds"
+.IP "compact" 10
+"1d2h3m4s"
+.RE
+.TP
+.BI shlib::dt_elapsed " start" " [format]"
+Output the elapsed time since
+.I start
+timestamp.
+Uses the same format options as
+.BR shlib::dt_duration .
+.SS Validation
+.TP
+.BI shlib::dt_is_valid " datestr" " [format]"
+Return 0 if
+.I datestr
+is a valid date, 1 otherwise.
+The optional
+.I format
+is used for BSD date parsing.
+.SH EXAMPLES
+Get current time:
+.PP
+.RS
+.nf
+#!/usr/bin/env bash
+source /path/to/shlib/shlib.sh
+
+now=$(shlib::dt_now)
+echo "Current timestamp: $now"
+echo "ISO format: $(shlib::dt_now_iso)"
+echo "Today: $(shlib::dt_today)"
+.fi
+.RE
+.PP
+Format and parse dates:
+.PP
+.RS
+.nf
+# Format a timestamp
+ts=1704067200
+shlib::dt_from_unix "$ts" "%Y-%m-%d %H:%M:%S"
+
+# Parse a date string
+ts=$(shlib::dt_to_unix "2024-01-01")
+echo "Parsed: $ts"
+.fi
+.RE
+.PP
+Date arithmetic:
+.PP
+.RS
+.nf
+# Add time to a timestamp
+tomorrow=$(shlib::dt_add "$(shlib::dt_now)" 1 days)
+last_week=$(shlib::dt_add "$(shlib::dt_now)" -7 days)
+
+# Calculate difference
+diff=$(shlib::dt_diff "$end" "$start" hours)
+echo "Duration: $diff hours"
+.fi
+.RE
+.PP
+Measure elapsed time:
+.PP
+.RS
+.nf
+start=$(shlib::dt_now)
+# ... do work ...
+echo "Elapsed: $(shlib::dt_elapsed "$start")"
+echo "Elapsed: $(shlib::dt_elapsed "$start" long)"
+.fi
+.RE
+.PP
+Compare timestamps:
+.PP
+.RS
+.nf
+if shlib::dt_is_before "$start" "$end"; then
+    echo "Start is before end"
+fi
+.fi
+.RE
+.PP
+Format durations:
+.PP
+.RS
+.nf
+seconds=90061
+shlib::dt_duration "$seconds"          # 1d 1h 1m 1s
+shlib::dt_duration "$seconds" long     # 1 day, 1 hour, 1 minute, 1 second
+shlib::dt_duration "$seconds" compact  # 1d1h1m1s
+.fi
+.RE
+.SH PORTABILITY
+The date formatting and parsing functions handle differences between BSD
+(macOS) and GNU (Linux) date commands:
+.PP
+.RS
+.nf
+.TS
+l l l.
+Operation	BSD	GNU
+From timestamp	date -r TS	date -d @TS
+Parse string	date -j -f FMT STR	date -d STR
+.TE
+.fi
+.RE
+.PP
+Arithmetic, comparison, and duration functions use pure Bash and work
+identically on all platforms.
+.SH FILES
+.TP
+.I examples/dt.sh
+Example script demonstrating date and time functions.
+.SH EXIT STATUS
+.TP
+.B shlib::dt_from_unix
+Returns 0 on success, 1 if formatting fails.
+.TP
+.B shlib::dt_to_unix
+Returns 0 on success, 1 if parsing fails.
+.TP
+.B shlib::dt_is_before, shlib::dt_is_after
+Returns 0 if comparison is true, 1 otherwise.
+.TP
+.B shlib::dt_is_valid
+Returns 0 if date is valid, 1 otherwise.
+.TP
+.B All other functions
+Always return 0.
+.SH SEE ALSO
+.BR shlib (7),
+.BR date (1),
+.BR strftime (3)
+.SH AUTHORS
+shlib was created by waltlenu.
+.SH LICENSE
+MIT License. See LICENSE file for details.

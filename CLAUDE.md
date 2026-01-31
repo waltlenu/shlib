@@ -49,7 +49,7 @@ shlib::my_function() {
 
 Format codebase:
 ```bash
-shfmt -i 4 -w shlib.shfmt
+shfmt -w -i 4 -ci -bn shlib.shfmt
 ```
 
 Lint the library:
