@@ -148,7 +148,7 @@ echo
 # Copy an array
 declare -A original
 original[name]="shlib"
-original[version]="0.3.6"
+original[version]="0.4.0"
 declare -A backup
 shlib::kv_copy backup original
 echo "After kv_copy backup original:"
