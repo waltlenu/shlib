@@ -52,7 +52,25 @@ Date and time functions (timestamps, formatting, parsing, arithmetic, duration, 
 Simple printing functions, colorised, with emoji
 .TP
 .B shlib_ui(3)
-UI functions (spinner, etc.)
+UI functions (spinner, ASCII art banners, etc.)
+.SS ASCII Art Banners
+.TP
+.BI "shlib::banner " text
+Render text as ASCII art banner using the best available method (toilet > figlet > builtin).
+Always succeeds by falling back to the pure bash builtin implementation.
+.TP
+.BI "shlib::banner_builtin " text
+Render text as ASCII art using a pure bash 5x5 block font. Supports A-Z, 0-9, space,
+and basic punctuation (! ? . - : _). Lowercase is converted to uppercase.
+Always available with no external dependencies.
+.TP
+.BI "shlib::banner_figlet " "text [font]"
+Render text as ASCII art using figlet. Returns exit code 1 if figlet is not installed.
+Optional font parameter defaults to "standard".
+.TP
+.BI "shlib::banner_toilet " "text [font] [filter]"
+Render text as ASCII art using toilet. Returns exit code 1 if toilet is not installed.
+Optional font and filter parameters (e.g., filter: gay, metal, border).
 .SH VARIABLES
 .TP
 .B SHLIB_VERSION

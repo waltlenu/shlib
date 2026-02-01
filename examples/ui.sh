@@ -54,6 +54,51 @@ fi
 echo
 
 #
+# ASCII Art Banners
+#
+shlib::headern "ASCII Art Banners"
+
+echo "shlib::banner_builtin \"HELLO\":"
+shlib::banner_builtin "HELLO"
+echo
+
+echo "shlib::banner_builtin \"TEST 123\":"
+shlib::banner_builtin "TEST 123"
+echo
+
+echo "shlib::banner_builtin \"HI!\":"
+shlib::banner_builtin "HI!"
+echo
+
+echo "shlib::banner \"SHLIB\" (auto-selects best method):"
+shlib::banner "SHLIB"
+echo
+
+# Show figlet if available
+if shlib::cmd_exists figlet; then
+    echo "shlib::banner_figlet \"FIGLET\":"
+    shlib::banner_figlet "FIGLET"
+    echo
+else
+    echo "(figlet not installed, skipping shlib::banner_figlet example)"
+    echo
+fi
+
+# Show toilet if available
+if shlib::cmd_exists toilet; then
+    echo "shlib::banner_toilet \"TOILET\":"
+    shlib::banner_toilet "TOILET"
+    echo
+
+    echo "shlib::banner_toilet \"COLOR\" \"\" \"gay\":"
+    shlib::banner_toilet "COLOR" "" "gay"
+    echo
+else
+    echo "(toilet not installed, skipping shlib::banner_toilet example)"
+    echo
+fi
+
+#
 # ANSI Color Reference
 #
 shlib::headern "ANSI Color Reference"
@@ -80,3 +125,4 @@ echo
 
 echo "shlib::ansi_256_palette:"
 shlib::ansi_256_palette
+echo

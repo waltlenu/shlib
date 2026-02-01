@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2016
 
 #
 # Example: System functions from shlib
@@ -56,7 +57,8 @@ fi
 
 # Retry with delay between attempts
 tmpfile=$(mktemp)
-echo "0" > "$tmpfile"
+echo "0" >"$tmpfile"
+
 if shlib::cmd_retry 3 1 bash -c '
     count=$(cat "'"$tmpfile"'")
     count=$((count + 1))
@@ -79,7 +81,7 @@ fi
 
 # Non-blocking lock when already locked
 mkdir "${lockfile}.lock"
-echo $$ > "${lockfile}.lock/pid"
+echo $$ >"${lockfile}.lock/pid"
 if ! shlib::cmd_locked "$lockfile" 0 true; then
     shlib::cwarnn "Lock already held (expected)"
 fi
@@ -87,15 +89,18 @@ rm -rf "${lockfile}.lock"
 
 # Stale lock detection (PID doesn't exist)
 mkdir "${lockfile}.lock"
-echo 999999 > "${lockfile}.lock/pid"
+echo 999999 >"${lockfile}.lock/pid"
 if shlib::cmd_locked "$lockfile" 0 true; then
     shlib::cinfon "Stale lock detected and acquired"
 fi
 
 # Wait for lock with timeout
 mkdir "${lockfile}.lock"
-echo $$ > "${lockfile}.lock/pid"
-(sleep 1; rm -rf "${lockfile}.lock") &
+echo $$ >"${lockfile}.lock/pid"
+(
+    sleep 1
+    rm -rf "${lockfile}.lock"
+) &
 if shlib::cmd_locked "$lockfile" 5 true; then
     shlib::cinfon "Lock acquired after waiting"
 fi

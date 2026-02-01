@@ -1690,6 +1690,152 @@ shlib::ansi_styles() {
     done
 }
 
+# @description Render text as ASCII art banner using best available method
+# @arg $1 string The text to render
+# @stdout ASCII art banner (toilet > figlet > builtin)
+# @exitcode 0 Always succeeds (falls back to builtin)
+# @example
+#   shlib::banner "HELLO"
+shlib::banner() {
+    local text="$1"
+
+    # Prefer toilet (supports colors), then figlet, then builtin
+    if shlib::cmd_exists toilet; then
+        toilet -- "$text"
+    elif shlib::cmd_exists figlet; then
+        figlet -- "$text"
+    else
+        shlib::banner_builtin "$text"
+    fi
+}
+
+# @description Render text as ASCII art banner using pure bash 5x5 block font
+# @arg $1 string The text to render (A-Z, 0-9, space, and ! ? . - : _)
+# @stdout Five lines of ASCII art block letters
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::banner_builtin "HELLO"
+#   shlib::banner_builtin "TEST 123"
+shlib::banner_builtin() {
+    local text
+    text=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    local line1="" line2="" line3="" line4="" line5=""
+    local i char c1 c2 c3 c4 c5
+
+    for ((i = 0; i < ${#text}; i++)); do
+        char="${text:$i:1}"
+
+        # Get the 5 lines for this character
+        case "$char" in
+            A) c1="█████" c2="█   █" c3="█████" c4="█   █" c5="█   █" ;;
+            B) c1="████ " c2="█   █" c3="████ " c4="█   █" c5="████ " ;;
+            C) c1="█████" c2="█    " c3="█    " c4="█    " c5="█████" ;;
+            D) c1="████ " c2="█   █" c3="█   █" c4="█   █" c5="████ " ;;
+            E) c1="█████" c2="█    " c3="████ " c4="█    " c5="█████" ;;
+            F) c1="█████" c2="█    " c3="████ " c4="█    " c5="█    " ;;
+            G) c1="█████" c2="█    " c3="█ ███" c4="█   █" c5="█████" ;;
+            H) c1="█   █" c2="█   █" c3="█████" c4="█   █" c5="█   █" ;;
+            I) c1="█████" c2="  █  " c3="  █  " c4="  █  " c5="█████" ;;
+            J) c1="█████" c2="    █" c3="    █" c4="█   █" c5="█████" ;;
+            K) c1="█   █" c2="█  █ " c3="███  " c4="█  █ " c5="█   █" ;;
+            L) c1="█    " c2="█    " c3="█    " c4="█    " c5="█████" ;;
+            M) c1="█   █" c2="██ ██" c3="█ █ █" c4="█   █" c5="█   █" ;;
+            N) c1="█   █" c2="██  █" c3="█ █ █" c4="█  ██" c5="█   █" ;;
+            O) c1="█████" c2="█   █" c3="█   █" c4="█   █" c5="█████" ;;
+            P) c1="█████" c2="█   █" c3="█████" c4="█    " c5="█    " ;;
+            Q) c1="█████" c2="█   █" c3="█   █" c4="█  █ " c5="███ █" ;;
+            R) c1="█████" c2="█   █" c3="█████" c4="█  █ " c5="█   █" ;;
+            S) c1="█████" c2="█    " c3="█████" c4="    █" c5="█████" ;;
+            T) c1="█████" c2="  █  " c3="  █  " c4="  █  " c5="  █  " ;;
+            U) c1="█   █" c2="█   █" c3="█   █" c4="█   █" c5="█████" ;;
+            V) c1="█   █" c2="█   █" c3="█   █" c4=" █ █ " c5="  █  " ;;
+            W) c1="█   █" c2="█   █" c3="█ █ █" c4="██ ██" c5="█   █" ;;
+            X) c1="█   █" c2=" █ █ " c3="  █  " c4=" █ █ " c5="█   █" ;;
+            Y) c1="█   █" c2=" █ █ " c3="  █  " c4="  █  " c5="  █  " ;;
+            Z) c1="█████" c2="   █ " c3="  █  " c4=" █   " c5="█████" ;;
+            0) c1="█████" c2="█  ██" c3="█ █ █" c4="██  █" c5="█████" ;;
+            1) c1=" ██  " c2="  █  " c3="  █  " c4="  █  " c5="█████" ;;
+            2) c1="█████" c2="    █" c3="█████" c4="█    " c5="█████" ;;
+            3) c1="█████" c2="    █" c3="█████" c4="    █" c5="█████" ;;
+            4) c1="█   █" c2="█   █" c3="█████" c4="    █" c5="    █" ;;
+            5) c1="█████" c2="█    " c3="█████" c4="    █" c5="█████" ;;
+            6) c1="█████" c2="█    " c3="█████" c4="█   █" c5="█████" ;;
+            7) c1="█████" c2="    █" c3="   █ " c4="  █  " c5="  █  " ;;
+            8) c1="█████" c2="█   █" c3="█████" c4="█   █" c5="█████" ;;
+            9) c1="█████" c2="█   █" c3="█████" c4="    █" c5="█████" ;;
+            " ") c1="     " c2="     " c3="     " c4="     " c5="     " ;;
+            "!") c1="  █  " c2="  █  " c3="  █  " c4="     " c5="  █  " ;;
+            "?") c1="█████" c2="    █" c3="  ██ " c4="     " c5="  █  " ;;
+            ".") c1="     " c2="     " c3="     " c4="     " c5="  █  " ;;
+            "-") c1="     " c2="     " c3="█████" c4="     " c5="     " ;;
+            ":") c1="     " c2="  █  " c3="     " c4="  █  " c5="     " ;;
+            "_") c1="     " c2="     " c3="     " c4="     " c5="█████" ;;
+            *) c1="     " c2="     " c3="     " c4="     " c5="     " ;;
+        esac
+
+        line1="${line1}${c1} "
+        line2="${line2}${c2} "
+        line3="${line3}${c3} "
+        line4="${line4}${c4} "
+        line5="${line5}${c5} "
+    done
+
+    # Remove trailing space from each line
+    echo "${line1% }"
+    echo "${line2% }"
+    echo "${line3% }"
+    echo "${line4% }"
+    echo "${line5% }"
+}
+
+# @description Render text as ASCII art banner using figlet
+# @arg $1 string The text to render
+# @arg $2 string Font name (optional, default: standard)
+# @stdout ASCII art from figlet
+# @exitcode 0 Success
+# @exitcode 1 figlet not installed
+# @example
+#   shlib::banner_figlet "Hello"
+#   shlib::banner_figlet "Hello" "banner"
+shlib::banner_figlet() {
+    local text="$1"
+    local font="${2:-standard}"
+
+    if ! shlib::cmd_exists figlet; then
+        return 1
+    fi
+
+    figlet -f "$font" "$text"
+}
+
+# @description Render text as ASCII art banner using toilet
+# @arg $1 string The text to render
+# @arg $2 string Font name (optional, default: standard)
+# @arg $3 string Filter (optional, e.g., gay, metal, border)
+# @stdout ASCII art from toilet
+# @exitcode 0 Success
+# @exitcode 1 toilet not installed
+# @example
+#   shlib::banner_toilet "Hello"
+#   shlib::banner_toilet "Hello" "mono12"
+#   shlib::banner_toilet "Hello" "mono12" "gay"
+shlib::banner_toilet() {
+    local text="$1"
+    local font="${2:-}"
+    local filter="${3:-}"
+
+    if ! shlib::cmd_exists toilet; then
+        return 1
+    fi
+
+    local cmd="toilet"
+    [[ -n "$font" ]] && cmd="$cmd -f $font"
+    [[ -n "$filter" ]] && cmd="$cmd --filter $filter"
+    cmd="$cmd -- "
+
+    eval "$cmd\"\$text\""
+}
+
 # @description Print a bold header message to stdout (without newline)
 # @arg $@ string The header message to print
 # @stdout The message in bold

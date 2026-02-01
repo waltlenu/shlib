@@ -19,8 +19,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../shlib.sh"
 
+shlib::banner_toilet "shlib" "" "gay"
+
 shlib::headern "shlib Examples"
-echo "Version: $(shlib::version)"
 echo
 
 # Run all example scripts

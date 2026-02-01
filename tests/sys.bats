@@ -1,4 +1,8 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2016
+
+# ShellCheck Exclusions:
+# - https://www.shellcheck.net/wiki/SC2016
 
 setup() {
     load 'test_helper'
@@ -38,7 +42,7 @@ setup() {
 
     # Create stale lock with non-existent PID
     mkdir "${lockfile}.lock"
-    echo 999999 > "${lockfile}.lock/pid"
+    echo 999999 >"${lockfile}.lock/pid"
 
     # Should succeed by detecting stale lock
     run shlib::cmd_locked "$lockfile" 0 true
@@ -68,7 +72,7 @@ setup() {
 
     # Create lock manually
     mkdir "${lockfile}.lock"
-    echo $$ > "${lockfile}.lock/pid"
+    echo $$ >"${lockfile}.lock/pid"
 
     # Should fail immediately with timeout=0
     run ! shlib::cmd_locked "$lockfile" 0 true
@@ -105,7 +109,7 @@ setup() {
 
     # Create lock held by current process
     mkdir "${lockfile}.lock"
-    echo $$ > "${lockfile}.lock/pid"
+    echo $$ >"${lockfile}.lock/pid"
 
     # Should timeout after 1 second
     run ! shlib::cmd_locked "$lockfile" 1 true
@@ -119,8 +123,11 @@ setup() {
 
     # Create lock that will be released after 1 second
     mkdir "${lockfile}.lock"
-    echo $$ > "${lockfile}.lock/pid"
-    (sleep 1; rm -rf "${lockfile}.lock") &
+    echo $$ >"${lockfile}.lock/pid"
+    (
+        sleep 1
+        rm -rf "${lockfile}.lock"
+    ) &
 
     # Should succeed after lock is released (within 5s timeout)
     run shlib::cmd_locked "$lockfile" 5 true
@@ -132,8 +139,11 @@ setup() {
 
     # Create lock that will be released quickly
     mkdir "${lockfile}.lock"
-    echo $$ > "${lockfile}.lock/pid"
-    (sleep 0.5; rm -rf "${lockfile}.lock") &
+    echo $$ >"${lockfile}.lock/pid"
+    (
+        sleep 0.5
+        rm -rf "${lockfile}.lock"
+    ) &
 
     # Should wait and succeed
     run shlib::cmd_locked "$lockfile" -1 true
@@ -172,7 +182,7 @@ setup() {
 @test "shlib::cmd_retry succeeds on later attempt" {
     # Create a temp file to track attempts
     tmpfile=$(mktemp)
-    echo "0" > "$tmpfile"
+    echo "0" >"$tmpfile"
 
     # Command that fails twice then succeeds
     run shlib::cmd_retry 3 0 bash -c '
