@@ -27,7 +27,7 @@ readonly SHLIB_LOADED=1
 set -euo pipefail
 
 # Library version
-readonly SHLIB_VERSION="0.1.3"
+readonly SHLIB_VERSION="0.3.5"
 
 # Detect library directory
 # shellcheck disable=SC2034,SC2155
