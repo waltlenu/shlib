@@ -112,8 +112,8 @@ shlib::version() {
 # @exitcode 0 Command exists
 # @exitcode 1 Command not found
 # @example
-#   shlib::command_exists git
-shlib::command_exists() {
+#   shlib::cmd_exists git
+shlib::cmd_exists() {
     command -v "$1" &>/dev/null
 }
 

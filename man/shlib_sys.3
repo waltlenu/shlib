@@ -12,7 +12,7 @@ Requires Bash version 3 or higher.
 .SH FUNCTIONS
 .SS Validation
 .TP
-.BI shlib::command_exists " command"
+.BI shlib::cmd_exists " command"
 Check if
 .I command
 exists in PATH. Returns 0 if found, 1 otherwise.
@@ -25,7 +25,7 @@ Check if a command exists:
 source /path/to/shlib/shlib.sh
 
 # Check if a command exists
-shlib::command_exists "commandname"
+shlib::cmd_exists "commandname"
 .fi
 .RE
 .SH FILES
@@ -34,7 +34,7 @@ shlib::command_exists "commandname"
 Example script demonstrating system functions.
 .SH EXIT STATUS
 .TP
-.B shlib::command_exists
+.B shlib::cmd_exists
 Returns 0 if command exists, 1 otherwise.
 .SH SEE ALSO
 .BR shlib (7),

@@ -14,13 +14,13 @@ source "${SCRIPT_DIR}/../shlib.sh"
 shlib::headern "Command System Functions"
 
 # Check for commands
-if shlib::command_exists git; then
+if shlib::cmd_exists git; then
     shlib::cinfon "git is installed"
 else
     shlib::cwarnn "git is not installed"
 fi
 
-if shlib::command_exists nonexistent_cmd; then
+if shlib::cmd_exists nonexistent_cmd; then
     shlib::cinfon "nonexistent_cmd is installed"
 else
     shlib::cwarnn "nonexistent_cmd is not installed (expected)"

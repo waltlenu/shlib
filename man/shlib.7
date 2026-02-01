@@ -94,7 +94,7 @@ source /path/to/shlib/shlib.sh
 
 shlib::headern "Starting script..."
 
-if shlib::command_exists git; then
+if shlib::cmd_exists git; then
     shlib::cinfon "git is available"
 else
     shlib::cerrorn "git is required"
