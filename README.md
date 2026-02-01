@@ -17,6 +17,10 @@ A library of reusable [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) sh
 - Statically analysed with [ShellCheck](https://github.com/koalaman/shellcheck)
 - Yes, I let [Claude Code](CLAUDE.md) assist me but I watch it with suspicion 👹
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/RECORDING_ID.svg)](https://asciinema.org/a/vH29P88drmDu86B3)
+
 ## Usage
 
 _Don't just "curl bash pipe it"_
