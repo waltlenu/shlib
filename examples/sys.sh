@@ -66,3 +66,36 @@ if shlib::cmd_retry 3 1 bash -c '
     shlib::cinfon "Command succeeded on attempt 2 (with 1s delay between)"
 fi
 rm -f "$tmpfile"
+
+echo
+
+shlib::headern "Command Locking"
+
+# Run a command with file-based lock
+lockfile=$(mktemp -u)
+if shlib::cmd_locked "$lockfile" 0 echo "Protected operation"; then
+    shlib::cinfon "Locked command executed successfully"
+fi
+
+# Non-blocking lock when already locked
+mkdir "${lockfile}.lock"
+echo $$ > "${lockfile}.lock/pid"
+if ! shlib::cmd_locked "$lockfile" 0 true; then
+    shlib::cwarnn "Lock already held (expected)"
+fi
+rm -rf "${lockfile}.lock"
+
+# Stale lock detection (PID doesn't exist)
+mkdir "${lockfile}.lock"
+echo 999999 > "${lockfile}.lock/pid"
+if shlib::cmd_locked "$lockfile" 0 true; then
+    shlib::cinfon "Stale lock detected and acquired"
+fi
+
+# Wait for lock with timeout
+mkdir "${lockfile}.lock"
+echo $$ > "${lockfile}.lock/pid"
+(sleep 1; rm -rf "${lockfile}.lock") &
+if shlib::cmd_locked "$lockfile" 5 true; then
+    shlib::cinfon "Lock acquired after waiting"
+fi

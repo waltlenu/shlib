@@ -35,7 +35,37 @@ with a timeout specified in seconds. If the command does not complete within
 .I timeout
 seconds, it is terminated.
 Returns the command's exit code if it completes in time, or 124 if it times out.
-
+.SS Locking
+.TP
+.BI shlib::cmd_locked " lockfile timeout command [args...]"
+Run
+.I command
+protected by a file-based lock. The lock is implemented using
+.BR mkdir (1)
+which is atomic on POSIX systems, making it portable across platforms.
+A directory named
+.I lockfile.lock
+is created to hold the lock, with a PID file inside for stale lock detection.
+.PP
+.RS
+The
+.I timeout
+argument controls lock acquisition behavior:
+.IP \(bu 2
+.B 0
+\- Non-blocking; fail immediately if lock is held
+.IP \(bu 2
+.B >0
+\- Wait up to this many seconds to acquire the lock
+.IP \(bu 2
+.B -1
+\- Wait indefinitely until lock is acquired
+.RE
+.PP
+.RS
+Stale locks are automatically detected and removed when the process holding the lock
+no longer exists.
+.RE
 .SH EXAMPLES
 Check if a command exists:
 .PP
@@ -74,6 +104,25 @@ else
 fi
 .fi
 .RE
+.PP
+Run a command with file-based locking:
+.PP
+.RS
+.nf
+# Non-blocking: fail if another process holds the lock
+if shlib::cmd_locked /tmp/myapp 0 ./deploy.sh; then
+    echo "Deployment completed"
+else
+    echo "Another deployment is running"
+fi
+
+# Wait up to 30 seconds for the lock
+shlib::cmd_locked /tmp/myapp 30 ./critical-section.sh
+
+# Wait forever (useful for cron jobs)
+shlib::cmd_locked /var/lock/backup -1 ./backup.sh
+.fi
+.RE
 .SH FILES
 .TP
 .I examples/sys.sh
@@ -89,6 +138,10 @@ or the command's exit code if it fails before timeout.
 .TP
 .B shlib::cmd_retry
 Returns 0 if command succeeds within max attempts, 1 if all attempts fail.
+.TP
+.B shlib::cmd_locked
+Returns 0 if command succeeds after acquiring lock, 1 if lock could not be acquired
+within timeout or arguments are invalid, or the command's exit code otherwise.
 .SH SEE ALSO
 .BR shlib (7),
 .BR shlib_logging (3)
