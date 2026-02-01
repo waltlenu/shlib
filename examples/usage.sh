@@ -6,11 +6,11 @@
 # Individual example scripts:
 #   - core.sh     Core functions (version, list_functions, list_variables)
 #   - arrays.sh   Array functions
-#   - exec.sh     Execution functions (command_exists)
-#   - kv.sh       Key-value (associative array) functions (requires bash 4+)
-#   - logging.sh  Logging functions (simple, colorized, emoji)
+#   - kv.sh       Key-value
+#   - logging.sh  Logging functions
 #   - strings.sh  String manipulation functions
-#   - ui.sh       UI functions (headers, hr, status, spinner, ANSI)
+#   - sys.sh      System functions
+#   - ui.sh       UI functions
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,10 +28,10 @@ scripts=(
     "core.sh"
     "arrays.sh"
     "dt.sh"
-    "exec.sh"
     "kv.sh"
     "logging.sh"
     "strings.sh"
+    "sys.sh"
     "ui.sh"
 )
 

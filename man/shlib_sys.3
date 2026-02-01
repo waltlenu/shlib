@@ -1,13 +1,13 @@
 .\" shlib - A shell library of reusable functions
-.TH SHLIB_EXEC 3 "February 2026" "shlib 0.3.6" "Shell Library"
+.TH SHLIB_SYS 3 "February 2026" "shlib 0.3.6" "Shell Library"
 .SH NAME
-shlib_exec \- Command execution functions from the shlib library
+shlib_sys \- System functions from the shlib library
 .SH SYNOPSIS
 .B source
 .I /path/to/shlib.sh
 .SH DESCRIPTION
-.B shlib_exec
-provides functions for command execution.
+.B shlib_sys
+provides functions for system interaction.
 Requires Bash version 3 or higher.
 .SH FUNCTIONS
 .SS Validation
@@ -30,8 +30,8 @@ shlib::command_exists "commandname"
 .RE
 .SH FILES
 .TP
-.I examples/exec.sh
-Example script demonstrating execution functions.
+.I examples/sys.sh
+Example script demonstrating system functions.
 .SH EXIT STATUS
 .TP
 .B shlib::command_exists

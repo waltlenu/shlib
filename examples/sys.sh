@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Example: Execution functions from shlib
+# Example: System functions from shlib
 #
 
 # Get the directory of this script
@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/../shlib.sh"
 
-shlib::headern "Command Execution Functions"
+shlib::headern "Command System Functions"
 
 # Check for commands
 if shlib::command_exists git; then

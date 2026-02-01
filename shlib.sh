@@ -104,7 +104,7 @@ shlib::version() {
 }
 
 #
-# Execution
+# System
 #
 
 # @description Check if a command exists in PATH

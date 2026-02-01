@@ -28,10 +28,10 @@ List all shlib functions, one per line, sorted alphabetically.
 .TP
 .B shlib::list_variables
 List all shlib global variables (SHLIB_*), one per line, sorted alphabetically.
-.SS Execution
+.SS System
 .TP
-.B shlib_exec(3)
-Command execution functions (command_exists, etc.)
+.B shlib_sys(3)
+System functions (command execution, operating system, processes, etc.)
 .SS Data Types
 .TP
 .B shlib_arrays(3)
@@ -122,29 +122,8 @@ Test files using the Bats testing framework.
 .I examples/usage.sh
 Main example script that runs all individual examples.
 .TP
-.I examples/core.sh
-Example script for core functions (version, list_functions, list_variables).
-.TP
-.I examples/exec.sh
-Example script for execution functions (command_exists).
-.TP
-.I examples/logging.sh
-Example script for logging functions (simple, colorized, emoji).
-.TP
-.I examples/strings.sh
-Example script for string manipulation functions.
-.TP
-.I examples/arrays.sh
-Example script for array functions.
-.TP
-.I examples/kv.sh
-Example script for key-value (associative array) functions.
-.TP
-.I examples/ui.sh
-Example script for UI functions (headers, hr, status, spinner, ANSI).
-.TP
-.I examples/dt.sh
-Example script for date and time functions.
+.I examples/*.sh
+Example scripts for library functions split by section.
 .SH EXIT STATUS
 Functions that check conditions return 0 on success and 1 on failure.
 Logging functions always return 0.
