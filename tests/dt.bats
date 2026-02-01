@@ -458,58 +458,6 @@ setup() {
     shlib::dt_is_before 0 1
 }
 
-@test "shlib::dt_is_valid accepts datetime with time" {
-    shlib::dt_is_valid "2024-01-01 12:30:45"
-}
-
-@test "shlib::dt_is_valid accepts leap year date" {
-    shlib::dt_is_valid "2024-02-29"
-}
-
-@test "shlib::dt_is_valid accepts YYYY/MM/DD format" {
-    shlib::dt_is_valid "2024/01/01"
-}
-
-@test "shlib::dt_is_valid handles non-leap year Feb 29" {
-    # Note: BSD date may be lenient with invalid dates, so we just check it runs
-    run shlib::dt_is_valid "2023-02-29"
-    # Result may vary by platform (GNU stricter than BSD)
-    [[ "$status" -eq 0 || "$status" -eq 1 ]]
-}
-
-@test "shlib::dt_is_valid returns 0 for valid YYYY-MM-DD" {
-    shlib::dt_is_valid "2024-01-01"
-}
-
-@test "shlib::dt_is_valid returns 1 for empty string" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_valid ""
-}
-
-@test "shlib::dt_is_valid returns 1 for invalid date" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_valid "not-a-date"
-}
-
-@test "shlib::dt_is_valid returns 1 for invalid day" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_valid "2024-01-32"
-}
-
-@test "shlib::dt_is_valid returns 1 for invalid month" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_valid "2024-13-01"
-}
-
-@test "shlib::dt_is_valid returns 1 for partial date" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_valid "2024-01"
-}
-
-@test "shlib::dt_is_valid with explicit format" {
-    shlib::dt_is_valid "01/15/2024" "%m/%d/%Y"
-}
-
 @test "shlib::dt_now and dt_now_iso return consistent timestamps" {
     local unix_ts iso_ts
     unix_ts=$(shlib::dt_now)
@@ -551,53 +499,6 @@ setup() {
     run shlib::dt_now
     # Should be after Jan 1, 2020 (1577836800)
     [[ "$output" -gt 1577836800 ]]
-}
-
-@test "shlib::dt_to_unix parses datetime with time" {
-    run shlib::dt_to_unix "2024-01-01 12:30:45"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
-}
-
-@test "shlib::dt_to_unix parses YYYY-MM-DD" {
-    run shlib::dt_to_unix "2024-01-01"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
-}
-
-@test "shlib::dt_to_unix parses YYYY/MM/DD format" {
-    run shlib::dt_to_unix "2024/01/01"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
-}
-
-@test "shlib::dt_to_unix returns error for empty string" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_to_unix ""
-}
-
-@test "shlib::dt_to_unix returns error for invalid date" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_to_unix "not-a-date"
-}
-
-@test "shlib::dt_to_unix with explicit format" {
-    run shlib::dt_to_unix "01/15/2024" "%m/%d/%Y"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
-}
-
-@test "shlib::dt_to_unix with format tries fallback formats" {
-    # Even with explicit format, function tries common formats as fallback
-    run shlib::dt_to_unix "2024-01-01" "%m/%d/%Y"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
-}
-
-@test "shlib::dt_to_unix with ISO format string" {
-    run shlib::dt_to_unix "2024-01-01 00:00:00"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
 }
 
 @test "shlib::dt_today matches current date" {

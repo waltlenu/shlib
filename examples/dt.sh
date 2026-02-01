@@ -29,12 +29,6 @@ echo "  dt_from_unix \$now \"%Y-%m-%d %H:%M:%S\": $(shlib::dt_from_unix "$now" "
 echo "  dt_from_unix \$now \"%A, %B %d, %Y\": $(shlib::dt_from_unix "$now" "%A, %B %d, %Y")"
 echo
 
-# Parsing dates
-echo "Parsing dates:"
-echo "  dt_to_unix \"2024-01-01\": $(shlib::dt_to_unix "2024-01-01")"
-echo "  dt_to_unix \"01/15/2024\" \"%m/%d/%Y\": $(shlib::dt_to_unix "01/15/2024" "%m/%d/%Y")"
-echo
-
 # Timestamp arithmetic
 echo "Timestamp arithmetic:"
 base=1704067200
@@ -81,15 +75,3 @@ echo "  Started at: $start"
 sleep 1
 echo "  dt_elapsed \$start: $(shlib::dt_elapsed "$start")"
 echo
-
-# Validation
-echo "Date validation:"
-if shlib::dt_is_valid "2024-01-01"; then
-    echo "  dt_is_valid \"2024-01-01\": true"
-fi
-if shlib::dt_is_valid "01/15/2024" "%m/%d/%Y"; then
-    echo "  dt_is_valid \"01/15/2024\" \"%m/%d/%Y\": true"
-fi
-if ! shlib::dt_is_valid "not-a-date"; then
-    echo "  dt_is_valid \"not-a-date\": false"
-fi

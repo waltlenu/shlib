@@ -36,15 +36,6 @@ Format a Unix
 using the strftime-compatible
 .IR format .
 Returns exit code 1 if formatting fails.
-.TP
-.BI shlib::dt_to_unix " datestr" " [format]"
-Parse a date string to Unix timestamp.
-The optional
-.I format
-specifies the expected date format using pure Bash regex parsing for portability.
-Supported formats: %Y-%m-%d, %Y/%m/%d, %m/%d/%Y, %Y-%m-%d %H:%M:%S.
-Falls back to auto-detection if format doesn't match.
-Returns exit code 1 if parsing fails.
 .SS Arithmetic
 .TP
 .BI shlib::dt_add " timestamp amount unit"
@@ -98,17 +89,6 @@ Output the elapsed time since
 timestamp.
 Uses the same format options as
 .BR shlib::dt_duration .
-.SS Validation
-.TP
-.BI shlib::dt_is_valid " datestr" " [format]"
-Return 0 if
-.I datestr
-is a valid date, 1 otherwise.
-The optional
-.I format
-specifies the expected date format using pure Bash regex validation for portability.
-Supported formats: %Y-%m-%d, %Y/%m/%d, %m/%d/%Y, %Y-%m-%d %H:%M:%S.
-Without a format, tries all known patterns then falls back to system date command.
 .SH EXAMPLES
 Get current time:
 .PP
@@ -121,20 +101,6 @@ now=$(shlib::dt_now)
 echo "Current timestamp: $now"
 echo "ISO format: $(shlib::dt_now_iso)"
 echo "Today: $(shlib::dt_today)"
-.fi
-.RE
-.PP
-Format and parse dates:
-.PP
-.RS
-.nf
-# Format a timestamp
-ts=1704067200
-shlib::dt_from_unix "$ts" "%Y-%m-%d %H:%M:%S"
-
-# Parse a date string
-ts=$(shlib::dt_to_unix "2024-01-01")
-echo "Parsed: $ts"
 .fi
 .RE
 .PP
@@ -209,14 +175,8 @@ Example script demonstrating date and time functions.
 .B shlib::dt_from_unix
 Returns 0 on success, 1 if formatting fails.
 .TP
-.B shlib::dt_to_unix
-Returns 0 on success, 1 if parsing fails.
-.TP
 .B shlib::dt_is_before, shlib::dt_is_after
 Returns 0 if comparison is true, 1 otherwise.
-.TP
-.B shlib::dt_is_valid
-Returns 0 if date is valid, 1 otherwise.
 .TP
 .B All other functions
 Always return 0.
