@@ -40,7 +40,8 @@ RESET := $(shell tput sgr0 2>/dev/null || echo '')
 
 # Phony targets
 .PHONY: help check lint shellcheck format format-check test \
-        docker-build docker-test docker-shell clean
+        docker-build docker-test docker-shell clean \
+        ci install-deps changelog release-notes
 
 ## help: Show this help message
 help:
@@ -118,8 +119,37 @@ man:
 ## clean: Remove generated files
 clean:
 	@echo '$(BOLD)Cleaning...$(RESET)'
-	@rm -rf .cache __pycache__ *.log
+	@rm -rf .cache __pycache__ *.log changelog.md
 	@echo '$(GREEN)Clean complete$(RESET)'
+
+## ci: Run full CI pipeline (for CI systems)
+ci: install-deps check
+	@echo '$(GREEN)CI pipeline complete$(RESET)'
+
+## install-deps: Install development dependencies
+install-deps:
+	@echo '$(BOLD)Installing dependencies...$(RESET)'
+	@if command -v apt-get >/dev/null 2>&1; then \
+		which bats >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y bats; \
+		which shellcheck >/dev/null 2>&1 || sudo apt-get install -y shellcheck; \
+		which shfmt >/dev/null 2>&1 || (curl -sS https://webinstall.dev/shfmt | bash); \
+	elif command -v brew >/dev/null 2>&1; then \
+		which bats >/dev/null 2>&1 || brew install bats-core; \
+		which shellcheck >/dev/null 2>&1 || brew install shellcheck; \
+		which shfmt >/dev/null 2>&1 || brew install shfmt; \
+	else \
+		echo 'Warning: Could not detect package manager (apt-get or brew)' >&2; \
+		echo 'Please install bats, shellcheck, and shfmt manually' >&2; \
+	fi
+	@echo '$(GREEN)Dependencies installed$(RESET)'
+
+## changelog: Generate changelog.md from git history
+changelog:
+	@./hack/changelog.sh
+
+## release-notes: Generate changelog to stdout
+release-notes:
+	@./hack/changelog.sh --stdout
 
 ## version: Show shlib version
 version:
