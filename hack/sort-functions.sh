@@ -4,8 +4,8 @@
 # sort-functions.sh - Sort functions alphabetically within sections
 #
 # Usage:
-#   ./scripts/sort-functions.sh shlib.sh           # output to stdout
-#   ./scripts/sort-functions.sh shlib.sh > out.sh  # redirect to file
+#   ./hack/sort-functions.sh shlib.sh           # sort in place (default)
+#   ./hack/sort-functions.sh shlib.sh --stdout  # output to stdout
 #
 # This script preserves:
 #   - File header (shebang, license, strict mode, global variables)
@@ -17,12 +17,23 @@
 set -euo pipefail
 
 # Check arguments
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <file.sh>" >&2
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+    echo "Usage: $0 <file.sh> [--stdout]" >&2
     exit 1
 fi
 
 input_file="$1"
+to_stdout=0
+
+if [[ $# -eq 2 ]]; then
+    if [[ "$2" == "--stdout" ]]; then
+        to_stdout=1
+    else
+        echo "Error: Unknown option: $2" >&2
+        echo "Usage: $0 <file.sh> [--stdout]" >&2
+        exit 1
+    fi
+fi
 
 if [[ ! -f "$input_file" ]]; then
     echo "Error: File not found: $input_file" >&2
@@ -77,7 +88,12 @@ sort_and_output_functions() {
 
 # Create temp directory for function blocks
 tmpdir=$(mktemp -d)
+output_file="$tmpdir/output"
 trap 'rm -rf "$tmpdir"' EXIT
+
+# Start output capture (all echo/cat will go to output_file)
+exec 3>&1
+exec >"$output_file"
 
 # Read file into array using while loop (Bash 3 compatible)
 line_count=0
@@ -224,4 +240,14 @@ done
 # Output last section
 if [[ $section_count -gt 0 ]]; then
     sort_and_output_functions "$tmpdir/section_$((section_count - 1))"
+fi
+
+# Restore stdout and handle output
+exec 1>&3
+exec 3>&-
+
+if [[ $to_stdout -eq 1 ]]; then
+    cat "$output_file"
+else
+    cp "$output_file" "$input_file"
 fi

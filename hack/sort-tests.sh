@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034,SC2001
 
-# sort-bats-tests.sh - Sort @test blocks alphabetically within bats test files
+# sort-tests.sh - Sort @test blocks alphabetically within bats test files
 #
 # Usage:
-#   ./scripts/sort-bats-tests.sh tests/strings.bats           # output to stdout
-#   ./scripts/sort-bats-tests.sh tests/strings.bats > out.bats # redirect to file
+#   ./hack/sort-tests.sh tests/strings.bats           # sort in place (default)
+#   ./hack/sort-tests.sh tests/strings.bats --stdout  # output to stdout
 #
 # This script preserves:
 #   - File header (shebang, shellcheck directives, comments)
@@ -17,12 +17,23 @@
 set -euo pipefail
 
 # Check arguments
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0 <file.bats>" >&2
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+    echo "Usage: $0 <file.bats> [--stdout]" >&2
     exit 1
 fi
 
 input_file="$1"
+to_stdout=0
+
+if [[ $# -eq 2 ]]; then
+    if [[ "$2" == "--stdout" ]]; then
+        to_stdout=1
+    else
+        echo "Error: Unknown option: $2" >&2
+        echo "Usage: $0 <file.bats> [--stdout]" >&2
+        exit 1
+    fi
+fi
 
 if [[ ! -f "$input_file" ]]; then
     echo "Error: File not found: $input_file" >&2
@@ -31,7 +42,12 @@ fi
 
 # Create temp directory for test blocks
 tmpdir=$(mktemp -d)
+output_file="$tmpdir/output"
 trap 'rm -rf "$tmpdir"' EXIT
+
+# Start output capture (all echo/cat will go to output_file)
+exec 3>&1
+exec >"$output_file"
 
 # Read file into array using while loop (Bash 3 compatible)
 line_count=0
@@ -170,4 +186,14 @@ if [[ ${#test_files[@]} -gt 0 ]]; then
             cat "$f"
         fi
     done <<<"$sorted_files"
+fi
+
+# Restore stdout and handle output
+exec 1>&3
+exec 3>&-
+
+if [[ $to_stdout -eq 1 ]]; then
+    cat "$output_file"
+else
+    cp "$output_file" "$input_file"
 fi
