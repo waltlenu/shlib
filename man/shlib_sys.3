@@ -16,6 +16,26 @@ Requires Bash version 3 or higher.
 Check if
 .I command
 exists in PATH. Returns 0 if found, 1 otherwise.
+.SS Execution
+.TP
+.BI shlib::cmd_retry " max_attempts delay command [args...]"
+Retry
+.I command
+up to
+.I max_attempts
+times with
+.I delay
+seconds between attempts. Returns 0 if the command succeeds within the allowed
+attempts, or 1 if all attempts fail. Set delay to 0 for no delay between retries.
+.TP
+.BI shlib::cmd_timeout " timeout command [args...]"
+Run
+.I command
+with a timeout specified in seconds. If the command does not complete within
+.I timeout
+seconds, it is terminated.
+Returns the command's exit code if it completes in time, or 124 if it times out.
+
 .SH EXAMPLES
 Check if a command exists:
 .PP
@@ -28,6 +48,32 @@ source /path/to/shlib/shlib.sh
 shlib::cmd_exists "commandname"
 .fi
 .RE
+.PP
+Run a command with timeout:
+.PP
+.RS
+.nf
+# Timeout after 5 seconds
+if shlib::cmd_timeout 5 curl -s http://example.com; then
+    echo "Request completed"
+else
+    echo "Request timed out or failed"
+fi
+.fi
+.RE
+.PP
+Retry a command on failure:
+.PP
+.RS
+.nf
+# Retry up to 3 times with 2 second delay
+if shlib::cmd_retry 3 2 curl -f http://example.com; then
+    echo "Request succeeded"
+else
+    echo "Request failed after 3 attempts"
+fi
+.fi
+.RE
 .SH FILES
 .TP
 .I examples/sys.sh
@@ -36,6 +82,13 @@ Example script demonstrating system functions.
 .TP
 .B shlib::cmd_exists
 Returns 0 if command exists, 1 otherwise.
+.TP
+.B shlib::cmd_timeout
+Returns 0 if command succeeds within timeout, 124 if command times out,
+or the command's exit code if it fails before timeout.
+.TP
+.B shlib::cmd_retry
+Returns 0 if command succeeds within max attempts, 1 if all attempts fail.
 .SH SEE ALSO
 .BR shlib (7),
 .BR shlib_logging (3)

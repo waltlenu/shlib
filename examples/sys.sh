@@ -25,3 +25,44 @@ if shlib::cmd_exists nonexistent_cmd; then
 else
     shlib::cwarnn "nonexistent_cmd is not installed (expected)"
 fi
+
+echo
+
+shlib::headern "Command Timeout"
+
+# Run a command with timeout
+if shlib::cmd_timeout 2 sleep 1; then
+    shlib::cinfon "Command completed within timeout"
+fi
+
+# Command that times out
+if ! shlib::cmd_timeout 1 sleep 5; then
+    shlib::cwarnn "Command timed out (expected)"
+fi
+
+echo
+
+shlib::headern "Command Retry"
+
+# Command that succeeds on first try
+if shlib::cmd_retry 3 0 true; then
+    shlib::cinfon "Command succeeded"
+fi
+
+# Command that always fails
+if ! shlib::cmd_retry 2 0 false; then
+    shlib::cwarnn "Command failed after 2 attempts (expected)"
+fi
+
+# Retry with delay between attempts
+tmpfile=$(mktemp)
+echo "0" > "$tmpfile"
+if shlib::cmd_retry 3 1 bash -c '
+    count=$(cat "'"$tmpfile"'")
+    count=$((count + 1))
+    echo "$count" > "'"$tmpfile"'"
+    [ "$count" -ge 2 ]
+'; then
+    shlib::cinfon "Command succeeded on attempt 2 (with 1s delay between)"
+fi
+rm -f "$tmpfile"

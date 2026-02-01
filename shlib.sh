@@ -117,6 +117,96 @@ shlib::cmd_exists() {
     command -v "$1" &>/dev/null
 }
 
+# @description Retry a command multiple times with optional delay
+# @arg $1 int Maximum number of attempts
+# @arg $2 int Delay in seconds between attempts (0 for no delay)
+# @arg $@ string The command and its arguments
+# @stdout Command output from the successful attempt (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command succeeded within max attempts
+# @exitcode 1 All attempts failed
+# @example
+#   shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
+#   shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+shlib::cmd_retry() {
+    local max_attempts="$1"
+    local delay="$2"
+    shift 2
+
+    # Validate max_attempts is a positive number
+    if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -le 0 ]]; then
+        return 1
+    fi
+
+    # Validate delay is a non-negative number
+    if ! [[ "$delay" =~ ^[0-9]+$ ]]; then
+        return 1
+    fi
+
+    local attempt=1
+    while [[ $attempt -le $max_attempts ]]; do
+        if "$@"; then
+            return 0
+        fi
+
+        if [[ $attempt -lt $max_attempts ]] && [[ $delay -gt 0 ]]; then
+            sleep "$delay"
+        fi
+
+        ((attempt++))
+    done
+
+    return 1
+}
+
+# @description Run a command with a timeout
+# @arg $1 int Timeout in seconds
+# @arg $@ string The command and its arguments
+# @stdout Command output (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command completed successfully within timeout
+# @exitcode 124 Command timed out
+# @exitcode * Command's exit code if it completed before timeout
+# @example
+#   shlib::cmd_timeout 5 sleep 2    # succeeds
+#   shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
+shlib::cmd_timeout() {
+    local timeout="$1"
+    shift
+
+    # Validate timeout is a positive number
+    if ! [[ "$timeout" =~ ^[0-9]+$ ]] || [[ "$timeout" -le 0 ]]; then
+        return 1
+    fi
+
+    # Run command in background
+    "$@" &
+    local cmd_pid=$!
+
+    # Start a watchdog timer in background
+    (
+        sleep "$timeout"
+        kill -0 "$cmd_pid" 2>/dev/null && kill -TERM "$cmd_pid" 2>/dev/null
+    ) &
+    local watchdog_pid=$!
+
+    # Wait for command to complete
+    local exit_code
+    wait "$cmd_pid" 2>/dev/null
+    exit_code=$?
+
+    # Kill the watchdog if command finished first
+    kill -0 "$watchdog_pid" 2>/dev/null && kill "$watchdog_pid" 2>/dev/null
+    wait "$watchdog_pid" 2>/dev/null
+
+    # Check if command was killed by timeout (SIGTERM = 143, or we check if it was killed)
+    if [[ $exit_code -eq 143 ]] || [[ $exit_code -eq 137 ]]; then
+        return 124
+    fi
+
+    return $exit_code
+}
+
 #
 # Logging Functions
 #
