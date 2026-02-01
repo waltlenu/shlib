@@ -8,6 +8,7 @@ shlib_logging \-  Logging functions from the shlib library
 .SH DESCRIPTION
 .B shlib_logging
 is a list of simple BASH printing functions for logging, including colorised and emoji variants.
+All logging functions prefix messages with an ISO8601 local timestamp in brackets (e.g., [2024-01-01T12:00:00-05:00]).
 Requires Bash version 3 or higher.
 .SH FUNCTIONS
 .SS Headers
@@ -26,94 +27,94 @@ to stdout in bold (with trailing newline).
 .BI shlib::error " message"
 Print
 .I message
-to stderr with "error:" prefix (without trailing newline).
+to stderr with ISO8601 timestamp and "error:" prefix (without trailing newline).
 .TP
 .BI shlib::errorn " message"
 Print
 .I message
-to stderr with "error:" prefix (with trailing newline).
+to stderr with ISO8601 timestamp and "error:" prefix (with trailing newline).
 .TP
 .BI shlib::warn " message"
 Print
 .I message
-to stdout with "warning:" prefix (without trailing newline).
+to stdout with ISO8601 timestamp and "warning:" prefix (without trailing newline).
 .TP
 .BI shlib::warnn " message"
 Print
 .I message
-to stdout with "warning:" prefix (with trailing newline).
+to stdout with ISO8601 timestamp and "warning:" prefix (with trailing newline).
 .TP
 .BI shlib::info " message"
 Print
 .I message
-to stdout with "info:" prefix (without trailing newline).
+to stdout with ISO8601 timestamp and "info:" prefix (without trailing newline).
 .TP
 .BI shlib::infon " message"
 Print
 .I message
-to stdout with "info:" prefix (with trailing newline).
+to stdout with ISO8601 timestamp and "info:" prefix (with trailing newline).
 .SS Colorized Logging
 .TP
 .BI shlib::cerror " message"
 Print
 .I message
-to stderr with red "error:" prefix (without trailing newline).
+to stderr with ISO8601 timestamp and red "error:" prefix (without trailing newline).
 .TP
 .BI shlib::cerrorn " message"
 Print
 .I message
-to stderr with red "error:" prefix (with trailing newline).
+to stderr with ISO8601 timestamp and red "error:" prefix (with trailing newline).
 .TP
 .BI shlib::cwarn " message"
 Print
 .I message
-to stdout with yellow "warning:" prefix (without trailing newline).
+to stdout with ISO8601 timestamp and yellow "warning:" prefix (without trailing newline).
 .TP
 .BI shlib::cwarnn " message"
 Print
 .I message
-to stdout with yellow "warning:" prefix (with trailing newline).
+to stdout with ISO8601 timestamp and yellow "warning:" prefix (with trailing newline).
 .TP
 .BI shlib::cinfo " message"
 Print
 .I message
-to stdout with blue "info:" prefix (without trailing newline).
+to stdout with ISO8601 timestamp and blue "info:" prefix (without trailing newline).
 .TP
 .BI shlib::cinfon " message"
 Print
 .I message
-to stdout with blue "info:" prefix (with trailing newline).
+to stdout with ISO8601 timestamp and blue "info:" prefix (with trailing newline).
 .SS Emoji Logging
 .TP
 .BI shlib::eerror " message"
 Print
 .I message
-to stderr with "\[u274C] " prefix (without trailing newline).
+to stderr with ISO8601 timestamp and "\[u274C] " prefix (without trailing newline).
 .TP
 .BI shlib::eerrorn " message"
 Print
 .I message
-to stderr with "\[u274C] " prefix (with trailing newline).
+to stderr with ISO8601 timestamp and "\[u274C] " prefix (with trailing newline).
 .TP
 .BI shlib::ewarn " message"
 Print
 .I message
-to stdout with "\[u26A0]\[uFE0F] " prefix (without trailing newline).
+to stdout with ISO8601 timestamp and "\[u26A0]\[uFE0F] " prefix (without trailing newline).
 .TP
 .BI shlib::ewarnn " message"
 Print
 .I message
-to stdout with "\[u26A0]\[uFE0F] " prefix (with trailing newline).
+to stdout with ISO8601 timestamp and "\[u26A0]\[uFE0F] " prefix (with trailing newline).
 .TP
 .BI shlib::einfo " message"
 Print
 .I message
-to stdout with "\[u2139]\[uFE0F] " prefix (without trailing newline).
+to stdout with ISO8601 timestamp and "\[u2139]\[uFE0F] " prefix (without trailing newline).
 .TP
 .BI shlib::einfon " message"
 Print
 .I message
-to stdout with "\[u2139]\[uFE0F] " prefix (with trailing newline).
+to stdout with ISO8601 timestamp and "\[u2139]\[uFE0F] " prefix (with trailing newline).
 .SH VARIABLES
 .TP
 .B SHLIB_VERSION

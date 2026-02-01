@@ -4,152 +4,189 @@ setup() {
     load 'test_helper'
 }
 
-@test "shlib::cerror outputs colorized error to stderr" {
+# Helper to check ISO8601 timestamp format at start of output
+# Format: [YYYY-MM-DDTHH:MM:SS±HH:MM]
+check_timestamp_prefix() {
+    local output="$1"
+    [[ "$output" =~ ^\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:[0-9]{2}\] ]]
+}
+
+@test "shlib::cerror outputs colorized error with timestamp to stderr" {
     run shlib::cerror "test message"
-    [[ "${output}" == $'\033[31merror:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[31merror:\033[0m test message' ]]
 }
 
 @test "shlib::cerror with empty message" {
     run shlib::cerror ""
-    [[ "${output}" == $'\033[31merror:\033[0m ' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[31merror:\033[0m ' ]]
 }
 
-@test "shlib::cerrorn outputs colorized error to stderr" {
+@test "shlib::cerrorn outputs colorized error with timestamp to stderr" {
     run shlib::cerrorn "test message"
-    [[ "${output}" == $'\033[31merror:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[31merror:\033[0m test message' ]]
 }
 
-@test "shlib::cinfo outputs colorized info" {
+@test "shlib::cinfo outputs colorized info with timestamp" {
     run shlib::cinfo "test message"
-    [[ "${output}" == $'\033[34minfo:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[34minfo:\033[0m test message' ]]
 }
 
 @test "shlib::cinfo with empty message" {
     run shlib::cinfo ""
-    [[ "${output}" == $'\033[34minfo:\033[0m ' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[34minfo:\033[0m ' ]]
 }
 
-@test "shlib::cinfon outputs colorized info" {
+@test "shlib::cinfon outputs colorized info with timestamp" {
     run shlib::cinfon "test message"
-    [[ "${output}" == $'\033[34minfo:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[34minfo:\033[0m test message' ]]
 }
 
-@test "shlib::cwarn outputs colorized warning" {
+@test "shlib::cwarn outputs colorized warning with timestamp" {
     run shlib::cwarn "test message"
-    [[ "${output}" == $'\033[33mwarning:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[33mwarning:\033[0m test message' ]]
 }
 
 @test "shlib::cwarn with empty message" {
     run shlib::cwarn ""
-    [[ "${output}" == $'\033[33mwarning:\033[0m ' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[33mwarning:\033[0m ' ]]
 }
 
-@test "shlib::cwarnn outputs colorized warning" {
+@test "shlib::cwarnn outputs colorized warning with timestamp" {
     run shlib::cwarnn "test message"
-    [[ "${output}" == $'\033[33mwarning:\033[0m test message' ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *$'] \033[33mwarning:\033[0m test message' ]]
 }
 
-@test "shlib::eerror outputs emoji error to stderr" {
+@test "shlib::eerror outputs emoji error with timestamp to stderr" {
     run shlib::eerror "test message"
-    [[ "${output}" == "❌️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ❌️  test message" ]]
 }
 
 @test "shlib::eerror with empty message" {
     run shlib::eerror ""
-    [[ "${output}" == "❌️  " ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ❌️  " ]]
 }
 
-@test "shlib::eerrorn outputs emoji error to stderr" {
+@test "shlib::eerrorn outputs emoji error with timestamp to stderr" {
     run shlib::eerrorn "test message"
-    [[ "${output}" == "❌️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ❌️  test message" ]]
 }
 
-@test "shlib::einfo outputs emoji info" {
+@test "shlib::einfo outputs emoji info with timestamp" {
     run shlib::einfo "test message"
-    [[ "${output}" == "ℹ️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ℹ️  test message" ]]
 }
 
-@test "shlib::einfon outputs emoji info" {
+@test "shlib::einfon outputs emoji info with timestamp" {
     run shlib::einfon "test message"
-    [[ "${output}" == "ℹ️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ℹ️  test message" ]]
 }
 
-@test "shlib::error outputs to stderr" {
+@test "shlib::error outputs with timestamp to stderr" {
     run shlib::error "test message"
-    [[ "${output}" == "error: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] error: test message" ]]
 }
 
 @test "shlib::error with empty message" {
     run shlib::error ""
-    [[ "${output}" == "error: " ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] error: " ]]
 }
 
 @test "shlib::error with multiple arguments concatenates" {
     run shlib::error "a" "b" "c"
-    [[ "${output}" == "error: a b c" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] error: a b c" ]]
 }
 
 @test "shlib::error with special characters" {
     run shlib::error "line1\nline2"
+    check_timestamp_prefix "$output"
     [[ "${output}" == *"line1"* ]]
 }
 
-@test "shlib::errorn outputs to stderr" {
+@test "shlib::errorn outputs with timestamp to stderr" {
     run shlib::errorn "test message"
-    [[ "${output}" == "error: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] error: test message" ]]
 }
 
-@test "shlib::ewarn outputs emoji warning" {
+@test "shlib::ewarn outputs emoji warning with timestamp" {
     run shlib::ewarn "test message"
-    [[ "${output}" == "⚠️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ⚠️  test message" ]]
 }
 
-@test "shlib::ewarnn outputs emoji warning" {
+@test "shlib::ewarnn outputs emoji warning with timestamp" {
     run shlib::ewarnn "test message"
-    [[ "${output}" == "⚠️  test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] ⚠️  test message" ]]
 }
 
-@test "shlib::info outputs message" {
+@test "shlib::info outputs message with timestamp" {
     run shlib::info "test message"
-    [[ "${output}" == "info: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] info: test message" ]]
 }
 
 @test "shlib::info with empty message" {
     run shlib::info ""
-    [[ "${output}" == "info: " ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] info: " ]]
 }
 
 @test "shlib::info with multiple arguments concatenates" {
     run shlib::info "a" "b" "c"
-    [[ "${output}" == "info: a b c" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] info: a b c" ]]
 }
 
 @test "shlib::info with tab character" {
     run shlib::info $'tab\there'
-    [[ "${output}" == "info: tab	here" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] info: tab	here" ]]
 }
 
-@test "shlib::infon outputs message" {
+@test "shlib::infon outputs message with timestamp" {
     run shlib::infon "test message"
-    [[ "${output}" == "info: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] info: test message" ]]
 }
 
-@test "shlib::warn outputs to stderr" {
+@test "shlib::warn outputs with timestamp to stderr" {
     run shlib::warn "test message"
-    [[ "${output}" == "warning: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] warning: test message" ]]
 }
 
 @test "shlib::warn with empty message" {
     run shlib::warn ""
-    [[ "${output}" == "warning: " ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] warning: " ]]
 }
 
 @test "shlib::warn with multiple arguments concatenates" {
     run shlib::warn "a" "b" "c"
-    [[ "${output}" == "warning: a b c" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] warning: a b c" ]]
 }
 
-@test "shlib::warnn outputs to stderr" {
+@test "shlib::warnn outputs with timestamp to stderr" {
     run shlib::warnn "test message"
-    [[ "${output}" == "warning: test message" ]]
+    check_timestamp_prefix "$output"
+    [[ "${output}" == *"] warning: test message" ]]
 }

@@ -123,182 +123,236 @@ shlib::command_exists() {
 
 # @description Print a colorized error message to stderr (without newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with red "error: "
+# @stderr The message prefixed with ISO8601 timestamp and red "error: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cerror "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 shlib::cerror() {
-    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized error message to stderr (with newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with red "error: " followed by newline
+# @stderr The message prefixed with ISO8601 timestamp and red "error: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cerrorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 shlib::cerrorn() {
-    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized info message to stdout (without newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with blue "info: "
+# @stdout The message prefixed with ISO8601 timestamp and blue "info: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cinfo "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
 shlib::cinfo() {
-    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized info message to stdout (with newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with blue "info: " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and blue "info: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cinfon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
 shlib::cinfon() {
-    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized warning message to stdout (without newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with yellow "warning: "
+# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cwarn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 shlib::cwarn() {
-    printf '\033[%sm%s\033[%sm %s' "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print a colorized warning message to stdout (with newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with yellow "warning: " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::cwarnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 shlib::cwarnn() {
-    printf '\033[%sm%s\033[%sm %s\n' "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
 }
 
 # @description Print an emoji error message to stderr (without newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "❌️ "
+# @stderr The message prefixed with ISO8601 timestamp and "❌️ "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::eerror "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
 shlib::eerror() {
-    echo -n "❌️  $*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ❌️  $*" >&2
 }
 
 # @description Print an emoji error message to stderr (with newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "❌️ " followed by newline
+# @stderr The message prefixed with ISO8601 timestamp and "❌️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::eerrorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
 shlib::eerrorn() {
-    echo "❌️  $*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ❌️  $*" >&2
 }
 
 # @description Print an emoji info message to stdout (without newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with "ℹ️ "
+# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::einfo "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
 shlib::einfo() {
-    echo -n "ℹ️  $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ℹ️  $*"
 }
 
 # @description Print an emoji info message to stdout (with newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with "ℹ️ " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::einfon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
 shlib::einfon() {
-    echo "ℹ️  $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ℹ️  $*"
 }
 
 # @description Print an error message to stderr (without newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "error: "
+# @stderr The message prefixed with ISO8601 timestamp and "error: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::error "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 shlib::error() {
-    echo -n "error: $*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] error: $*" >&2
 }
 
 # @description Print an error message to stderr (with newline)
 # @arg $@ string The error message to print
-# @stderr The message prefixed with "error: " followed by newline
+# @stderr The message prefixed with ISO8601 timestamp and "error: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::errorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 shlib::errorn() {
-    echo "error: $*" >&2
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] error: $*" >&2
 }
 
 # @description Print an emoji warning message to stdout (without newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with "⚠️ "
+# @stdout The message prefixed with ISO8601 timestamp and "⚠️ "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::ewarn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
 shlib::ewarn() {
-    echo -n "⚠️  $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ⚠️  $*"
 }
 
 # @description Print an emoji warning message to stdout (with newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with "⚠️ " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and "⚠️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::ewarnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
 shlib::ewarnn() {
-    echo "⚠️  $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ⚠️  $*"
 }
 
 # @description Print an info message to stdout (without newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with "info: "
+# @stdout The message prefixed with ISO8601 timestamp and "info: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::info "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
 shlib::info() {
-    echo -n "info: $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] info: $*"
 }
 
 # @description Print an info message to stdout (with newline)
 # @arg $@ string The info message to print
-# @stdout The message prefixed with "info: " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and "info: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::infon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
 shlib::infon() {
-    echo "info: $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] info: $*"
 }
 
 # @description Print a warning message to stdout (without newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with "warning: "
+# @stdout The message prefixed with ISO8601 timestamp and "warning: "
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::warn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 shlib::warn() {
-    echo -n "warning: $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] warning: $*"
 }
 
 # @description Print a warning message to stdout (with newline)
 # @arg $@ string The warning message to print
-# @stdout The message prefixed with "warning: " followed by newline
+# @stdout The message prefixed with ISO8601 timestamp and "warning: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
 #   shlib::warnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 shlib::warnn() {
-    echo "warning: $*"
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] warning: $*"
 }
 
 #
