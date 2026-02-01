@@ -4,90 +4,17 @@ setup() {
     load 'test_helper'
 }
 
-@test "SHLIB_VERSION is set" {
-    [[ -n "${SHLIB_VERSION}" ]]
+@test "shlib::list_functions only includes shlib:: functions" {
+    run shlib::list_functions
+    while IFS= read -r line; do
+        [[ "$line" == shlib::* ]]
+    done <<<"$output"
 }
 
-@test "SHLIB_LOADED is readonly" {
-    run bash -c 'source shlib.sh; SHLIB_LOADED=0 2>&1'
-    # Should fail with readonly error
-    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
-}
-
-@test "SHLIB_DIR is set to correct path" {
-    [[ -n "${SHLIB_DIR}" ]]
-    [[ -d "${SHLIB_DIR}" ]]
-    [[ -f "${SHLIB_DIR}/shlib.sh" ]]
-}
-
-@test "SHLIB_VERSION is readonly" {
-    run bash -c 'source shlib.sh; SHLIB_VERSION="test" 2>&1'
-    # Should fail with readonly error
-    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
-}
-
-@test "SHLIB_ANSI_COLOR_NAMES has 16 elements" {
-    [[ "${#SHLIB_ANSI_COLOR_NAMES[@]}" -eq 16 ]]
-}
-
-@test "SHLIB_ANSI_COLOR_NAMES contains expected colors" {
-    [[ "${SHLIB_ANSI_COLOR_NAMES[0]}" == "Black" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[1]}" == "Red" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[7]}" == "White" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[15]}" == "Bright White" ]]
-}
-
-@test "SHLIB_ANSI_FG_CODES has 16 elements" {
-    [[ "${#SHLIB_ANSI_FG_CODES[@]}" -eq 16 ]]
-}
-
-@test "SHLIB_ANSI_FG_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_FG_CODES[0]}" -eq 30 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[7]}" -eq 37 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[8]}" -eq 90 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[15]}" -eq 97 ]]
-}
-
-@test "SHLIB_ANSI_BG_CODES has 16 elements" {
-    [[ "${#SHLIB_ANSI_BG_CODES[@]}" -eq 16 ]]
-}
-
-@test "SHLIB_ANSI_BG_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_BG_CODES[0]}" -eq 40 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[7]}" -eq 47 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[8]}" -eq 100 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[15]}" -eq 107 ]]
-}
-
-@test "SHLIB_ANSI_STYLE_CODES has 9 elements" {
-    [[ "${#SHLIB_ANSI_STYLE_CODES[@]}" -eq 9 ]]
-}
-
-@test "SHLIB_ANSI_STYLE_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_STYLE_CODES[0]}" -eq 0 ]]
-    [[ "${SHLIB_ANSI_STYLE_CODES[1]}" -eq 1 ]]
-    [[ "${SHLIB_ANSI_STYLE_CODES[4]}" -eq 4 ]]
-}
-
-@test "SHLIB_ANSI_STYLE_NAMES has 9 elements" {
-    [[ "${#SHLIB_ANSI_STYLE_NAMES[@]}" -eq 9 ]]
-}
-
-@test "SHLIB_ANSI_STYLE_NAMES contains expected names" {
-    [[ "${SHLIB_ANSI_STYLE_NAMES[0]}" == "Normal" ]]
-    [[ "${SHLIB_ANSI_STYLE_NAMES[1]}" == "Bold" ]]
-    [[ "${SHLIB_ANSI_STYLE_NAMES[4]}" == "Underline" ]]
-}
-
-@test "shlib::version outputs version string" {
-    result="$(shlib::version)"
-    [[ "${result}" == "${SHLIB_VERSION}" ]]
-}
-
-@test "shlib::version format matches semver pattern" {
-    run shlib::version
-    # Match X.Y.Z pattern
-    [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+@test "shlib::list_functions output is sorted" {
+    run shlib::list_functions
+    first_line="${lines[0]}"
+    [[ "$first_line" == "shlib::ansi_256_palette" ]]
 }
 
 @test "shlib::list_functions returns function names" {
@@ -97,17 +24,17 @@ setup() {
     [[ "$output" == *"shlib::list_functions"* ]]
 }
 
-@test "shlib::list_functions output is sorted" {
-    run shlib::list_functions
-    first_line="${lines[0]}"
-    [[ "$first_line" == "shlib::ansi_256_palette" ]]
+@test "shlib::list_variables only includes SHLIB_ variables" {
+    run shlib::list_variables
+    while IFS= read -r line; do
+        [[ "$line" == SHLIB_* ]]
+    done <<<"$output"
 }
 
-@test "shlib::list_functions only includes shlib:: functions" {
-    run shlib::list_functions
-    while IFS= read -r line; do
-        [[ "$line" == shlib::* ]]
-    done <<<"$output"
+@test "shlib::list_variables output is sorted" {
+    run shlib::list_variables
+    first_line="${lines[0]}"
+    [[ "$first_line" == "SHLIB_ANSI_BG_CODES" ]]
 }
 
 @test "shlib::list_variables returns variable names" {
@@ -118,15 +45,88 @@ setup() {
     [[ "$output" == *"SHLIB_LOADED"* ]]
 }
 
-@test "shlib::list_variables output is sorted" {
-    run shlib::list_variables
-    first_line="${lines[0]}"
-    [[ "$first_line" == "SHLIB_ANSI_BG_CODES" ]]
+@test "shlib::version format matches semver pattern" {
+    run shlib::version
+    # Match X.Y.Z pattern
+    [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }
 
-@test "shlib::list_variables only includes SHLIB_ variables" {
-    run shlib::list_variables
-    while IFS= read -r line; do
-        [[ "$line" == SHLIB_* ]]
-    done <<<"$output"
+@test "shlib::version outputs version string" {
+    result="$(shlib::version)"
+    [[ "${result}" == "${SHLIB_VERSION}" ]]
+}
+
+@test "SHLIB_ANSI_BG_CODES contains expected codes" {
+    [[ "${SHLIB_ANSI_BG_CODES[0]}" -eq 40 ]]
+    [[ "${SHLIB_ANSI_BG_CODES[7]}" -eq 47 ]]
+    [[ "${SHLIB_ANSI_BG_CODES[8]}" -eq 100 ]]
+    [[ "${SHLIB_ANSI_BG_CODES[15]}" -eq 107 ]]
+}
+
+@test "SHLIB_ANSI_BG_CODES has 16 elements" {
+    [[ "${#SHLIB_ANSI_BG_CODES[@]}" -eq 16 ]]
+}
+
+@test "SHLIB_ANSI_COLOR_NAMES contains expected colors" {
+    [[ "${SHLIB_ANSI_COLOR_NAMES[0]}" == "Black" ]]
+    [[ "${SHLIB_ANSI_COLOR_NAMES[1]}" == "Red" ]]
+    [[ "${SHLIB_ANSI_COLOR_NAMES[7]}" == "White" ]]
+    [[ "${SHLIB_ANSI_COLOR_NAMES[15]}" == "Bright White" ]]
+}
+
+@test "SHLIB_ANSI_COLOR_NAMES has 16 elements" {
+    [[ "${#SHLIB_ANSI_COLOR_NAMES[@]}" -eq 16 ]]
+}
+
+@test "SHLIB_ANSI_FG_CODES contains expected codes" {
+    [[ "${SHLIB_ANSI_FG_CODES[0]}" -eq 30 ]]
+    [[ "${SHLIB_ANSI_FG_CODES[7]}" -eq 37 ]]
+    [[ "${SHLIB_ANSI_FG_CODES[8]}" -eq 90 ]]
+    [[ "${SHLIB_ANSI_FG_CODES[15]}" -eq 97 ]]
+}
+
+@test "SHLIB_ANSI_FG_CODES has 16 elements" {
+    [[ "${#SHLIB_ANSI_FG_CODES[@]}" -eq 16 ]]
+}
+
+@test "SHLIB_ANSI_STYLE_CODES contains expected codes" {
+    [[ "${SHLIB_ANSI_STYLE_CODES[0]}" -eq 0 ]]
+    [[ "${SHLIB_ANSI_STYLE_CODES[1]}" -eq 1 ]]
+    [[ "${SHLIB_ANSI_STYLE_CODES[4]}" -eq 4 ]]
+}
+
+@test "SHLIB_ANSI_STYLE_CODES has 9 elements" {
+    [[ "${#SHLIB_ANSI_STYLE_CODES[@]}" -eq 9 ]]
+}
+
+@test "SHLIB_ANSI_STYLE_NAMES contains expected names" {
+    [[ "${SHLIB_ANSI_STYLE_NAMES[0]}" == "Normal" ]]
+    [[ "${SHLIB_ANSI_STYLE_NAMES[1]}" == "Bold" ]]
+    [[ "${SHLIB_ANSI_STYLE_NAMES[4]}" == "Underline" ]]
+}
+
+@test "SHLIB_ANSI_STYLE_NAMES has 9 elements" {
+    [[ "${#SHLIB_ANSI_STYLE_NAMES[@]}" -eq 9 ]]
+}
+
+@test "SHLIB_DIR is set to correct path" {
+    [[ -n "${SHLIB_DIR}" ]]
+    [[ -d "${SHLIB_DIR}" ]]
+    [[ -f "${SHLIB_DIR}/shlib.sh" ]]
+}
+
+@test "SHLIB_LOADED is readonly" {
+    run bash -c 'source shlib.sh; SHLIB_LOADED=0 2>&1'
+    # Should fail with readonly error
+    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
+}
+
+@test "SHLIB_VERSION is readonly" {
+    run bash -c 'source shlib.sh; SHLIB_VERSION="test" 2>&1'
+    # Should fail with readonly error
+    [[ "$status" -ne 0 || "$output" == *"readonly"* ]]
+}
+
+@test "SHLIB_VERSION is set" {
+    [[ -n "${SHLIB_VERSION}" ]]
 }

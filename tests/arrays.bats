@@ -1,42 +1,13 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2034
+# shellcheck disable=SC2030,SC2031,SC2034
 
 # ShellCheck Exclusions:
+# - https://www.shellcheck.net/wiki/SC2030
+# - https://www.shellcheck.net/wiki/SC2031
 # - https://www.shellcheck.net/wiki/SC2034
 
 setup() {
     load 'test_helper'
-}
-
-@test "shlib::arr_len returns correct count" {
-    local -a arr=(a b c d e)
-    run shlib::arr_len arr
-    [[ "${output}" == "5" ]]
-}
-
-@test "shlib::arr_len returns 0 for empty array" {
-    local -a arr=()
-    run shlib::arr_len arr
-    [[ "${output}" == "0" ]]
-}
-
-@test "shlib::arr_len handles array with spaces in elements" {
-    local -a arr=("hello world" "foo bar" "baz")
-    run shlib::arr_len arr
-    [[ "${output}" == "3" ]]
-}
-
-@test "shlib::arr_len handles single element array" {
-    local -a arr=("only one")
-    run shlib::arr_len arr
-    [[ "${output}" == "1" ]]
-}
-
-@test "shlib::arr_append adds single element" {
-    local -a arr=(a b)
-    shlib::arr_append arr c
-    [[ "${#arr[@]}" == "3" ]]
-    [[ "${arr[2]}" == "c" ]]
 }
 
 @test "shlib::arr_append adds multiple elements" {
@@ -46,11 +17,33 @@ setup() {
     [[ "${arr[3]}" == "d" ]]
 }
 
+@test "shlib::arr_append adds single element" {
+    local -a arr=(a b)
+    shlib::arr_append arr c
+    [[ "${#arr[@]}" == "3" ]]
+    [[ "${arr[2]}" == "c" ]]
+}
+
 @test "shlib::arr_append handles elements with spaces" {
     local -a arr=()
     shlib::arr_append arr "hello world" "foo bar"
     [[ "${#arr[@]}" == "2" ]]
     [[ "${arr[0]}" == "hello world" ]]
+}
+
+@test "shlib::arr_append multiple to empty array" {
+    local -a arr=()
+    shlib::arr_append arr "a" "b" "c"
+    [[ ${#arr[@]} -eq 3 ]]
+    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[2]}" == "c" ]]
+}
+
+@test "shlib::arr_append to empty array" {
+    local -a arr=()
+    shlib::arr_append arr "first"
+    [[ ${#arr[@]} -eq 1 ]]
+    [[ "${arr[0]}" == "first" ]]
 }
 
 @test "shlib::arr_delete removes element by index" {
@@ -76,34 +69,42 @@ setup() {
     [[ "${arr[1]}" == "b" ]]
 }
 
-@test "shlib::arr_pop removes last element" {
-    local -a arr=(a b c d)
-    shlib::arr_pop arr
-    [[ "${#arr[@]}" == "3" ]]
-    [[ "${arr[2]}" == "c" ]]
+@test "shlib::arr_delete with negative index" {
+    local -a arr=(a b c)
+    # Negative index may be treated as empty, should not crash
+    shlib::arr_delete arr -1
+    # Array should remain valid (behavior may vary)
+    [[ ${#arr[@]} -ge 0 ]]
 }
 
-@test "shlib::arr_pop on single element array" {
-    local -a arr=(only)
-    shlib::arr_pop arr
-    [[ "${#arr[@]}" == "0" ]]
+@test "shlib::arr_delete with out-of-bounds index" {
+    local -a arr=(a b c)
+    shlib::arr_delete arr 100
+    # Array should remain intact when index is out of bounds
+    [[ ${#arr[@]} -eq 3 ]]
 }
 
-@test "shlib::arr_pop on empty array does nothing" {
-    local -a arr=()
-    shlib::arr_pop arr
-    [[ "${#arr[@]}" == "0" ]]
+@test "shlib::arr_insert handles element with spaces" {
+    local -a arr=(a b c)
+    shlib::arr_insert arr 1 "hello world"
+    [[ ${#arr[@]} -eq 4 ]]
+    [[ "${arr[1]}" == "hello world" ]]
+    [[ "${arr[2]}" == "b" ]]
 }
 
-@test "shlib::arr_insert inserts at middle" {
-    local -a arr=(a b c d)
-    shlib::arr_insert arr 2 "X"
-    [[ ${#arr[@]} -eq 5 ]]
-    [[ "${arr[0]}" == "a" ]]
-    [[ "${arr[1]}" == "b" ]]
+@test "shlib::arr_insert handles index beyond array length" {
+    local -a arr=(a b)
+    shlib::arr_insert arr 10 "X"
+    [[ ${#arr[@]} -eq 3 ]]
     [[ "${arr[2]}" == "X" ]]
-    [[ "${arr[3]}" == "c" ]]
-    [[ "${arr[4]}" == "d" ]]
+}
+
+@test "shlib::arr_insert handles negative index" {
+    local -a arr=(a b c)
+    shlib::arr_insert arr -5 "X"
+    [[ ${#arr[@]} -eq 4 ]]
+    [[ "${arr[0]}" == "X" ]]
+    [[ "${arr[1]}" == "a" ]]
 }
 
 @test "shlib::arr_insert inserts at beginning" {
@@ -122,19 +123,15 @@ setup() {
     [[ "${arr[3]}" == "X" ]]
 }
 
-@test "shlib::arr_insert handles index beyond array length" {
-    local -a arr=(a b)
-    shlib::arr_insert arr 10 "X"
-    [[ ${#arr[@]} -eq 3 ]]
+@test "shlib::arr_insert inserts at middle" {
+    local -a arr=(a b c d)
+    shlib::arr_insert arr 2 "X"
+    [[ ${#arr[@]} -eq 5 ]]
+    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[1]}" == "b" ]]
     [[ "${arr[2]}" == "X" ]]
-}
-
-@test "shlib::arr_insert handles negative index" {
-    local -a arr=(a b c)
-    shlib::arr_insert arr -5 "X"
-    [[ ${#arr[@]} -eq 4 ]]
-    [[ "${arr[0]}" == "X" ]]
-    [[ "${arr[1]}" == "a" ]]
+    [[ "${arr[3]}" == "c" ]]
+    [[ "${arr[4]}" == "d" ]]
 }
 
 @test "shlib::arr_insert into empty array" {
@@ -144,41 +141,210 @@ setup() {
     [[ "${arr[0]}" == "X" ]]
 }
 
-@test "shlib::arr_insert handles element with spaces" {
+@test "shlib::arr_insert with empty string element" {
     local -a arr=(a b c)
-    shlib::arr_insert arr 1 "hello world"
+    shlib::arr_insert arr 1 ""
     [[ ${#arr[@]} -eq 4 ]]
-    [[ "${arr[1]}" == "hello world" ]]
+    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[1]}" == "" ]]
     [[ "${arr[2]}" == "b" ]]
 }
 
-@test "shlib::arr_sort sorts alphabetically" {
-    local -a arr=(cherry apple banana)
-    shlib::arr_sort arr
-    [[ "${arr[0]}" == "apple" ]]
-    [[ "${arr[1]}" == "banana" ]]
-    [[ "${arr[2]}" == "cherry" ]]
+@test "shlib::arr_len handles array with spaces in elements" {
+    local -a arr=("hello world" "foo bar" "baz")
+    run shlib::arr_len arr
+    [[ "${output}" == "3" ]]
 }
 
-@test "shlib::arr_sort handles numbers as strings" {
-    local -a arr=(10 2 1 20)
-    shlib::arr_sort arr
-    [[ "${arr[0]}" == "1" ]]
-    [[ "${arr[1]}" == "10" ]]
-    [[ "${arr[2]}" == "2" ]]
-    [[ "${arr[3]}" == "20" ]]
+@test "shlib::arr_len handles single element array" {
+    local -a arr=("only one")
+    run shlib::arr_len arr
+    [[ "${output}" == "1" ]]
 }
 
-@test "shlib::arr_sort handles single element" {
+@test "shlib::arr_len returns 0 for empty array" {
+    local -a arr=()
+    run shlib::arr_len arr
+    [[ "${output}" == "0" ]]
+}
+
+@test "shlib::arr_len returns correct count" {
+    local -a arr=(a b c d e)
+    run shlib::arr_len arr
+    [[ "${output}" == "5" ]]
+}
+
+@test "shlib::arr_merge handles elements with spaces" {
+    local -a arr1=("hello world")
+    local -a arr2=("foo bar" "baz")
+    local -a result
+    shlib::arr_merge result arr1 arr2
+    [[ ${#result[@]} -eq 3 ]]
+    [[ "${result[0]}" == "hello world" ]]
+    [[ "${result[1]}" == "foo bar" ]]
+    [[ "${result[2]}" == "baz" ]]
+}
+
+@test "shlib::arr_merge handles empty source arrays" {
+    local -a arr1=(a b)
+    local -a arr2=()
+    local -a arr3=(c d)
+    local -a result
+    shlib::arr_merge result arr1 arr2 arr3
+    [[ ${#result[@]} -eq 4 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+}
+
+@test "shlib::arr_merge merges three arrays" {
+    local -a arr1=(a b)
+    local -a arr2=(c)
+    local -a arr3=(d e f)
+    local -a result
+    shlib::arr_merge result arr1 arr2 arr3
+    [[ ${#result[@]} -eq 6 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+    [[ "${result[5]}" == "f" ]]
+}
+
+@test "shlib::arr_merge merges two arrays" {
+    local -a arr1=(a b)
+    local -a arr2=(c d)
+    local -a result
+    shlib::arr_merge result arr1 arr2
+    [[ ${#result[@]} -eq 4 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[1]}" == "b" ]]
+    [[ "${result[2]}" == "c" ]]
+    [[ "${result[3]}" == "d" ]]
+}
+
+@test "shlib::arr_merge overwrites existing destination" {
+    local -a arr1=(a b)
+    local -a result=(x y z)
+    shlib::arr_merge result arr1
+    [[ ${#result[@]} -eq 2 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[1]}" == "b" ]]
+}
+
+@test "shlib::arr_merge with no source arrays" {
+    local -a result
+    shlib::arr_merge result
+    [[ ${#result[@]} -eq 0 ]]
+}
+
+@test "shlib::arr_merge with single source array" {
+    local -a arr1=(a b c)
+    local -a result
+    shlib::arr_merge result arr1
+    [[ ${#result[@]} -eq 3 ]]
+    [[ "${result[0]}" == "a" ]]
+    [[ "${result[2]}" == "c" ]]
+}
+
+@test "shlib::arr_pop on empty array does nothing" {
+    local -a arr=()
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "0" ]]
+}
+
+@test "shlib::arr_pop on single element array" {
     local -a arr=(only)
-    shlib::arr_sort arr
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "0" ]]
+}
+
+@test "shlib::arr_pop removes last element" {
+    local -a arr=(a b c d)
+    shlib::arr_pop arr
+    [[ "${#arr[@]}" == "3" ]]
+    [[ "${arr[2]}" == "c" ]]
+}
+
+@test "shlib::arr_print handles empty array" {
+    local -a arr=()
+    run shlib::arr_print arr
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::arr_print handles single element" {
+    local -a arr=(only)
+    run shlib::arr_print arr ","
+    [[ "${output}" == "only" ]]
+}
+
+@test "shlib::arr_print with comma separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr ","
+    [[ "${output}" == "a,b,c" ]]
+}
+
+@test "shlib::arr_print with default separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr
+    [[ "${output}" == "a b c" ]]
+}
+
+@test "shlib::arr_print with elements containing the separator" {
+    local -a arr=("a,b" "c,d")
+    run shlib::arr_print arr ","
+    # The separator is embedded in elements, output includes them
+    [[ "${output}" == "a,b,c,d" ]]
+}
+
+@test "shlib::arr_print with empty string separator defaults to space" {
+    # Note: arr_print uses ${2:- } which defaults empty to space
+    local -a arr=(a b c)
+    run shlib::arr_print arr ""
+    [[ "${output}" == "a b c" ]]
+}
+
+@test "shlib::arr_print with multi-char separator" {
+    local -a arr=(a b c)
+    run shlib::arr_print arr " | "
+    [[ "${output}" == "a | b | c" ]]
+}
+
+@test "shlib::arr_printn handles elements with spaces" {
+    local -a arr=("hello world" "foo bar")
+    run shlib::arr_printn arr
+    [[ "${lines[0]}" == "hello world" ]]
+    [[ "${lines[1]}" == "foo bar" ]]
+}
+
+@test "shlib::arr_printn handles single element" {
+    local -a arr=(only)
+    run shlib::arr_printn arr
+    [[ "${output}" == "only" ]]
+}
+
+@test "shlib::arr_printn prints each element on new line" {
+    local -a arr=(a b c)
+    run shlib::arr_printn arr
+    [[ "${lines[0]}" == "a" ]]
+    [[ "${lines[1]}" == "b" ]]
+    [[ "${lines[2]}" == "c" ]]
+}
+
+@test "shlib::arr_printn with empty array" {
+    local -a arr=()
+    run shlib::arr_printn arr
+    [[ "${output}" == "" ]]
+}
+
+@test "shlib::arr_reverse handles single element" {
+    local -a arr=(only)
+    shlib::arr_reverse arr
     [[ "${arr[0]}" == "only" ]]
 }
 
-@test "shlib::arr_sort with empty array" {
-    local -a arr=()
-    shlib::arr_sort arr
-    [[ ${#arr[@]} -eq 0 ]]
+@test "shlib::arr_reverse handles two elements" {
+    local -a arr=(first second)
+    shlib::arr_reverse arr
+    [[ "${arr[0]}" == "second" ]]
+    [[ "${arr[1]}" == "first" ]]
 }
 
 @test "shlib::arr_reverse reverses array" {
@@ -196,87 +362,50 @@ setup() {
     [[ ${#arr[@]} -eq 0 ]]
 }
 
-@test "shlib::arr_reverse handles single element" {
+@test "shlib::arr_sort handles numbers as strings" {
+    local -a arr=(10 2 1 20)
+    shlib::arr_sort arr
+    [[ "${arr[0]}" == "1" ]]
+    [[ "${arr[1]}" == "10" ]]
+    [[ "${arr[2]}" == "2" ]]
+    [[ "${arr[3]}" == "20" ]]
+}
+
+@test "shlib::arr_sort handles single element" {
     local -a arr=(only)
-    shlib::arr_reverse arr
+    shlib::arr_sort arr
     [[ "${arr[0]}" == "only" ]]
 }
 
-@test "shlib::arr_reverse handles two elements" {
-    local -a arr=(first second)
-    shlib::arr_reverse arr
-    [[ "${arr[0]}" == "second" ]]
-    [[ "${arr[1]}" == "first" ]]
+@test "shlib::arr_sort sorts alphabetically" {
+    local -a arr=(cherry apple banana)
+    shlib::arr_sort arr
+    [[ "${arr[0]}" == "apple" ]]
+    [[ "${arr[1]}" == "banana" ]]
+    [[ "${arr[2]}" == "cherry" ]]
 }
 
-@test "shlib::arr_print with default separator" {
-    local -a arr=(a b c)
-    run shlib::arr_print arr
-    [[ "${output}" == "a b c" ]]
-}
-
-@test "shlib::arr_print with comma separator" {
-    local -a arr=(a b c)
-    run shlib::arr_print arr ","
-    [[ "${output}" == "a,b,c" ]]
-}
-
-@test "shlib::arr_print with multi-char separator" {
-    local -a arr=(a b c)
-    run shlib::arr_print arr " | "
-    [[ "${output}" == "a | b | c" ]]
-}
-
-@test "shlib::arr_print handles single element" {
-    local -a arr=(only)
-    run shlib::arr_print arr ","
-    [[ "${output}" == "only" ]]
-}
-
-@test "shlib::arr_print handles empty array" {
+@test "shlib::arr_sort with empty array" {
     local -a arr=()
-    run shlib::arr_print arr
-    [[ "${output}" == "" ]]
+    shlib::arr_sort arr
+    [[ ${#arr[@]} -eq 0 ]]
 }
 
-@test "shlib::arr_printn prints each element on new line" {
-    local -a arr=(a b c)
-    run shlib::arr_printn arr
-    [[ "${lines[0]}" == "a" ]]
-    [[ "${lines[1]}" == "b" ]]
-    [[ "${lines[2]}" == "c" ]]
-}
-
-@test "shlib::arr_printn handles single element" {
-    local -a arr=(only)
-    run shlib::arr_printn arr
-    [[ "${output}" == "only" ]]
-}
-
-@test "shlib::arr_printn handles elements with spaces" {
-    local -a arr=("hello world" "foo bar")
-    run shlib::arr_printn arr
-    [[ "${lines[0]}" == "hello world" ]]
-    [[ "${lines[1]}" == "foo bar" ]]
-}
-
-@test "shlib::arr_uniq removes duplicates" {
-    local -a arr=(a b a c b d)
+@test "shlib::arr_uniq case-sensitive duplicates" {
+    local -a arr=("A" "a" "B" "b" "A")
     shlib::arr_uniq arr
     [[ ${#arr[@]} -eq 4 ]]
-    [[ "${arr[0]}" == "a" ]]
-    [[ "${arr[1]}" == "b" ]]
-    [[ "${arr[2]}" == "c" ]]
-    [[ "${arr[3]}" == "d" ]]
+    [[ "${arr[0]}" == "A" ]]
+    [[ "${arr[1]}" == "a" ]]
+    [[ "${arr[2]}" == "B" ]]
+    [[ "${arr[3]}" == "b" ]]
 }
 
-@test "shlib::arr_uniq preserves order of first occurrence" {
-    local -a arr=(cherry apple cherry banana apple)
+@test "shlib::arr_uniq handles array with all duplicates" {
+    local -a arr=(x x x x)
     shlib::arr_uniq arr
-    [[ ${#arr[@]} -eq 3 ]]
-    [[ "${arr[0]}" == "cherry" ]]
-    [[ "${arr[1]}" == "apple" ]]
-    [[ "${arr[2]}" == "banana" ]]
+    [[ ${#arr[@]} -eq 1 ]]
+    [[ "${arr[0]}" == "x" ]]
 }
 
 @test "shlib::arr_uniq handles array with no duplicates" {
@@ -287,11 +416,13 @@ setup() {
     [[ "${arr[3]}" == "d" ]]
 }
 
-@test "shlib::arr_uniq handles array with all duplicates" {
-    local -a arr=(x x x x)
+@test "shlib::arr_uniq handles elements with spaces" {
+    local -a arr=("hello world" "foo bar" "hello world" "baz")
     shlib::arr_uniq arr
-    [[ ${#arr[@]} -eq 1 ]]
-    [[ "${arr[0]}" == "x" ]]
+    [[ ${#arr[@]} -eq 3 ]]
+    [[ "${arr[0]}" == "hello world" ]]
+    [[ "${arr[1]}" == "foo bar" ]]
+    [[ "${arr[2]}" == "baz" ]]
 }
 
 @test "shlib::arr_uniq handles empty array" {
@@ -307,150 +438,21 @@ setup() {
     [[ "${arr[0]}" == "only" ]]
 }
 
-@test "shlib::arr_uniq handles elements with spaces" {
-    local -a arr=("hello world" "foo bar" "hello world" "baz")
+@test "shlib::arr_uniq preserves order of first occurrence" {
+    local -a arr=(cherry apple cherry banana apple)
     shlib::arr_uniq arr
     [[ ${#arr[@]} -eq 3 ]]
-    [[ "${arr[0]}" == "hello world" ]]
-    [[ "${arr[1]}" == "foo bar" ]]
-    [[ "${arr[2]}" == "baz" ]]
+    [[ "${arr[0]}" == "cherry" ]]
+    [[ "${arr[1]}" == "apple" ]]
+    [[ "${arr[2]}" == "banana" ]]
 }
 
-@test "shlib::arr_merge merges two arrays" {
-    local -a arr1=(a b)
-    local -a arr2=(c d)
-    local -a result
-    shlib::arr_merge result arr1 arr2
-    [[ ${#result[@]} -eq 4 ]]
-    [[ "${result[0]}" == "a" ]]
-    [[ "${result[1]}" == "b" ]]
-    [[ "${result[2]}" == "c" ]]
-    [[ "${result[3]}" == "d" ]]
-}
-
-@test "shlib::arr_merge merges three arrays" {
-    local -a arr1=(a b)
-    local -a arr2=(c)
-    local -a arr3=(d e f)
-    local -a result
-    shlib::arr_merge result arr1 arr2 arr3
-    [[ ${#result[@]} -eq 6 ]]
-    [[ "${result[0]}" == "a" ]]
-    [[ "${result[2]}" == "c" ]]
-    [[ "${result[5]}" == "f" ]]
-}
-
-@test "shlib::arr_merge handles empty source arrays" {
-    local -a arr1=(a b)
-    local -a arr2=()
-    local -a arr3=(c d)
-    local -a result
-    shlib::arr_merge result arr1 arr2 arr3
-    [[ ${#result[@]} -eq 4 ]]
-    [[ "${result[0]}" == "a" ]]
-    [[ "${result[2]}" == "c" ]]
-}
-
-@test "shlib::arr_merge with single source array" {
-    local -a arr1=(a b c)
-    local -a result
-    shlib::arr_merge result arr1
-    [[ ${#result[@]} -eq 3 ]]
-    [[ "${result[0]}" == "a" ]]
-    [[ "${result[2]}" == "c" ]]
-}
-
-@test "shlib::arr_merge with no source arrays" {
-    local -a result
-    shlib::arr_merge result
-    [[ ${#result[@]} -eq 0 ]]
-}
-
-@test "shlib::arr_merge handles elements with spaces" {
-    local -a arr1=("hello world")
-    local -a arr2=("foo bar" "baz")
-    local -a result
-    shlib::arr_merge result arr1 arr2
-    [[ ${#result[@]} -eq 3 ]]
-    [[ "${result[0]}" == "hello world" ]]
-    [[ "${result[1]}" == "foo bar" ]]
-    [[ "${result[2]}" == "baz" ]]
-}
-
-@test "shlib::arr_merge overwrites existing destination" {
-    local -a arr1=(a b)
-    local -a result=(x y z)
-    shlib::arr_merge result arr1
-    [[ ${#result[@]} -eq 2 ]]
-    [[ "${result[0]}" == "a" ]]
-    [[ "${result[1]}" == "b" ]]
-}
-
-@test "shlib::arr_print with elements containing the separator" {
-    local -a arr=("a,b" "c,d")
-    run shlib::arr_print arr ","
-    # The separator is embedded in elements, output includes them
-    [[ "${output}" == "a,b,c,d" ]]
-}
-
-@test "shlib::arr_printn with empty array" {
-    local -a arr=()
-    run shlib::arr_printn arr
-    [[ "${output}" == "" ]]
-}
-
-@test "shlib::arr_delete with negative index" {
-    local -a arr=(a b c)
-    # Negative index may be treated as empty, should not crash
-    shlib::arr_delete arr -1
-    # Array should remain valid (behavior may vary)
-    [[ ${#arr[@]} -ge 0 ]]
-}
-
-@test "shlib::arr_delete with out-of-bounds index" {
-    local -a arr=(a b c)
-    shlib::arr_delete arr 100
-    # Array should remain intact when index is out of bounds
-    [[ ${#arr[@]} -eq 3 ]]
-}
-
-@test "shlib::arr_insert with empty string element" {
-    local -a arr=(a b c)
-    shlib::arr_insert arr 1 ""
+@test "shlib::arr_uniq removes duplicates" {
+    local -a arr=(a b a c b d)
+    shlib::arr_uniq arr
     [[ ${#arr[@]} -eq 4 ]]
     [[ "${arr[0]}" == "a" ]]
-    [[ "${arr[1]}" == "" ]]
-    [[ "${arr[2]}" == "b" ]]
-}
-
-@test "shlib::arr_append to empty array" {
-    local -a arr=()
-    shlib::arr_append arr "first"
-    [[ ${#arr[@]} -eq 1 ]]
-    [[ "${arr[0]}" == "first" ]]
-}
-
-@test "shlib::arr_append multiple to empty array" {
-    local -a arr=()
-    shlib::arr_append arr "a" "b" "c"
-    [[ ${#arr[@]} -eq 3 ]]
-    [[ "${arr[0]}" == "a" ]]
+    [[ "${arr[1]}" == "b" ]]
     [[ "${arr[2]}" == "c" ]]
-}
-
-@test "shlib::arr_uniq case-sensitive duplicates" {
-    local -a arr=("A" "a" "B" "b" "A")
-    shlib::arr_uniq arr
-    [[ ${#arr[@]} -eq 4 ]]
-    [[ "${arr[0]}" == "A" ]]
-    [[ "${arr[1]}" == "a" ]]
-    [[ "${arr[2]}" == "B" ]]
-    [[ "${arr[3]}" == "b" ]]
-}
-
-@test "shlib::arr_print with empty string separator defaults to space" {
-    # Note: arr_print uses ${2:- } which defaults empty to space
-    local -a arr=(a b c)
-    run shlib::arr_print arr ""
-    [[ "${output}" == "a b c" ]]
+    [[ "${arr[3]}" == "d" ]]
 }
