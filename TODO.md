@@ -1,6 +1,5 @@
 # TODO
 
-- date/time functions
 - add timestamps to logging functions
 - random string functions
 - exec functions: is_root, retry, timeout
