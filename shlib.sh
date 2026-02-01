@@ -6,6 +6,9 @@
 # Usage:
 #   source /path/to/shlib/shlib.sh
 #
+# License: MIT
+#
+
 # ShellCheck Exclusions:
 # - https://www.shellcheck.net/wiki/SC1087
 
@@ -772,12 +775,12 @@ shlib::dt_add() {
     local multiplier=1
 
     case "$unit" in
-        second | seconds) multiplier=1 ;;
-        minute | minutes) multiplier=60 ;;
-        hour | hours) multiplier=3600 ;;
-        day | days) multiplier=86400 ;;
-        week | weeks) multiplier=604800 ;;
-        *) multiplier=1 ;;
+    second | seconds) multiplier=1 ;;
+    minute | minutes) multiplier=60 ;;
+    hour | hours) multiplier=3600 ;;
+    day | days) multiplier=86400 ;;
+    week | weeks) multiplier=604800 ;;
+    *) multiplier=1 ;;
     esac
 
     echo $((timestamp + amount * multiplier))
@@ -801,12 +804,12 @@ shlib::dt_diff() {
     local divisor=1
 
     case "$unit" in
-        second | seconds) divisor=1 ;;
-        minute | minutes) divisor=60 ;;
-        hour | hours) divisor=3600 ;;
-        day | days) divisor=86400 ;;
-        week | weeks) divisor=604800 ;;
-        *) divisor=1 ;;
+    second | seconds) divisor=1 ;;
+    minute | minutes) divisor=60 ;;
+    hour | hours) divisor=3600 ;;
+    day | days) divisor=86400 ;;
+    week | weeks) divisor=604800 ;;
+    *) divisor=1 ;;
     esac
 
     echo $((diff / divisor))
@@ -840,32 +843,32 @@ shlib::dt_duration() {
     local output=""
 
     case "$format" in
-        long)
-            local parts=()
-            [[ $days -gt 0 ]] && parts+=("$days day$([[ $days -ne 1 ]] && echo "s")")
-            [[ $hours -gt 0 ]] && parts+=("$hours hour$([[ $hours -ne 1 ]] && echo "s")")
-            [[ $mins -gt 0 ]] && parts+=("$mins minute$([[ $mins -ne 1 ]] && echo "s")")
-            [[ $secs -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("$secs second$([[ $secs -ne 1 ]] && echo "s")")
+    long)
+        local parts=()
+        [[ $days -gt 0 ]] && parts+=("$days day$([[ $days -ne 1 ]] && echo "s")")
+        [[ $hours -gt 0 ]] && parts+=("$hours hour$([[ $hours -ne 1 ]] && echo "s")")
+        [[ $mins -gt 0 ]] && parts+=("$mins minute$([[ $mins -ne 1 ]] && echo "s")")
+        [[ $secs -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("$secs second$([[ $secs -ne 1 ]] && echo "s")")
 
-            local i
-            for ((i = 0; i < ${#parts[@]}; i++)); do
-                [[ $i -gt 0 ]] && output+=", "
-                output+="${parts[$i]}"
-            done
-            ;;
-        compact)
-            [[ $days -gt 0 ]] && output+="${days}d"
-            [[ $hours -gt 0 ]] && output+="${hours}h"
-            [[ $mins -gt 0 ]] && output+="${mins}m"
-            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
-            ;;
-        short | *)
-            [[ $days -gt 0 ]] && output+="${days}d "
-            [[ $hours -gt 0 ]] && output+="${hours}h "
-            [[ $mins -gt 0 ]] && output+="${mins}m "
-            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
-            output="${output% }" # trim trailing space
-            ;;
+        local i
+        for ((i = 0; i < ${#parts[@]}; i++)); do
+            [[ $i -gt 0 ]] && output+=", "
+            output+="${parts[$i]}"
+        done
+        ;;
+    compact)
+        [[ $days -gt 0 ]] && output+="${days}d"
+        [[ $hours -gt 0 ]] && output+="${hours}h"
+        [[ $mins -gt 0 ]] && output+="${mins}m"
+        [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+        ;;
+    short | *)
+        [[ $days -gt 0 ]] && output+="${days}d "
+        [[ $hours -gt 0 ]] && output+="${hours}h "
+        [[ $mins -gt 0 ]] && output+="${mins}m "
+        [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+        output="${output% }" # trim trailing space
+        ;;
     esac
 
     echo "${negative}${output}"
