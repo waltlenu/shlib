@@ -41,8 +41,9 @@ Returns exit code 1 if formatting fails.
 Parse a date string to Unix timestamp.
 The optional
 .I format
-is used for BSD date parsing (e.g., "%Y-%m-%d").
-GNU date parses most formats automatically.
+specifies the expected date format using pure Bash regex parsing for portability.
+Supported formats: %Y-%m-%d, %Y/%m/%d, %m/%d/%Y, %Y-%m-%d %H:%M:%S.
+Falls back to auto-detection if format doesn't match.
 Returns exit code 1 if parsing fails.
 .SS Arithmetic
 .TP
@@ -105,7 +106,9 @@ Return 0 if
 is a valid date, 1 otherwise.
 The optional
 .I format
-is used for BSD date parsing.
+specifies the expected date format using pure Bash regex validation for portability.
+Supported formats: %Y-%m-%d, %Y/%m/%d, %m/%d/%Y, %Y-%m-%d %H:%M:%S.
+Without a format, tries all known patterns then falls back to system date command.
 .SH EXAMPLES
 Get current time:
 .PP

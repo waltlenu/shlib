@@ -32,6 +32,7 @@ echo
 # Parsing dates
 echo "Parsing dates:"
 echo "  dt_to_unix \"2024-01-01\": $(shlib::dt_to_unix "2024-01-01")"
+echo "  dt_to_unix \"01/15/2024\" \"%m/%d/%Y\": $(shlib::dt_to_unix "01/15/2024" "%m/%d/%Y")"
 echo
 
 # Timestamp arithmetic
@@ -85,6 +86,9 @@ echo
 echo "Date validation:"
 if shlib::dt_is_valid "2024-01-01"; then
     echo "  dt_is_valid \"2024-01-01\": true"
+fi
+if shlib::dt_is_valid "01/15/2024" "%m/%d/%Y"; then
+    echo "  dt_is_valid \"01/15/2024\" \"%m/%d/%Y\": true"
 fi
 if ! shlib::dt_is_valid "not-a-date"; then
     echo "  dt_is_valid \"not-a-date\": false"
