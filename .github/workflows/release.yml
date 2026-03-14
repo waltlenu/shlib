@@ -1,49 +1,49 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+    push:
+        tags:
+            - "v*"
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    release:
+        name: Create Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Generate changelog
-        run: make changelog
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
+            - name: Generate changelog
+              run: make changelog
+              env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
 
-      - name: Get release info
-        id: release_info
-        run: |
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+            - name: Get release info
+              id: release_info
+              run: |
+                  TAG_NAME="${GITHUB_REF#refs/tags/}"
+                  echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-          # Determine if pre-release
-          if [[ "$TAG_NAME" == *"-"* ]]; then
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-          fi
+                  # Determine if pre-release
+                  if [[ "$TAG_NAME" == *"-"* ]]; then
+                    echo "prerelease=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "prerelease=false" >> $GITHUB_OUTPUT
+                  fi
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.release_info.outputs.tag_name }}
-          name: ${{ steps.release_info.outputs.tag_name }}
-          body_path: changelog.md
-          draft: false
-          prerelease: ${{ steps.release_info.outputs.prerelease }}
-          generate_release_notes: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.release_info.outputs.tag_name }}
+                  name: ${{ steps.release_info.outputs.tag_name }}
+                  body_path: changelog.md
+                  draft: false
+                  prerelease: ${{ steps.release_info.outputs.prerelease }}
+                  generate_release_notes: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

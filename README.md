@@ -4,11 +4,11 @@
 
 A library of reusable [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) shell functions.
 
-- Just [one file](shlib.sh), (but a long one 😜), easy to download and source
-- Pure Bash whenever possible:
+- Just [one file](shlib.sh), but a long one 😜 -> easy to download and source
+- Pure Bash:
   - Idiomatic
-  - No external binaries
-  - Requires Bash >= 3.x because that's what MacOS ships with (the last version released under GPL2)
+  - No external binaries[^1]
+  - Bash `>= 3.x`, or `4`[^2][^3]
 - Won't pollute the environment
   - Every function is "name-spaced" by prefixing it with `shlib::`
   - Every global variable is "name-spaced" by prefixing it with `SHLIB_`
@@ -17,11 +17,17 @@ A library of reusable [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) sh
 - Statically analysed with [ShellCheck](https://github.com/koalaman/shellcheck)
 - Yes, I let [Claude Code](CLAUDE.md) assist me but I watch it with suspicion 👹
 
+[^1]: Whenever possible
+[^2]: There is a section called KV (Key Value) that implements associative arrays functions. It requires BASH v4.x+.
+[^3]: Because that's what MacOS ships with (the last version released under GPL2)
+
 ## Usage
 
-_Don't just "curl bash pipe it"_
+_**Don't** just "curl pipe bash it"_
 
-⚠️ First, **please read** the [code](shlib.sh). At least the top of the file, where all the global instructions/variables are located. The rest of the file is made up Bash function definitions. Everything _should_ be inoffensive because I don't want errors in my own scripts, but don't take my word for it.
+⚠️ First, **please read** the [code](shlib.sh), at least the top of the file.
+
+That's where all the global instructions/variables are located. The rest of the file is made up Bash function definitions. Everything _should_ be inoffensive because I don't want errors in my own scripts, but **don't** take my word for it.
 
 I recommend downloading the latest [released](https://github.com/waltlenu/shlib/releases) version of this library and source in your Bash script:
 
@@ -29,8 +35,10 @@ I recommend downloading the latest [released](https://github.com/waltlenu/shlib/
 #!/usr/bin/env bash
 
 REMOTE='waltlenu/shlib'
-LATEST_TAG=$(curl -sL "https://api.github.com/repos/$REMOTE/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-curl -fsSL --remote-name "https://raw.githubusercontent.com/$REMOTE/refs/tags/$LATEST_TAG/shlib.sh"
+LATEST_TAG=$(curl -sL "https://api.github.com/repos/$REMOTE/releases/latest" \
+  | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+curl -fsSL --remote-name \
+  "https://raw.githubusercontent.com/$REMOTE/refs/tags/$LATEST_TAG/shlib.sh"
 
 # Load library
 source shlib.sh
@@ -39,15 +47,15 @@ source shlib.sh
 shlib::einfon "Hello 🌍"
 ```
 
-But if you prefer the very latest, or just copy a function, go ahead.
+But if you prefer the very [latest](https://raw.githubusercontent.com/waltlenu/shlib/refs/heads/main/shlib.sh), or just copy a function, go ahead.
 
-## Examples
+### Examples
 
-Try running the [examples/usage.sh][examples/usage.sh] script. The `shlib::ansi_` function print pretty colors 😀
+Try running the [examples/usage.sh](examples/usage.sh) script. The `shlib::ansi_` functions print pretty colors 😀
 
-## Documentation
+### Documentation
 
-View the man page(s):
+Read the man page(s):
 
 ```bash
 man man/shlib.7
@@ -76,25 +84,30 @@ shlib::my_function() {
 }
 ```
 
-### Linting and formatting
+### Linting, formatting, testing
 
-This project uses [ShellCheck](https://github.com/koalaman/shellcheck) for linting, [shfmt](https://github.com/patrickvane/shfmt) for formatting:
+This project uses:
+- [ShellCheck](https://github.com/koalaman/shellcheck) for static analysis
+- [shfmt](https://github.com/patrickvane/shfmt) for formatting
+- [Bats](https://github.com/bats-core/bats-core) for testing
 
 ```bash
+make all
+
+# or:
 shellcheck -s bash shlib.sh
-```
-
-### Testing
-
-This project uses [Bats](https://github.com/bats-core/bats-core) for testing.
-
-```bash
+shfmt -i 4 -ci -bn shlib.sh
 bats tests/
 ```
 
 ### TODO
 
-Plenty of features missing see [TODO](TODO.md) file.
+Plenty of features still missing:
+
+- [ ] ui: add a confirmation prompt
+- [ ] sys: add functions like is_root
+- [ ] make tmp file, dir
+- [ ] random string functions
 
 ## License
 

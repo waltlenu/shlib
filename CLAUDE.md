@@ -26,7 +26,7 @@ shlib::my_function() {
 - Use `#!/usr/bin/env bash` shebang
 - Strict mode is enabled: `set -euo pipefail`
 - use pure bash whenever possible
-- must support support bash version 3
+- must support bash version 3
 - Quote all variables: `"${var}"`
 - Use `[[` for conditionals, not `[`
 - Use lowercase with underscores for local variables

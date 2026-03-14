@@ -1,10 +1,9 @@
-# shlib - Makefile
+# shlib - A library of reusable Bash shell functions
 #
 # Usage:
-#   make help     - Show available targets
-#   make check    - Run all checks (lint + test)
-#   make format   - Format all shell scripts
-#
+#   make help   - Show available targets
+#   make all    - Run all checks (lint + test)
+
 
 # Shell configuration
 SHELL := /bin/bash
@@ -21,13 +20,10 @@ SHFMT_OPTS := -i 4 -ci -bn
 
 # Files
 SHELL_FILES := shlib.sh
-TEST_FILES := $(wildcard tests/*.bats)
 EXAMPLE_FILES := $(wildcard examples/*.sh)
-ALL_SHELL_FILES := $(SHELL_FILES) $(EXAMPLE_FILES) $(TEST_FILES)
-
-# Docker
-DOCKER_IMAGE := shlib
-DOCKER := docker
+HACK_FILES := $(wildcard hack/*.sh)
+TEST_FILES := $(wildcard tests/*.bats)
+ALL_SHELL_FILES := $(SHELL_FILES) $(EXAMPLE_FILES) $(HACK_FILES) $(TEST_FILES)
 
 # Colors for output
 BOLD := $(shell tput bold 2>/dev/null || echo '')
@@ -39,13 +35,12 @@ RESET := $(shell tput sgr0 2>/dev/null || echo '')
 .DEFAULT_GOAL := help
 
 # Phony targets
-.PHONY: help check lint shellcheck format format-check test \
-        docker-build docker-test docker-shell clean \
-        ci install-deps changelog release-notes
+.PHONY: all lint format test \
+		example man changelog release-notes version hels
 
 ## help: Show this help message
 help:
-	@echo '$(BOLD)shlib$(RESET) - Shell library of reusable Bash functions'
+	@echo '$(BOLD)shlib$(RESET) - A library of reusable Bash shell functions'
 	@echo ''
 	@echo '$(BOLD)Usage:$(RESET)'
 	@echo '  make $(GREEN)<target>$(RESET)'
@@ -53,60 +48,27 @@ help:
 	@echo '$(BOLD)Targets:$(RESET)'
 	@sed -n 's/^## //p' $(MAKEFILE_LIST) | column -t -s ':' | sed 's/^/  /'
 
-## all: Run all linters and formatters
-all: check docker-build
-
-## check: Run all checks (lint + test)
-check: lint format-check test
+## all: Run all linters, formatters, tests
+all: lint format test
 	@echo '$(GREEN)All checks passed$(RESET)'
 
-## lint: Run shellcheck on all shell files
-lint: shellcheck
-
-## shellcheck: Run shellcheck static analysis
-shellcheck:
+## lint: Run static analysis
+lint:
 	@echo '$(BOLD)Running shellcheck...$(RESET)'
 	@$(SHELLCHECK) $(SHELLCHECK_OPTS) $(ALL_SHELL_FILES)
 	@echo '$(GREEN)shellcheck passed$(RESET)'
 
-## format: Format all shell scripts with shfmt
+## format: Check for code formatting
 format:
-	@echo '$(BOLD)Formatting shell scripts...$(RESET)'
-	@$(SHFMT) $(SHFMT_OPTS) -w $(ALL_SHELL_FILES)
-	@echo '$(GREEN)Formatting complete$(RESET)'
-
-## format-check: Check if files are formatted (no changes)
-format-check:
-	@echo '$(BOLD)Checking formatting...$(RESET)'
+	@echo '$(BOLD)Running shfmt...$(RESET)'
 	@$(SHFMT) $(SHFMT_OPTS) -d $(ALL_SHELL_FILES)
 	@echo '$(GREEN)Formatting check passed$(RESET)'
 
-## test: Run all bats tests
+## test: Unit-Test all functions
 test:
-	@echo '$(BOLD)Running tests...$(RESET)'
+	@echo '$(BOLD)Running BATS...$(RESET)'
 	@$(BATS) tests/
 	@echo '$(GREEN)All tests passed$(RESET)'
-
-## docker-build: Build the Docker development image
-docker-build:
-	@echo '$(BOLD)Building Docker image...$(RESET)'
-	@$(DOCKER) build -t $(DOCKER_IMAGE) .
-	@echo '$(GREEN)Docker image built: $(DOCKER_IMAGE)$(RESET)'
-
-## docker-test: Run tests inside Docker container
-docker-test: docker-build
-	@echo '$(BOLD)Running tests in Docker...$(RESET)'
-	@$(DOCKER) run --rm -v "$(PWD):/app" $(DOCKER_IMAGE) -c "bats tests/"
-
-## docker-shell: Start interactive shell in Docker container
-docker-shell: docker-build
-	@$(DOCKER) run --rm -it -v "$(PWD):/app" $(DOCKER_IMAGE)
-
-## docker-check: Run all checks inside Docker container
-docker-check: docker-build
-	@echo '$(BOLD)Running checks in Docker...$(RESET)'
-	@$(DOCKER) run --rm -v "$(PWD):/app" $(DOCKER_IMAGE) -c "shellcheck -s bash shlib.sh && bats tests/"
-	@echo '$(GREEN)All Docker checks passed$(RESET)'
 
 ## example: Run the example script
 example:
@@ -115,33 +77,6 @@ example:
 ## man: View the main man page
 man:
 	@man man/shlib.7
-
-## clean: Remove generated files
-clean:
-	@echo '$(BOLD)Cleaning...$(RESET)'
-	@rm -rf .cache __pycache__ *.log changelog.md
-	@echo '$(GREEN)Clean complete$(RESET)'
-
-## ci: Run full CI pipeline (for CI systems)
-ci: install-deps check
-	@echo '$(GREEN)CI pipeline complete$(RESET)'
-
-## install-deps: Install development dependencies
-install-deps:
-	@echo '$(BOLD)Installing dependencies...$(RESET)'
-	@if command -v apt-get >/dev/null 2>&1; then \
-		which bats >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y bats; \
-		which shellcheck >/dev/null 2>&1 || sudo apt-get install -y shellcheck; \
-		which shfmt >/dev/null 2>&1 || (curl -sS https://webinstall.dev/shfmt | bash); \
-	elif command -v brew >/dev/null 2>&1; then \
-		which bats >/dev/null 2>&1 || brew install bats-core; \
-		which shellcheck >/dev/null 2>&1 || brew install shellcheck; \
-		which shfmt >/dev/null 2>&1 || brew install shfmt; \
-	else \
-		echo 'Warning: Could not detect package manager (apt-get or brew)' >&2; \
-		echo 'Please install bats, shellcheck, and shfmt manually' >&2; \
-	fi
-	@echo '$(GREEN)Dependencies installed$(RESET)'
 
 ## changelog: Generate changelog.md from git history
 changelog:
