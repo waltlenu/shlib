@@ -106,9 +106,9 @@ done <"$input_file"
 # Section marker pattern: '#' alone, followed by '# SectionName', followed by '#'
 header_end=0
 for ((i = 0; i < line_count - 2; i++)); do
-    if [[ "${lines[i]}" == "#" && "${lines[i + 1]}" == "# "* && "${lines[i + 2]}" == "#" ]]; then
+    if [[ "${lines[i]}" == "#" && "${lines[i+1]}" == "# "* && "${lines[i+2]}" == "#" ]]; then
         # Check if line i+1 is a section header (starts with "# " and has uppercase letter)
-        section_line="${lines[i + 1]}"
+        section_line="${lines[i+1]}"
         if [[ "$section_line" =~ ^#\ [A-Z] ]]; then
             header_end=$i
             break
@@ -136,8 +136,8 @@ while [[ $current_line -lt $line_count ]]; do
 
     # Check for section header (3-line pattern: #, # Name, #)
     if [[ "$line" == "#" && $((current_line + 2)) -lt $line_count ]]; then
-        next1="${lines[current_line + 1]}"
-        next2="${lines[current_line + 2]}"
+        next1="${lines[current_line+1]}"
+        next2="${lines[current_line+2]}"
 
         if [[ "$next1" == "# "* && "$next2" == "#" ]]; then
             # Check if this is a section header (uppercase letter after "# ")
@@ -155,8 +155,8 @@ while [[ $current_line -lt $line_count ]]; do
                 # Store section header
                 {
                     echo "${lines[current_line]}"
-                    echo "${lines[current_line + 1]}"
-                    echo "${lines[current_line + 2]}"
+                    echo "${lines[current_line+1]}"
+                    echo "${lines[current_line+2]}"
                 } >"$section_dir/header"
 
                 current_line=$((current_line + 3))

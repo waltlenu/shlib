@@ -27,20 +27,6 @@ indent_size = 4
 [Makefile]
 indent_style = tab
 
-[*.mk]
-indent_style = tab
-
-# YAML files (GitHub Actions, configs)
-[*.yml]
-indent_size = 2
-
-[*.yaml]
-indent_size = 2
-
-# JSON files
-[*.json]
-indent_size = 2
-
 # Markdown
 [*.md]
 indent_size = 2
