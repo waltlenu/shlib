@@ -104,650 +104,6 @@ shlib::version() {
 }
 
 #
-# System
-#
-
-# @description Check if a command exists in PATH
-# @arg $1 string The command name to check
-# @exitcode 0 Command exists
-# @exitcode 1 Command not found
-# @example
-#   shlib::cmd_exists git
-shlib::cmd_exists() {
-    command -v "$1" &>/dev/null
-}
-
-# @description Run a command protected by file-based locking
-# @arg $1 string Path to the lock file (a .lock directory will be created)
-# @arg $2 int Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
-# @arg $@ string The command and its arguments
-# @stdout Command output (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command completed successfully
-# @exitcode 1 Failed to acquire lock within timeout, or invalid arguments
-# @exitcode * Command's exit code if lock was acquired
-# @example
-#   shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
-#   shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
-#   shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
-shlib::cmd_locked() {
-    local lockfile="$1"
-    local timeout="$2"
-    shift 2
-
-    # Validate lockfile path
-    if [[ -z "$lockfile" ]]; then
-        return 1
-    fi
-
-    # Validate timeout is an integer (including negative)
-    if ! [[ "$timeout" =~ ^-?[0-9]+$ ]]; then
-        return 1
-    fi
-
-    # Validate command is provided
-    if [[ $# -eq 0 ]]; then
-        return 1
-    fi
-
-    local lockdir="${lockfile}.lock"
-    local pidfile="${lockdir}/pid"
-    local start_time elapsed exit_code lock_pid
-
-    start_time=$(date +%s)
-
-    # Try to acquire lock
-    while true; do
-        # mkdir is atomic on POSIX systems - portable locking mechanism
-        if mkdir "$lockdir" 2>/dev/null; then
-            # Got the lock, write our PID for stale detection
-            echo $$ >"$pidfile"
-
-            # Run command
-            "$@"
-            exit_code=$?
-
-            # Release lock
-            rm -rf "$lockdir"
-
-            return $exit_code
-        fi
-
-        # Check for stale lock (holding process no longer exists)
-        if [[ -f "$pidfile" ]]; then
-            lock_pid=$(cat "$pidfile" 2>/dev/null)
-            if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
-                # Stale lock, try to remove it and retry
-                rm -rf "$lockdir" 2>/dev/null
-                continue
-            fi
-        fi
-
-        # Check timeout
-        if [[ $timeout -eq 0 ]]; then
-            # Non-blocking mode, fail immediately
-            return 1
-        elif [[ $timeout -gt 0 ]]; then
-            elapsed=$(($(date +%s) - start_time))
-            if [[ $elapsed -ge $timeout ]]; then
-                return 1
-            fi
-        fi
-        # timeout -1 means wait forever
-
-        # Wait before retrying (0.1s if available, 1s fallback for older systems)
-        sleep 0.1 2>/dev/null || sleep 1
-    done
-}
-
-# @description Retry a command multiple times with optional delay
-# @arg $1 int Maximum number of attempts
-# @arg $2 int Delay in seconds between attempts (0 for no delay)
-# @arg $@ string The command and its arguments
-# @stdout Command output from the successful attempt (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command succeeded within max attempts
-# @exitcode 1 All attempts failed
-# @example
-#   shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
-#   shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
-shlib::cmd_retry() {
-    local max_attempts="$1"
-    local delay="$2"
-    shift 2
-
-    # Validate max_attempts is a positive number
-    if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -le 0 ]]; then
-        return 1
-    fi
-
-    # Validate delay is a non-negative number
-    if ! [[ "$delay" =~ ^[0-9]+$ ]]; then
-        return 1
-    fi
-
-    local attempt=1
-    while [[ $attempt -le $max_attempts ]]; do
-        if "$@"; then
-            return 0
-        fi
-
-        if [[ $attempt -lt $max_attempts ]] && [[ $delay -gt 0 ]]; then
-            sleep "$delay"
-        fi
-
-        ((attempt++))
-    done
-
-    return 1
-}
-
-# @description Run a command with a timeout
-# @arg $1 int Timeout in seconds
-# @arg $@ string The command and its arguments
-# @stdout Command output (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command completed successfully within timeout
-# @exitcode 124 Command timed out
-# @exitcode * Command's exit code if it completed before timeout
-# @example
-#   shlib::cmd_timeout 5 sleep 2    # succeeds
-#   shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
-shlib::cmd_timeout() {
-    local timeout="$1"
-    shift
-
-    # Validate timeout is a positive number
-    if ! [[ "$timeout" =~ ^[0-9]+$ ]] || [[ "$timeout" -le 0 ]]; then
-        return 1
-    fi
-
-    # Run command in background
-    "$@" &
-    local cmd_pid=$!
-
-    # Start a watchdog timer in background
-    (
-        sleep "$timeout"
-        kill -0 "$cmd_pid" 2>/dev/null && kill -TERM "$cmd_pid" 2>/dev/null
-    ) &
-    local watchdog_pid=$!
-
-    # Wait for command to complete
-    local exit_code
-    wait "$cmd_pid" 2>/dev/null
-    exit_code=$?
-
-    # Kill the watchdog if command finished first
-    kill -0 "$watchdog_pid" 2>/dev/null && kill "$watchdog_pid" 2>/dev/null
-    wait "$watchdog_pid" 2>/dev/null
-
-    # Check if command was killed by timeout (SIGTERM = 143, or we check if it was killed)
-    if [[ $exit_code -eq 143 ]] || [[ $exit_code -eq 137 ]]; then
-        return 124
-    fi
-
-    return $exit_code
-}
-
-#
-# Logging Functions
-#
-
-# @description Print a colorized error message to stderr (without newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and red "error: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cerror "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::cerror() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
-}
-
-# @description Print a colorized error message to stderr (with newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and red "error: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cerrorn "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::cerrorn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
-}
-
-# @description Print a colorized info message to stdout (without newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and blue "info: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cinfo "Processing file"
-#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
-shlib::cinfo() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
-}
-
-# @description Print a colorized info message to stdout (with newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and blue "info: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cinfon "Processing complete"
-#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
-shlib::cinfon() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
-}
-
-# @description Print a colorized warning message to stdout (without newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cwarn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::cwarn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
-}
-
-# @description Print a colorized warning message to stdout (with newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::cwarnn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::cwarnn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
-}
-
-# @description Print an emoji error message to stderr (without newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and "❌️ "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::eerror "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
-shlib::eerror() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] ❌️  $*" >&2
-}
-
-# @description Print an emoji error message to stderr (with newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and "❌️ " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::eerrorn "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
-shlib::eerrorn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] ❌️  $*" >&2
-}
-
-# @description Print an emoji info message to stdout (without newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::einfo "Processing file"
-#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
-shlib::einfo() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] ℹ️  $*"
-}
-
-# @description Print an emoji info message to stdout (with newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::einfon "Processing complete"
-#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
-shlib::einfon() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] ℹ️  $*"
-}
-
-# @description Print an error message to stderr (without newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and "error: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::error "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::error() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] error: $*" >&2
-}
-
-# @description Print an error message to stderr (with newline)
-# @arg $@ string The error message to print
-# @stderr The message prefixed with ISO8601 timestamp and "error: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::errorn "Something went wrong"
-#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::errorn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] error: $*" >&2
-}
-
-# @description Print an emoji warning message to stdout (without newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and "⚠️ "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::ewarn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
-shlib::ewarn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] ⚠️  $*"
-}
-
-# @description Print an emoji warning message to stdout (with newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and "⚠️ " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::ewarnn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
-shlib::ewarnn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] ⚠️  $*"
-}
-
-# @description Print an info message to stdout (without newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and "info: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::info "Processing file"
-#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
-shlib::info() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] info: $*"
-}
-
-# @description Print an info message to stdout (with newline)
-# @arg $@ string The info message to print
-# @stdout The message prefixed with ISO8601 timestamp and "info: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::infon "Processing complete"
-#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
-shlib::infon() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] info: $*"
-}
-
-# @description Print a warning message to stdout (without newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and "warning: "
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::warn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::warn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo -n "[$ts] warning: $*"
-}
-
-# @description Print a warning message to stdout (with newline)
-# @arg $@ string The warning message to print
-# @stdout The message prefixed with ISO8601 timestamp and "warning: " followed by newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::warnn "This might cause issues"
-#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::warnn() {
-    local ts
-    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    echo "[$ts] warning: $*"
-}
-
-#
-# String Manipulation Functions
-#
-
-# @description Check if a string contains a substring
-# @arg $1 string The string to search in
-# @arg $2 string The substring to search for
-# @exitcode 0 String contains substring
-# @exitcode 1 String does not contain substring
-# @example
-#   shlib::str_contains "hello world" "world" && echo "found"
-shlib::str_contains() {
-    [[ "$1" == *"$2"* ]]
-}
-
-# @description Check if a string ends with a suffix
-# @arg $1 string The string to check
-# @arg $2 string The suffix to check for
-# @exitcode 0 String ends with suffix
-# @exitcode 1 String does not end with suffix
-# @example
-#   shlib::str_endswith "hello world" "world" && echo "yes"
-shlib::str_endswith() {
-    [[ "$1" == *"$2" ]]
-}
-
-# @description Check if a string is empty or contains only whitespace
-# @arg $1 string The string to check
-# @exitcode 0 String is empty or whitespace only
-# @exitcode 1 String contains non-whitespace characters
-# @example
-#   shlib::str_is_empty "   " && echo "empty"
-shlib::str_is_empty() {
-    local trimmed
-    trimmed="${1#"${1%%[![:space:]]*}"}"
-    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
-    [[ -z "$trimmed" ]]
-}
-
-# @description Get the length of a string
-# @arg $1 string The string to measure
-# @stdout The length of the string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_len "hello"
-shlib::str_len() {
-    echo "${#1}"
-}
-
-# @description Remove leading whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The string with leading whitespace removed
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_ltrim "  hello world"
-shlib::str_ltrim() {
-    local str="$1"
-    echo "${str#"${str%%[![:space:]]*}"}"
-}
-
-# @description Pad a string on the left to a specified length
-# @arg $1 string The string to pad
-# @arg $2 int The desired total length
-# @arg $3 string The padding character (default: space)
-# @stdout The padded string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_padleft "42" 5 "0"  # outputs "00042"
-shlib::str_padleft() {
-    local str="$1"
-    local len="$2"
-    local pad="${3:- }"
-    while [[ ${#str} -lt $len ]]; do
-        str="${pad}${str}"
-    done
-    echo "$str"
-}
-
-# @description Pad a string on the right to a specified length
-# @arg $1 string The string to pad
-# @arg $2 int The desired total length
-# @arg $3 string The padding character (default: space)
-# @stdout The padded string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_padright "hi" 5 "-"  # outputs "hi---"
-shlib::str_padright() {
-    local str="$1"
-    local len="$2"
-    local pad="${3:- }"
-    while [[ ${#str} -lt $len ]]; do
-        str="${str}${pad}"
-    done
-    echo "$str"
-}
-
-# @description Repeat a string N times
-# @arg $1 string The string to repeat
-# @arg $2 int The number of times to repeat (default: 1)
-# @stdout The repeated string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_repeat "ab" 3  # outputs "ababab"
-#   shlib::str_repeat "-" 10  # outputs "----------"
-shlib::str_repeat() {
-    local str="$1"
-    local count="${2:-1}"
-    local result=""
-    local i
-
-    for ((i = 0; i < count; i++)); do
-        result="${result}${str}"
-    done
-    echo "$result"
-}
-
-# @description Remove trailing whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The string with trailing whitespace removed
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_rtrim "hello world  "
-shlib::str_rtrim() {
-    local str="$1"
-    echo "${str%"${str##*[![:space:]]}"}"
-}
-
-# @description Split a string into an array using a separator
-# @arg $1 string The name of the array variable to store results (without $)
-# @arg $2 string The string to split
-# @arg $3 string The separator (default: " ")
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_split result "a,b,c" ","
-#   # result is now (a b c)
-shlib::str_split() {
-    local arr_name="$1"
-    local str="$2"
-    local sep="${3- }"
-
-    # Initialize array as empty
-    eval "$arr_name=()"
-
-    # Handle empty string
-    [[ -z "$str" ]] && return 0
-
-    # Handle empty separator - split into characters
-    if [[ -z "$sep" ]]; then
-        local i
-        for ((i = 0; i < ${#str}; i++)); do
-            eval "$arr_name+=(\"\${str:\$i:1}\")"
-        done
-        return 0
-    fi
-
-    # Split string by separator
-    local remaining="$str"
-    local part
-
-    while true; do
-        if [[ "$remaining" == *"$sep"* ]]; then
-            # shellcheck disable=SC2034
-            part="${remaining%%"$sep"*}"
-            eval "$arr_name+=(\"\$part\")"
-            remaining="${remaining#*"$sep"}"
-        else
-            # Last part (or only part if no separator found)
-            eval "$arr_name+=(\"\$remaining\")"
-            break
-        fi
-    done
-
-    return 0
-}
-
-# @description Check if a string starts with a prefix
-# @arg $1 string The string to check
-# @arg $2 string The prefix to check for
-# @exitcode 0 String starts with prefix
-# @exitcode 1 String does not start with prefix
-# @example
-#   shlib::str_startswith "hello world" "hello" && echo "yes"
-shlib::str_startswith() {
-    [[ "$1" == "$2"* ]]
-}
-
-# @description Convert a string to lowercase
-# @arg $1 string The string to convert
-# @stdout The lowercase string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_to_lower "HELLO"
-shlib::str_to_lower() {
-    echo "$1" | tr '[:upper:]' '[:lower:]'
-}
-
-# @description Convert a string to uppercase
-# @arg $1 string The string to convert
-# @stdout The uppercase string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_to_upper "hello"
-shlib::str_to_upper() {
-    echo "$1" | tr '[:lower:]' '[:upper:]'
-}
-
-# @description Remove leading and trailing whitespace from a string
-# @arg $1 string The string to trim
-# @stdout The trimmed string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::str_trim "  hello world  "
-shlib::str_trim() {
-    local str="$1"
-    str="${str#"${str%%[![:space:]]*}"}"
-    str="${str%"${str##*[![:space:]]}"}"
-    echo "$str"
-}
-
-#
 # Array Functions
 #
 
@@ -1553,6 +909,650 @@ shlib::kv_values() {
     local dest_name="$1"
     local arr_name="$2"
     eval "$dest_name=(\"\${$arr_name[@]}\")"
+}
+
+#
+# Logging Functions
+#
+
+# @description Print a colorized error message to stderr (without newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and red "error: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cerror "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+shlib::cerror() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+}
+
+# @description Print a colorized error message to stderr (with newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and red "error: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cerrorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+shlib::cerrorn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+}
+
+# @description Print a colorized info message to stdout (without newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and blue "info: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cinfo "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
+shlib::cinfo() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+}
+
+# @description Print a colorized info message to stdout (with newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and blue "info: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cinfon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
+shlib::cinfon() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+}
+
+# @description Print a colorized warning message to stdout (without newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cwarn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+shlib::cwarn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+}
+
+# @description Print a colorized warning message to stdout (with newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and yellow "warning: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::cwarnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+shlib::cwarnn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+}
+
+# @description Print an emoji error message to stderr (without newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and "❌️ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::eerror "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
+shlib::eerror() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ❌️  $*" >&2
+}
+
+# @description Print an emoji error message to stderr (with newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and "❌️ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::eerrorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
+shlib::eerrorn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ❌️  $*" >&2
+}
+
+# @description Print an emoji info message to stdout (without newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::einfo "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
+shlib::einfo() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ℹ️  $*"
+}
+
+# @description Print an emoji info message to stdout (with newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and "ℹ️ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::einfon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
+shlib::einfon() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ℹ️  $*"
+}
+
+# @description Print an error message to stderr (without newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and "error: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::error "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+shlib::error() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] error: $*" >&2
+}
+
+# @description Print an error message to stderr (with newline)
+# @arg $@ string The error message to print
+# @stderr The message prefixed with ISO8601 timestamp and "error: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::errorn "Something went wrong"
+#   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+shlib::errorn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] error: $*" >&2
+}
+
+# @description Print an emoji warning message to stdout (without newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and "⚠️ "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ewarn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
+shlib::ewarn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] ⚠️  $*"
+}
+
+# @description Print an emoji warning message to stdout (with newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and "⚠️ " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::ewarnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
+shlib::ewarnn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] ⚠️  $*"
+}
+
+# @description Print an info message to stdout (without newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and "info: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::info "Processing file"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
+shlib::info() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] info: $*"
+}
+
+# @description Print an info message to stdout (with newline)
+# @arg $@ string The info message to print
+# @stdout The message prefixed with ISO8601 timestamp and "info: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::infon "Processing complete"
+#   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
+shlib::infon() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] info: $*"
+}
+
+# @description Print a warning message to stdout (without newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and "warning: "
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::warn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+shlib::warn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo -n "[$ts] warning: $*"
+}
+
+# @description Print a warning message to stdout (with newline)
+# @arg $@ string The warning message to print
+# @stdout The message prefixed with ISO8601 timestamp and "warning: " followed by newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::warnn "This might cause issues"
+#   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+shlib::warnn() {
+    local ts
+    ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
+    echo "[$ts] warning: $*"
+}
+
+#
+# String Manipulation Functions
+#
+
+# @description Check if a string contains a substring
+# @arg $1 string The string to search in
+# @arg $2 string The substring to search for
+# @exitcode 0 String contains substring
+# @exitcode 1 String does not contain substring
+# @example
+#   shlib::str_contains "hello world" "world" && echo "found"
+shlib::str_contains() {
+    [[ "$1" == *"$2"* ]]
+}
+
+# @description Check if a string ends with a suffix
+# @arg $1 string The string to check
+# @arg $2 string The suffix to check for
+# @exitcode 0 String ends with suffix
+# @exitcode 1 String does not end with suffix
+# @example
+#   shlib::str_endswith "hello world" "world" && echo "yes"
+shlib::str_endswith() {
+    [[ "$1" == *"$2" ]]
+}
+
+# @description Check if a string is empty or contains only whitespace
+# @arg $1 string The string to check
+# @exitcode 0 String is empty or whitespace only
+# @exitcode 1 String contains non-whitespace characters
+# @example
+#   shlib::str_is_empty "   " && echo "empty"
+shlib::str_is_empty() {
+    local trimmed
+    trimmed="${1#"${1%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    [[ -z "$trimmed" ]]
+}
+
+# @description Get the length of a string
+# @arg $1 string The string to measure
+# @stdout The length of the string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_len "hello"
+shlib::str_len() {
+    echo "${#1}"
+}
+
+# @description Remove leading whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with leading whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_ltrim "  hello world"
+shlib::str_ltrim() {
+    local str="$1"
+    echo "${str#"${str%%[![:space:]]*}"}"
+}
+
+# @description Pad a string on the left to a specified length
+# @arg $1 string The string to pad
+# @arg $2 int The desired total length
+# @arg $3 string The padding character (default: space)
+# @stdout The padded string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_padleft "42" 5 "0"  # outputs "00042"
+shlib::str_padleft() {
+    local str="$1"
+    local len="$2"
+    local pad="${3:- }"
+    while [[ ${#str} -lt $len ]]; do
+        str="${pad}${str}"
+    done
+    echo "$str"
+}
+
+# @description Pad a string on the right to a specified length
+# @arg $1 string The string to pad
+# @arg $2 int The desired total length
+# @arg $3 string The padding character (default: space)
+# @stdout The padded string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_padright "hi" 5 "-"  # outputs "hi---"
+shlib::str_padright() {
+    local str="$1"
+    local len="$2"
+    local pad="${3:- }"
+    while [[ ${#str} -lt $len ]]; do
+        str="${str}${pad}"
+    done
+    echo "$str"
+}
+
+# @description Repeat a string N times
+# @arg $1 string The string to repeat
+# @arg $2 int The number of times to repeat (default: 1)
+# @stdout The repeated string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_repeat "ab" 3  # outputs "ababab"
+#   shlib::str_repeat "-" 10  # outputs "----------"
+shlib::str_repeat() {
+    local str="$1"
+    local count="${2:-1}"
+    local result=""
+    local i
+
+    for ((i = 0; i < count; i++)); do
+        result="${result}${str}"
+    done
+    echo "$result"
+}
+
+# @description Remove trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The string with trailing whitespace removed
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_rtrim "hello world  "
+shlib::str_rtrim() {
+    local str="$1"
+    echo "${str%"${str##*[![:space:]]}"}"
+}
+
+# @description Split a string into an array using a separator
+# @arg $1 string The name of the array variable to store results (without $)
+# @arg $2 string The string to split
+# @arg $3 string The separator (default: " ")
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_split result "a,b,c" ","
+#   # result is now (a b c)
+shlib::str_split() {
+    local arr_name="$1"
+    local str="$2"
+    local sep="${3- }"
+
+    # Initialize array as empty
+    eval "$arr_name=()"
+
+    # Handle empty string
+    [[ -z "$str" ]] && return 0
+
+    # Handle empty separator - split into characters
+    if [[ -z "$sep" ]]; then
+        local i
+        for ((i = 0; i < ${#str}; i++)); do
+            eval "$arr_name+=(\"\${str:\$i:1}\")"
+        done
+        return 0
+    fi
+
+    # Split string by separator
+    local remaining="$str"
+    local part
+
+    while true; do
+        if [[ "$remaining" == *"$sep"* ]]; then
+            # shellcheck disable=SC2034
+            part="${remaining%%"$sep"*}"
+            eval "$arr_name+=(\"\$part\")"
+            remaining="${remaining#*"$sep"}"
+        else
+            # Last part (or only part if no separator found)
+            eval "$arr_name+=(\"\$remaining\")"
+            break
+        fi
+    done
+
+    return 0
+}
+
+# @description Check if a string starts with a prefix
+# @arg $1 string The string to check
+# @arg $2 string The prefix to check for
+# @exitcode 0 String starts with prefix
+# @exitcode 1 String does not start with prefix
+# @example
+#   shlib::str_startswith "hello world" "hello" && echo "yes"
+shlib::str_startswith() {
+    [[ "$1" == "$2"* ]]
+}
+
+# @description Convert a string to lowercase
+# @arg $1 string The string to convert
+# @stdout The lowercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_to_lower "HELLO"
+shlib::str_to_lower() {
+    echo "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+# @description Convert a string to uppercase
+# @arg $1 string The string to convert
+# @stdout The uppercase string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_to_upper "hello"
+shlib::str_to_upper() {
+    echo "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+# @description Remove leading and trailing whitespace from a string
+# @arg $1 string The string to trim
+# @stdout The trimmed string
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::str_trim "  hello world  "
+shlib::str_trim() {
+    local str="$1"
+    str="${str#"${str%%[![:space:]]*}"}"
+    str="${str%"${str##*[![:space:]]}"}"
+    echo "$str"
+}
+
+#
+# System
+#
+
+# @description Check if a command exists in PATH
+# @arg $1 string The command name to check
+# @exitcode 0 Command exists
+# @exitcode 1 Command not found
+# @example
+#   shlib::cmd_exists git
+shlib::cmd_exists() {
+    command -v "$1" &>/dev/null
+}
+
+# @description Run a command protected by file-based locking
+# @arg $1 string Path to the lock file (a .lock directory will be created)
+# @arg $2 int Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
+# @arg $@ string The command and its arguments
+# @stdout Command output (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command completed successfully
+# @exitcode 1 Failed to acquire lock within timeout, or invalid arguments
+# @exitcode * Command's exit code if lock was acquired
+# @example
+#   shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
+#   shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
+#   shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
+shlib::cmd_locked() {
+    local lockfile="$1"
+    local timeout="$2"
+    shift 2
+
+    # Validate lockfile path
+    if [[ -z "$lockfile" ]]; then
+        return 1
+    fi
+
+    # Validate timeout is an integer (including negative)
+    if ! [[ "$timeout" =~ ^-?[0-9]+$ ]]; then
+        return 1
+    fi
+
+    # Validate command is provided
+    if [[ $# -eq 0 ]]; then
+        return 1
+    fi
+
+    local lockdir="${lockfile}.lock"
+    local pidfile="${lockdir}/pid"
+    local start_time elapsed exit_code lock_pid
+
+    start_time=$(date +%s)
+
+    # Try to acquire lock
+    while true; do
+        # mkdir is atomic on POSIX systems - portable locking mechanism
+        if mkdir "$lockdir" 2>/dev/null; then
+            # Got the lock, write our PID for stale detection
+            echo $$ >"$pidfile"
+
+            # Run command
+            "$@"
+            exit_code=$?
+
+            # Release lock
+            rm -rf "$lockdir"
+
+            return $exit_code
+        fi
+
+        # Check for stale lock (holding process no longer exists)
+        if [[ -f "$pidfile" ]]; then
+            lock_pid=$(cat "$pidfile" 2>/dev/null)
+            if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
+                # Stale lock, try to remove it and retry
+                rm -rf "$lockdir" 2>/dev/null
+                continue
+            fi
+        fi
+
+        # Check timeout
+        if [[ $timeout -eq 0 ]]; then
+            # Non-blocking mode, fail immediately
+            return 1
+        elif [[ $timeout -gt 0 ]]; then
+            elapsed=$(($(date +%s) - start_time))
+            if [[ $elapsed -ge $timeout ]]; then
+                return 1
+            fi
+        fi
+        # timeout -1 means wait forever
+
+        # Wait before retrying (0.1s if available, 1s fallback for older systems)
+        sleep 0.1 2>/dev/null || sleep 1
+    done
+}
+
+# @description Retry a command multiple times with optional delay
+# @arg $1 int Maximum number of attempts
+# @arg $2 int Delay in seconds between attempts (0 for no delay)
+# @arg $@ string The command and its arguments
+# @stdout Command output from the successful attempt (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command succeeded within max attempts
+# @exitcode 1 All attempts failed
+# @example
+#   shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
+#   shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+shlib::cmd_retry() {
+    local max_attempts="$1"
+    local delay="$2"
+    shift 2
+
+    # Validate max_attempts is a positive number
+    if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -le 0 ]]; then
+        return 1
+    fi
+
+    # Validate delay is a non-negative number
+    if ! [[ "$delay" =~ ^[0-9]+$ ]]; then
+        return 1
+    fi
+
+    local attempt=1
+    while [[ $attempt -le $max_attempts ]]; do
+        if "$@"; then
+            return 0
+        fi
+
+        if [[ $attempt -lt $max_attempts ]] && [[ $delay -gt 0 ]]; then
+            sleep "$delay"
+        fi
+
+        ((attempt++))
+    done
+
+    return 1
+}
+
+# @description Run a command with a timeout
+# @arg $1 int Timeout in seconds
+# @arg $@ string The command and its arguments
+# @stdout Command output (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command completed successfully within timeout
+# @exitcode 124 Command timed out
+# @exitcode * Command's exit code if it completed before timeout
+# @example
+#   shlib::cmd_timeout 5 sleep 2    # succeeds
+#   shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
+shlib::cmd_timeout() {
+    local timeout="$1"
+    shift
+
+    # Validate timeout is a positive number
+    if ! [[ "$timeout" =~ ^[0-9]+$ ]] || [[ "$timeout" -le 0 ]]; then
+        return 1
+    fi
+
+    # Run command in background
+    "$@" &
+    local cmd_pid=$!
+
+    # Start a watchdog timer in background
+    (
+        sleep "$timeout"
+        kill -0 "$cmd_pid" 2>/dev/null && kill -TERM "$cmd_pid" 2>/dev/null
+    ) &
+    local watchdog_pid=$!
+
+    # Wait for command to complete
+    local exit_code
+    wait "$cmd_pid" 2>/dev/null
+    exit_code=$?
+
+    # Kill the watchdog if command finished first
+    kill -0 "$watchdog_pid" 2>/dev/null && kill "$watchdog_pid" 2>/dev/null
+    wait "$watchdog_pid" 2>/dev/null
+
+    # Check if command was killed by timeout (SIGTERM = 143, or we check if it was killed)
+    if [[ $exit_code -eq 143 ]] || [[ $exit_code -eq 137 ]]; then
+        return 124
+    fi
+
+    return $exit_code
 }
 
 #
