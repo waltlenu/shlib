@@ -1,4 +1,3 @@
-# Print array elements one per line
+_header shlib::arr_printn
 constellations=(Orion Cassiopeia Ursa Lyra)
-echo "arr_printn:"
-shlib::arr_printn constellations
+_run shlib::arr_printn constellations

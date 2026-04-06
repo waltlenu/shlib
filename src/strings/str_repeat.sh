@@ -1,3 +1,3 @@
-# Repeat a string N times
-echo "str_repeat \"=-\" 20: $(shlib::str_repeat "=-" 20)"
-echo "str_repeat \"*\" 10:  $(shlib::str_repeat "*" 10)"
+_header shlib::str_repeat
+_eval shlib::str_repeat "=-" 20
+_eval shlib::str_repeat "*" 10

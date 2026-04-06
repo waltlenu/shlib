@@ -1,2 +1,2 @@
-# Render ASCII art banner using built-in block font
-shlib::banner_builtin "NOVA"
+_header shlib::banner_builtin
+_run shlib::banner_builtin "NOVA"

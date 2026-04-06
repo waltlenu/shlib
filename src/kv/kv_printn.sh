@@ -1,8 +1,7 @@
-# Print key-value pairs one per line
+_header shlib::kv_printn
 declare -A elements
 elements[hydrogen]="1"
 elements[helium]="2"
 elements[carbon]="6"
 elements[oxygen]="8"
-echo "kv_printn:"
-shlib::kv_printn elements
+_run shlib::kv_printn elements

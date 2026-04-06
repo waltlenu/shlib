@@ -1,7 +1,7 @@
-# Set key-value pairs in an associative array
+_header shlib::kv_set
 declare -A telescope
-shlib::kv_set telescope "aperture" "200mm"
-shlib::kv_set telescope "focal_length" "1000mm"
-shlib::kv_set telescope "filter" "H-alpha"
-echo "After kv_set:"
+_run shlib::kv_set telescope "aperture" "200mm"
+_run shlib::kv_set telescope "focal_length" "1000mm"
+_run shlib::kv_set telescope "filter" "H-alpha"
+echo "Result:"
 shlib::kv_printn telescope

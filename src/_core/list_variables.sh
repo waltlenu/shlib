@@ -1,2 +1,2 @@
-echo "shlib::list_variables:"
-shlib::list_variables
+_header shlib::list_variables
+_run shlib::list_variables

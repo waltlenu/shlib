@@ -1,2 +1,2 @@
-# Print success status indicator
-shlib::status_okn "Calibration complete"
+_header shlib::status_ok
+_run shlib::status_okn "Calibration complete"

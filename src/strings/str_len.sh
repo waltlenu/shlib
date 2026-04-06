@@ -1,3 +1,2 @@
-# Get the length of a string
-name="Betelgeuse"
-echo "str_len \"$name\": $(shlib::str_len "$name")"
+_header shlib::str_len
+_eval shlib::str_len "Betelgeuse"

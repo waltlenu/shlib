@@ -1,4 +1,5 @@
-# Remove leading and trailing whitespace
+_header shlib::str_trim
 raw="   Crab Nebula   "
 echo "Before: [$raw]"
-echo "After str_trim: [$(shlib::str_trim "$raw")]"
+_show shlib::str_trim "$raw"
+echo "After: [$(shlib::str_trim "$raw")]"

@@ -1,5 +1,5 @@
-# Sort an array in lexicographic order
+_header shlib::arr_sort
 stars=(Rigel Altair Sirius Vega Betelgeuse)
 echo "Before: (${stars[*]})"
-shlib::arr_sort stars
-echo "After arr_sort: (${stars[*]})"
+_run shlib::arr_sort stars
+echo "After: (${stars[*]})"

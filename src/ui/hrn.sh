@@ -1,3 +1,3 @@
-# Draw a horizontal rule (with newline)
-shlib::hrn "Session Start"
-shlib::hrn "" 50 "─"
+_header shlib::hrn
+_run shlib::hrn "Session Start"
+_run shlib::hrn "" 50 "─"

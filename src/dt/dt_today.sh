@@ -1,2 +1,2 @@
-# Get today's date
-echo "dt_today: $(shlib::dt_today)"
+_header shlib::dt_today
+_eval shlib::dt_today

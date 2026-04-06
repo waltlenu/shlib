@@ -1,2 +1,2 @@
-# Display the 256-color ANSI palette
-shlib::ansi_256_palette
+_header shlib::ansi_256_palette
+_run shlib::ansi_256_palette

@@ -1,3 +1,3 @@
-# Draw a horizontal rule
-shlib::hrn
-shlib::hrn "Telemetry" 40 "="
+_header shlib::hr
+_run shlib::hrn
+_run shlib::hrn "Telemetry" 40 "="

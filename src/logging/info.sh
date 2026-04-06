@@ -1,4 +1,4 @@
-# Print info messages to stdout
-shlib::infon "Telescope aligned to Polaris"
-shlib::info "Exposure started"
+_header shlib::info
+_run shlib::infon "Telescope aligned to Polaris"
+_run shlib::info "Exposure started"
 echo " <- no newline variant"

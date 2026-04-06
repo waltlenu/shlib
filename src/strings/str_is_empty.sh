@@ -1,7 +1,9 @@
-# Check if a string is empty or whitespace-only
+_header shlib::str_is_empty
+_show shlib::str_is_empty "   "
 if shlib::str_is_empty "   "; then
-    echo "str_is_empty \"   \": true (whitespace only)"
+    echo "true (whitespace only)"
 fi
+_show shlib::str_is_empty "quasar"
 if ! shlib::str_is_empty "quasar"; then
-    echo "str_is_empty \"quasar\": false"
+    echo "false"
 fi

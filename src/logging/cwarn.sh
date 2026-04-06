@@ -1,4 +1,4 @@
-# Print colorized warning messages to stdout
-shlib::cwarnn "Moon illumination above 80%"
-shlib::cwarn "Humidity rising"
+_header shlib::cwarn
+_run shlib::cwarnn "Moon illumination above 80%"
+_run shlib::cwarn "Humidity rising"
 echo " <- no newline variant"

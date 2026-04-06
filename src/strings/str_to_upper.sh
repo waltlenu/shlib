@@ -1,2 +1,2 @@
-# Convert a string to uppercase
-echo "str_to_upper \"pulsar\": $(shlib::str_to_upper "pulsar")"
+_header shlib::str_to_upper
+_eval shlib::str_to_upper "pulsar"

@@ -1,5 +1,5 @@
-# Append elements to an array
+_header shlib::arr_append
 planets=(Mercury Venus Earth)
 echo "Before: (${planets[*]})"
-shlib::arr_append planets "Mars" "Jupiter"
-echo "After arr_append: (${planets[*]})"
+_run shlib::arr_append planets "Mars" "Jupiter"
+echo "After: (${planets[*]})"

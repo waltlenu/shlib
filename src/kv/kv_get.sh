@@ -1,7 +1,7 @@
-# Get a value by key
+_header shlib::kv_get
 declare -A telescope
 telescope[aperture]="200mm"
 telescope[focal_length]="1000mm"
 telescope[filter]="H-alpha"
-echo "kv_get 'aperture': $(shlib::kv_get telescope "aperture")"
-echo "kv_get 'filter':   $(shlib::kv_get telescope "filter")"
+_eval shlib::kv_get telescope "aperture"
+_eval shlib::kv_get telescope "filter"

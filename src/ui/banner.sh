@@ -1,2 +1,2 @@
-# Render ASCII art banner using best available method
-shlib::banner "COSMOS"
+_header shlib::banner
+_run shlib::banner "COSMOS"

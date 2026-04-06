@@ -1,11 +1,13 @@
-# Run a command protected by file-based locking
+_header shlib::cmd_locked
 lockfile=$(mktemp -u)
+_show shlib::cmd_locked "$lockfile" 0 echo "Protected operation"
 if shlib::cmd_locked "$lockfile" 0 echo "Protected operation"; then
     shlib::cinfon "Locked command executed successfully"
 fi
 # Demonstrate lock contention
 mkdir "${lockfile}.lock"
 echo $$ >"${lockfile}.lock/pid"
+_show shlib::cmd_locked "$lockfile" 0 true
 if ! shlib::cmd_locked "$lockfile" 0 true; then
     shlib::cwarnn "Lock already held (expected)"
 fi

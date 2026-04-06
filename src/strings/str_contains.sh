@@ -1,7 +1,9 @@
-# Check if a string contains a substring
+_header shlib::str_contains
+_show shlib::str_contains "Andromeda Galaxy" "Galaxy"
 if shlib::str_contains "Andromeda Galaxy" "Galaxy"; then
-    echo "str_contains \"Andromeda Galaxy\" \"Galaxy\": true"
+    echo "true"
 fi
+_show shlib::str_contains "Andromeda Galaxy" "Nebula"
 if ! shlib::str_contains "Andromeda Galaxy" "Nebula"; then
-    echo "str_contains \"Andromeda Galaxy\" \"Nebula\": false"
+    echo "false"
 fi

@@ -1,1 +1,2 @@
-echo "shlib::version: $(shlib::version)"
+_header shlib::version
+_eval shlib::version

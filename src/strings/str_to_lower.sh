@@ -1,2 +1,2 @@
-# Convert a string to lowercase
-echo "str_to_lower \"SUPERNOVA\": $(shlib::str_to_lower "SUPERNOVA")"
+_header shlib::str_to_lower
+_eval shlib::str_to_lower "SUPERNOVA"

@@ -1,5 +1,5 @@
-# Remove duplicate elements from an array
+_header shlib::arr_uniq
 readings=(muon quark muon boson quark lepton muon)
 echo "Before: (${readings[*]})"
-shlib::arr_uniq readings
-echo "After arr_uniq: (${readings[*]})"
+_run shlib::arr_uniq readings
+echo "After: (${readings[*]})"

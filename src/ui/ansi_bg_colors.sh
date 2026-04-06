@@ -1,2 +1,2 @@
-# Display ANSI background colors
-shlib::ansi_bg_colors
+_header shlib::ansi_bg_colors
+_run shlib::ansi_bg_colors

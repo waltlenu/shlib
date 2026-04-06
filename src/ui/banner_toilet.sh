@@ -1,6 +1,6 @@
-# Render ASCII art banner using toilet
+_header shlib::banner_toilet
 if shlib::cmd_exists toilet; then
-    shlib::banner_toilet "QUASAR" "" "gay"
+    _run shlib::banner_toilet "QUASAR" "" "gay"
 else
     echo "(toilet not installed, skipping)"
 fi

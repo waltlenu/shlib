@@ -1,7 +1,7 @@
-# Print key-value pairs inline with custom separators
+_header shlib::kv_print
 declare -A telescope
 telescope[aperture]="200mm"
 telescope[focal_length]="1000mm"
 telescope[filter]="H-alpha"
-echo "kv_print (default): $(shlib::kv_print telescope)"
-echo "kv_print (custom):  $(shlib::kv_print telescope ":" ", ")"
+_eval shlib::kv_print telescope
+_eval shlib::kv_print telescope ":" ", "

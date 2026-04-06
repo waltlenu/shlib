@@ -22,47 +22,69 @@ shlib::banner_toilet "shlib" "" "gay"
 shlib::headern "shlib Examples"
 echo
 
+# Example helpers
+_header() { shlib::headern "${1#shlib::}"; }
+_run() {
+    echo "> $*"
+    "$@"
+}
+_show() { echo "> $*"; }
+# shellcheck disable=SC2005
+_eval() {
+    echo "> $*"
+    echo "$("$@")"
+}
+
 #######################################
 # _core
 #######################################
 
-echo "shlib::list_functions (first 10):"
+_header shlib::list_functions
+_show shlib::list_functions
 shlib::list_functions | head -10
 echo "... ($(shlib::list_functions | wc -l | tr -d ' ') total functions)"
+echo
 
-echo "shlib::list_variables:"
-shlib::list_variables
+_header shlib::list_variables
+_run shlib::list_variables
+echo
 
-echo "shlib::version: $(shlib::version)"
+_header shlib::version
+_eval shlib::version
+echo
 
 #######################################
 # arrays
 #######################################
 
-# Append elements to an array
+_header shlib::arr_append
 planets=(Mercury Venus Earth)
 echo "Before: (${planets[*]})"
-shlib::arr_append planets "Mars" "Jupiter"
-echo "After arr_append: (${planets[*]})"
+_run shlib::arr_append planets "Mars" "Jupiter"
+echo "After: (${planets[*]})"
+echo
 
-# Delete an element by index
+_header shlib::arr_delete
 particles=(muon quark boson lepton)
 echo "Before: (${particles[*]})"
-shlib::arr_delete particles 1
-echo "After arr_delete at index 1: (${particles[*]})"
+_run shlib::arr_delete particles 1
+echo "After: (${particles[*]})"
+echo
 
-# Insert an element at a specific index
+_header shlib::arr_insert
 planets=(Mercury Venus Mars Jupiter)
 echo "Before: (${planets[*]})"
-shlib::arr_insert planets 2 "Earth"
-echo "After arr_insert 2 \"Earth\": (${planets[*]})"
+_run shlib::arr_insert planets 2 "Earth"
+echo "After: (${planets[*]})"
+echo
 
-# Get the number of elements in an array
+_header shlib::arr_len
 stars=(Sirius Vega Rigel Altair Polaris)
 echo "Stars: (${stars[*]})"
-echo "arr_len: $(shlib::arr_len stars)"
+_eval shlib::arr_len stars
+echo
 
-# Merge multiple arrays into one
+_header shlib::arr_merge
 inner=(Mercury Venus Earth Mars)
 outer=(Jupiter Saturn Uranus Neptune)
 # shellcheck disable=SC2034
@@ -70,202 +92,235 @@ dwarf=(Pluto Ceres Eris)
 echo "inner: (${inner[*]})"
 echo "outer: (${outer[*]})"
 echo "dwarf: (${dwarf[*]})"
-shlib::arr_merge solar_system inner outer dwarf
+_run shlib::arr_merge solar_system inner outer dwarf
 # shellcheck disable=SC2154
-echo "After arr_merge: (${solar_system[*]})"
+echo "Result: (${solar_system[*]})"
+echo
 
-# Remove the last element from an array
+_header shlib::arr_pop
 moons=(Io Europa Ganymede Callisto)
 echo "Before: (${moons[*]})"
-shlib::arr_pop moons
-echo "After arr_pop: (${moons[*]})"
+_run shlib::arr_pop moons
+echo "After: (${moons[*]})"
+echo
 
-# Print array elements with custom separators
+_header shlib::arr_print
 quarks=(up down charm strange top bottom)
-echo "arr_print with space: $(shlib::arr_print quarks)"
-echo "arr_print with comma: $(shlib::arr_print quarks ",")"
-echo "arr_print with ' | ': $(shlib::arr_print quarks " | ")"
+_eval shlib::arr_print quarks
+_eval shlib::arr_print quarks ","
+_eval shlib::arr_print quarks " | "
+echo
 
-# Print array elements one per line
+_header shlib::arr_printn
 constellations=(Orion Cassiopeia Ursa Lyra)
-echo "arr_printn:"
-shlib::arr_printn constellations
+_run shlib::arr_printn constellations
+echo
 
-# Reverse an array in place
+_header shlib::arr_reverse
 planets=(Mercury Venus Earth Mars Jupiter)
 echo "Before: (${planets[*]})"
-shlib::arr_reverse planets
-echo "After arr_reverse: (${planets[*]})"
+_run shlib::arr_reverse planets
+echo "After: (${planets[*]})"
+echo
 
-# Sort an array in lexicographic order
+_header shlib::arr_sort
 stars=(Rigel Altair Sirius Vega Betelgeuse)
 echo "Before: (${stars[*]})"
-shlib::arr_sort stars
-echo "After arr_sort: (${stars[*]})"
+_run shlib::arr_sort stars
+echo "After: (${stars[*]})"
+echo
 
-# Remove duplicate elements from an array
+_header shlib::arr_uniq
 readings=(muon quark muon boson quark lepton muon)
 echo "Before: (${readings[*]})"
-shlib::arr_uniq readings
-echo "After arr_uniq: (${readings[*]})"
+_run shlib::arr_uniq readings
+echo "After: (${readings[*]})"
+echo
 
 #######################################
 # dt
 #######################################
 
-# Add time to a timestamp
+_header shlib::dt_add
 base=1704067200 # Jan 1, 2024 00:00:00 UTC
 echo "Base: $base ($(shlib::dt_from_unix "$base" "%Y-%m-%d" 2>/dev/null || echo "2024-01-01"))"
-echo "dt_add 1 days:   $(shlib::dt_add "$base" 1 days)"
-echo "dt_add 12 hours: $(shlib::dt_add "$base" 12 hours)"
-echo "dt_add -1 weeks: $(shlib::dt_add "$base" -1 weeks)"
+_eval shlib::dt_add "$base" 1 days
+_eval shlib::dt_add "$base" 12 hours
+_eval shlib::dt_add "$base" -1 weeks
+echo
 
-# Calculate difference between timestamps
+_header shlib::dt_diff
 ts1=1704153600 # Jan 2, 2024
 ts2=1704067200 # Jan 1, 2024
 echo "ts1=$ts1 (Jan 2), ts2=$ts2 (Jan 1)"
-echo "dt_diff in seconds: $(shlib::dt_diff "$ts1" "$ts2" seconds)"
-echo "dt_diff in hours:   $(shlib::dt_diff "$ts1" "$ts2" hours)"
-echo "dt_diff in days:    $(shlib::dt_diff "$ts1" "$ts2" days)"
+_eval shlib::dt_diff "$ts1" "$ts2" seconds
+_eval shlib::dt_diff "$ts1" "$ts2" hours
+_eval shlib::dt_diff "$ts1" "$ts2" days
+echo
 
-# Format seconds as human-readable duration
+_header shlib::dt_duration
 secs=90061 # 1 day, 1 hour, 1 minute, 1 second
-echo "dt_duration $secs (short):   $(shlib::dt_duration $secs)"
-echo "dt_duration $secs (long):    $(shlib::dt_duration $secs long)"
-echo "dt_duration $secs (compact): $(shlib::dt_duration $secs compact)"
-echo "dt_duration 3600:            $(shlib::dt_duration 3600)"
+_eval shlib::dt_duration $secs
+_eval shlib::dt_duration $secs long
+_eval shlib::dt_duration $secs compact
+_eval shlib::dt_duration 3600
+echo
 
-# Format elapsed time since a start timestamp
+_header shlib::dt_elapsed
 start=$(shlib::dt_now)
 sleep 1
-echo "dt_elapsed: $(shlib::dt_elapsed "$start")"
+_eval shlib::dt_elapsed "$start"
+echo
 
-# Format a Unix timestamp
+_header shlib::dt_from_unix
 ts=1704067200 # Jan 1, 2024
-echo "dt_from_unix (date):     $(shlib::dt_from_unix "$ts" "%Y-%m-%d")"
-echo "dt_from_unix (datetime): $(shlib::dt_from_unix "$ts" "%Y-%m-%d %H:%M:%S")"
+_eval shlib::dt_from_unix "$ts" "%Y-%m-%d"
+_eval shlib::dt_from_unix "$ts" "%Y-%m-%d %H:%M:%S"
+echo
 
-# Check if one timestamp is after another
+_header shlib::dt_is_after
 ts1=1704153600 # Jan 2, 2024
 ts2=1704067200 # Jan 1, 2024
+_show shlib::dt_is_after "$ts1" "$ts2"
 if shlib::dt_is_after "$ts1" "$ts2"; then
-    echo "dt_is_after: $ts1 is after $ts2 (true)"
+    echo "true"
 fi
+echo
 
-# Check if one timestamp is before another
+_header shlib::dt_is_before
 ts1=1704067200 # Jan 1, 2024
 ts2=1704153600 # Jan 2, 2024
+_show shlib::dt_is_before "$ts1" "$ts2"
 if shlib::dt_is_before "$ts1" "$ts2"; then
-    echo "dt_is_before: $ts1 is before $ts2 (true)"
+    echo "true"
 fi
+echo
 
-# Get current Unix timestamp
-echo "dt_now: $(shlib::dt_now)"
+_header shlib::dt_now
+_eval shlib::dt_now
+echo
 
-# Get current datetime in ISO 8601 format
-echo "dt_now_iso (UTC):   $(shlib::dt_now_iso)"
-echo "dt_now_iso (local): $(shlib::dt_now_iso local)"
+_header shlib::dt_now_iso
+_eval shlib::dt_now_iso
+_eval shlib::dt_now_iso local
+echo
 
-# Get today's date
-echo "dt_today: $(shlib::dt_today)"
+_header shlib::dt_today
+_eval shlib::dt_today
+echo
 
 #######################################
 # kv
 #######################################
 
-# Remove all entries from an associative array
+_header shlib::kv_clear
 declare -A catalog
 catalog[M31]="Andromeda"
 catalog[M42]="Orion Nebula"
 catalog[M45]="Pleiades"
 echo "Before: $(shlib::kv_len catalog) entries"
-shlib::kv_clear catalog
-echo "After kv_clear: $(shlib::kv_len catalog) entries"
+_run shlib::kv_clear catalog
+echo "After: $(shlib::kv_len catalog) entries"
+echo
 
-# Copy an associative array to another
+_header shlib::kv_copy
 declare -A source_catalog
 source_catalog[M31]="Andromeda"
 source_catalog[M42]="Orion Nebula"
 declare -A backup_catalog
-shlib::kv_copy backup_catalog source_catalog
+_run shlib::kv_copy backup_catalog source_catalog
 echo "Original: $(shlib::kv_print source_catalog)"
 echo "Copy:     $(shlib::kv_print backup_catalog)"
+echo
 
-# Delete a key from an associative array
+_header shlib::kv_delete
 declare -A elements
 elements[hydrogen]="1"
 elements[helium]="2"
 elements[lithium]="3"
 echo "Before: $(shlib::kv_print elements)"
-shlib::kv_delete elements "lithium"
-echo "After kv_delete 'lithium': $(shlib::kv_print elements)"
+_run shlib::kv_delete elements "lithium"
+echo "After: $(shlib::kv_print elements)"
+echo
 
-# Check if a key exists
+_header shlib::kv_exists
 declare -A elements
 elements[hydrogen]="1"
 elements[helium]="2"
-echo "kv_exists 'hydrogen': $(shlib::kv_exists elements "hydrogen" && echo "true" || echo "false")"
-echo "kv_exists 'lithium':  $(shlib::kv_exists elements "lithium" && echo "true" || echo "false")"
+_show shlib::kv_exists elements "hydrogen"
+shlib::kv_exists elements "hydrogen" && echo "true" || echo "false"
+_show shlib::kv_exists elements "lithium"
+shlib::kv_exists elements "lithium" && echo "true" || echo "false"
+echo
 
-# Find all keys with a specific value
+_header shlib::kv_find
 declare -A spectral_class
 spectral_class[Sirius]="A"
 spectral_class[Vega]="A"
 spectral_class[Betelgeuse]="M"
 spectral_class[Rigel]="B"
-shlib::kv_find class_a spectral_class "A"
+_run shlib::kv_find class_a spectral_class "A"
 # shellcheck disable=SC2154
 echo "Stars with class A: (${class_a[*]})"
+echo
 
-# Get a value by key
+_header shlib::kv_get
 declare -A telescope
 telescope[aperture]="200mm"
 telescope[focal_length]="1000mm"
 telescope[filter]="H-alpha"
-echo "kv_get 'aperture': $(shlib::kv_get telescope "aperture")"
-echo "kv_get 'filter':   $(shlib::kv_get telescope "filter")"
+_eval shlib::kv_get telescope "aperture"
+_eval shlib::kv_get telescope "filter"
+echo
 
-# Get a value with fallback default
+_header shlib::kv_get_default
 declare -A telescope
 telescope[aperture]="200mm"
-echo "kv_get_default 'aperture' '100mm': $(shlib::kv_get_default telescope "aperture" "100mm")"
-echo "kv_get_default 'tracking' 'off':   $(shlib::kv_get_default telescope "tracking" "off")"
+_eval shlib::kv_get_default telescope "aperture" "100mm"
+_eval shlib::kv_get_default telescope "tracking" "off"
+echo
 
-# Check if a value exists in an associative array
+_header shlib::kv_has_value
 declare -A spectral_class
 spectral_class[Sirius]="A"
 spectral_class[Vega]="A"
 spectral_class[Betelgeuse]="M"
-echo "kv_has_value 'A': $(shlib::kv_has_value spectral_class "A" && echo "true" || echo "false")"
-echo "kv_has_value 'G': $(shlib::kv_has_value spectral_class "G" && echo "true" || echo "false")"
+_show shlib::kv_has_value spectral_class "A"
+shlib::kv_has_value spectral_class "A" && echo "true" || echo "false"
+_show shlib::kv_has_value spectral_class "G"
+shlib::kv_has_value spectral_class "G" && echo "true" || echo "false"
+echo
 
-# Get all keys from an associative array
+_header shlib::kv_keys
 declare -A orbit_au
 orbit_au[Mercury]="0.39"
 orbit_au[Venus]="0.72"
 orbit_au[Earth]="1.00"
-shlib::kv_keys names orbit_au
+_run shlib::kv_keys names orbit_au
 # shellcheck disable=SC2154
-echo "kv_keys: (${names[*]})"
+echo "Result: (${names[*]})"
+echo
 
-# Get the count of entries
+_header shlib::kv_len
 declare -A orbit_au
 orbit_au[Mercury]="0.39"
 orbit_au[Venus]="0.72"
 orbit_au[Earth]="1.00"
 orbit_au[Mars]="1.52"
 echo "Contents: $(shlib::kv_print orbit_au)"
-echo "kv_len: $(shlib::kv_len orbit_au)"
+_eval shlib::kv_len orbit_au
+echo
 
-# Apply a transformation to all values
+_header shlib::kv_map
 declare -A catalog
 catalog[m31]="andromeda"
 catalog[m42]="orion nebula"
 echo "Before: $(shlib::kv_print catalog)"
-shlib::kv_map catalog 'tr a-z A-Z'
-echo "After kv_map (uppercase): $(shlib::kv_print catalog)"
+_run shlib::kv_map catalog 'tr a-z A-Z'
+echo "After: $(shlib::kv_print catalog)"
+echo
 
-# Merge multiple associative arrays (later overrides earlier)
+_header shlib::kv_merge
 declare -A defaults
 defaults[tracking]="off"
 defaults[exposure]="30s"
@@ -276,283 +331,355 @@ overrides[filter]="H-alpha"
 echo "defaults:  $(shlib::kv_print defaults)"
 echo "overrides: $(shlib::kv_print overrides)"
 declare -A config
-shlib::kv_merge config defaults overrides
-echo "After kv_merge: $(shlib::kv_print config)"
+_run shlib::kv_merge config defaults overrides
+echo "Result: $(shlib::kv_print config)"
+echo
 
-# Print key-value pairs inline with custom separators
+_header shlib::kv_print
 declare -A telescope
 telescope[aperture]="200mm"
 telescope[focal_length]="1000mm"
 telescope[filter]="H-alpha"
-echo "kv_print (default): $(shlib::kv_print telescope)"
-echo "kv_print (custom):  $(shlib::kv_print telescope ":" ", ")"
+_eval shlib::kv_print telescope
+_eval shlib::kv_print telescope ":" ", "
+echo
 
-# Print key-value pairs one per line
+_header shlib::kv_printn
 declare -A elements
 elements[hydrogen]="1"
 elements[helium]="2"
 elements[carbon]="6"
 elements[oxygen]="8"
-echo "kv_printn:"
-shlib::kv_printn elements
+_run shlib::kv_printn elements
+echo
 
-# Set key-value pairs in an associative array
+_header shlib::kv_set
 declare -A telescope
-shlib::kv_set telescope "aperture" "200mm"
-shlib::kv_set telescope "focal_length" "1000mm"
-shlib::kv_set telescope "filter" "H-alpha"
-echo "After kv_set:"
+_run shlib::kv_set telescope "aperture" "200mm"
+_run shlib::kv_set telescope "focal_length" "1000mm"
+_run shlib::kv_set telescope "filter" "H-alpha"
+echo "Result:"
 shlib::kv_printn telescope
+echo
 
-# Get all values from an associative array
+_header shlib::kv_values
 declare -A orbit_au
 orbit_au[Mercury]="0.39"
 orbit_au[Venus]="0.72"
 orbit_au[Earth]="1.00"
-shlib::kv_values distances orbit_au
+_run shlib::kv_values distances orbit_au
 # shellcheck disable=SC2154
-echo "kv_values: (${distances[*]})"
+echo "Result: (${distances[*]})"
+echo
 
 #######################################
 # logging
 #######################################
 
-# Print colorized error messages to stderr
-shlib::cerrorn "CCD temperature out of range"
-shlib::cerror "Guider lost lock on reference star"
+_header shlib::cerror
+_run shlib::cerrorn "CCD temperature out of range"
+_run shlib::cerror "Guider lost lock on reference star"
 echo " <- no newline variant" >&2
+echo
 
-# Print colorized info messages to stdout
-shlib::cinfon "Filter wheel moved to H-alpha"
-shlib::cinfo "Dome rotation complete"
+_header shlib::cinfo
+_run shlib::cinfon "Filter wheel moved to H-alpha"
+_run shlib::cinfo "Dome rotation complete"
 echo " <- no newline variant"
+echo
 
-# Print colorized warning messages to stdout
-shlib::cwarnn "Moon illumination above 80%"
-shlib::cwarn "Humidity rising"
+_header shlib::cwarn
+_run shlib::cwarnn "Moon illumination above 80%"
+_run shlib::cwarn "Humidity rising"
 echo " <- no newline variant"
+echo
 
-# Print emoji error messages to stderr
-shlib::eerrorn "Mount connection lost"
-shlib::eerror "Flat frame acquisition failed"
+_header shlib::eerror
+_run shlib::eerrorn "Mount connection lost"
+_run shlib::eerror "Flat frame acquisition failed"
 echo " <- no newline variant" >&2
+echo
 
-# Print emoji info messages to stdout
-shlib::einfon "Dark frame calibration complete"
-shlib::einfo "Image saved to FITS"
+_header shlib::einfo
+_run shlib::einfon "Dark frame calibration complete"
+_run shlib::einfo "Image saved to FITS"
 echo " <- no newline variant"
+echo
 
-# Print error messages to stderr
-shlib::errorn "Stellar parallax calculation failed"
-shlib::error "Sensor calibration error"
+_header shlib::error
+_run shlib::errorn "Stellar parallax calculation failed"
+_run shlib::error "Sensor calibration error"
 echo " <- no newline variant" >&2
+echo
 
-# Print emoji warning messages to stdout
-shlib::ewarnn "Cloud cover increasing"
-shlib::ewarn "Battery below 20%"
+_header shlib::ewarn
+_run shlib::ewarnn "Cloud cover increasing"
+_run shlib::ewarn "Battery below 20%"
 echo " <- no newline variant"
+echo
 
-# Print info messages to stdout
-shlib::infon "Telescope aligned to Polaris"
-shlib::info "Exposure started"
+_header shlib::info
+_run shlib::infon "Telescope aligned to Polaris"
+_run shlib::info "Exposure started"
 echo " <- no newline variant"
+echo
 
-# Print warning messages to stdout
-shlib::warnn "Atmospheric seeing degraded to 3 arcsec"
-shlib::warn "Tracking drift detected"
+_header shlib::warn
+_run shlib::warnn "Atmospheric seeing degraded to 3 arcsec"
+_run shlib::warn "Tracking drift detected"
 echo " <- no newline variant"
+echo
 
 #######################################
 # strings
 #######################################
 
-# Check if a string contains a substring
+_header shlib::str_contains
+_show shlib::str_contains "Andromeda Galaxy" "Galaxy"
 if shlib::str_contains "Andromeda Galaxy" "Galaxy"; then
-    echo "str_contains \"Andromeda Galaxy\" \"Galaxy\": true"
+    echo "true"
 fi
+_show shlib::str_contains "Andromeda Galaxy" "Nebula"
 if ! shlib::str_contains "Andromeda Galaxy" "Nebula"; then
-    echo "str_contains \"Andromeda Galaxy\" \"Nebula\": false"
+    echo "false"
 fi
+echo
 
-# Check if a string ends with a suffix
+_header shlib::str_endswith
+_show shlib::str_endswith "supernova.fits" ".fits"
 if shlib::str_endswith "supernova.fits" ".fits"; then
-    echo "str_endswith \"supernova.fits\" \".fits\": true"
+    echo "true"
 fi
+_show shlib::str_endswith "supernova.fits" ".csv"
 if ! shlib::str_endswith "supernova.fits" ".csv"; then
-    echo "str_endswith \"supernova.fits\" \".csv\": false"
+    echo "false"
 fi
+echo
 
-# Check if a string is empty or whitespace-only
+_header shlib::str_is_empty
+_show shlib::str_is_empty "   "
 if shlib::str_is_empty "   "; then
-    echo "str_is_empty \"   \": true (whitespace only)"
+    echo "true (whitespace only)"
 fi
+_show shlib::str_is_empty "quasar"
 if ! shlib::str_is_empty "quasar"; then
-    echo "str_is_empty \"quasar\": false"
+    echo "false"
 fi
+echo
 
-# Get the length of a string
-name="Betelgeuse"
-echo "str_len \"$name\": $(shlib::str_len "$name")"
+_header shlib::str_len
+_eval shlib::str_len "Betelgeuse"
+echo
 
-# Remove leading whitespace
+_header shlib::str_ltrim
 raw="   Horsehead Nebula"
 echo "Before: [$raw]"
-echo "After str_ltrim: [$(shlib::str_ltrim "$raw")]"
+_show shlib::str_ltrim "$raw"
+echo "After: [$(shlib::str_ltrim "$raw")]"
+echo
 
-# Pad a string on the left
-echo "str_padleft \"42\" 6 \"0\": [$(shlib::str_padleft "42" 6 "0")]"
-echo "str_padleft \"NGC\" 8:    [$(shlib::str_padleft "NGC" 8)]"
+_header shlib::str_padleft
+_show shlib::str_padleft "42" 6 "0"
+echo "[$(shlib::str_padleft "42" 6 "0")]"
+_show shlib::str_padleft "NGC" 8
+echo "[$(shlib::str_padleft "NGC" 8)]"
+echo
 
-# Pad a string on the right
-echo "str_padright \"M31\" 8 \".\": [$(shlib::str_padright "M31" 8 ".")]"
-echo "str_padright \"IC\" 6:      [$(shlib::str_padright "IC" 6)]"
+_header shlib::str_padright
+_show shlib::str_padright "M31" 8 "."
+echo "[$(shlib::str_padright "M31" 8 ".")]"
+_show shlib::str_padright "IC" 6
+echo "[$(shlib::str_padright "IC" 6)]"
+echo
 
-# Repeat a string N times
-echo "str_repeat \"=-\" 20: $(shlib::str_repeat "=-" 20)"
-echo "str_repeat \"*\" 10:  $(shlib::str_repeat "*" 10)"
+_header shlib::str_repeat
+_eval shlib::str_repeat "=-" 20
+_eval shlib::str_repeat "*" 10
+echo
 
-# Remove trailing whitespace
+_header shlib::str_rtrim
 raw="Ring Nebula   "
 echo "Before: [$raw]"
-echo "After str_rtrim: [$(shlib::str_rtrim "$raw")]"
+_show shlib::str_rtrim "$raw"
+echo "After: [$(shlib::str_rtrim "$raw")]"
+echo
 
-# Split a string into an array
+_header shlib::str_split
 csv="Sirius,Vega,Rigel,Altair"
-shlib::str_split star_list "$csv" ","
+_run shlib::str_split star_list "$csv" ","
 # shellcheck disable=SC2154
-echo "str_split \"$csv\" by \",\": (${star_list[*]})"
+echo "Result: (${star_list[*]})"
 echo "Count: ${#star_list[@]}"
+echo
 
-# Check if a string starts with a prefix
+_header shlib::str_startswith
+_show shlib::str_startswith "NGC 4321" "NGC"
 if shlib::str_startswith "NGC 4321" "NGC"; then
-    echo "str_startswith \"NGC 4321\" \"NGC\": true"
+    echo "true"
 fi
+_show shlib::str_startswith "NGC 4321" "IC"
 if ! shlib::str_startswith "NGC 4321" "IC"; then
-    echo "str_startswith \"NGC 4321\" \"IC\": false"
+    echo "false"
 fi
+echo
 
-# Convert a string to lowercase
-echo "str_to_lower \"SUPERNOVA\": $(shlib::str_to_lower "SUPERNOVA")"
+_header shlib::str_to_lower
+_eval shlib::str_to_lower "SUPERNOVA"
+echo
 
-# Convert a string to uppercase
-echo "str_to_upper \"pulsar\": $(shlib::str_to_upper "pulsar")"
+_header shlib::str_to_upper
+_eval shlib::str_to_upper "pulsar"
+echo
 
-# Remove leading and trailing whitespace
+_header shlib::str_trim
 raw="   Crab Nebula   "
 echo "Before: [$raw]"
-echo "After str_trim: [$(shlib::str_trim "$raw")]"
+_show shlib::str_trim "$raw"
+echo "After: [$(shlib::str_trim "$raw")]"
+echo
 
 #######################################
 # system
 #######################################
 
-# Check if a command exists
+_header shlib::cmd_exists
+_show shlib::cmd_exists git
 if shlib::cmd_exists git; then
     shlib::cinfon "git is installed"
 else
     shlib::cwarnn "git is not installed"
 fi
+_show shlib::cmd_exists nonexistent_cmd
 if ! shlib::cmd_exists nonexistent_cmd; then
     shlib::cwarnn "nonexistent_cmd not found (expected)"
 fi
+echo
 
-# Run a command protected by file-based locking
+_header shlib::cmd_locked
 lockfile=$(mktemp -u)
+_show shlib::cmd_locked "$lockfile" 0 echo "Protected operation"
 if shlib::cmd_locked "$lockfile" 0 echo "Protected operation"; then
     shlib::cinfon "Locked command executed successfully"
 fi
 # Demonstrate lock contention
 mkdir "${lockfile}.lock"
 echo $$ >"${lockfile}.lock/pid"
+_show shlib::cmd_locked "$lockfile" 0 true
 if ! shlib::cmd_locked "$lockfile" 0 true; then
     shlib::cwarnn "Lock already held (expected)"
 fi
 rm -rf "${lockfile}.lock"
+echo
 
-# Retry a command with delay between attempts
+_header shlib::cmd_retry
+_show shlib::cmd_retry 3 0 true
 if shlib::cmd_retry 3 0 true; then
     shlib::cinfon "Command succeeded on first attempt"
 fi
+_show shlib::cmd_retry 2 0 false
 if ! shlib::cmd_retry 2 0 false; then
     shlib::cwarnn "Command failed after 2 attempts (expected)"
 fi
+echo
 
-# Run a command with a timeout
+_header shlib::cmd_timeout
+_show shlib::cmd_timeout 2 sleep 1
 if shlib::cmd_timeout 2 sleep 1; then
     shlib::cinfon "Command completed within timeout"
 fi
+_show shlib::cmd_timeout 1 sleep 5
 if ! shlib::cmd_timeout 1 sleep 5; then
     shlib::cwarnn "Command timed out (expected)"
 fi
+echo
 
 #######################################
 # ui
 #######################################
 
-# Display the 256-color ANSI palette
-shlib::ansi_256_palette
+_header shlib::ansi_256_palette
+_run shlib::ansi_256_palette
+echo
 
-# Display ANSI background colors
-shlib::ansi_bg_colors
+_header shlib::ansi_bg_colors
+_run shlib::ansi_bg_colors
+echo
 
-# Display standard foreground/background color combinations
-shlib::ansi_color_matrix
+_header shlib::ansi_color_matrix
+_run shlib::ansi_color_matrix
+echo
 
-# Display bright foreground/background color combinations
-shlib::ansi_color_matrix_bright
+_header shlib::ansi_color_matrix_bright
+_run shlib::ansi_color_matrix_bright
+echo
 
-# Display ANSI foreground colors
-shlib::ansi_fg_colors
+_header shlib::ansi_fg_colors
+_run shlib::ansi_fg_colors
+echo
 
-# Display ANSI text styles
-shlib::ansi_styles
+_header shlib::ansi_styles
+_run shlib::ansi_styles
+echo
 
-# Render ASCII art banner using best available method
-shlib::banner "COSMOS"
+_header shlib::banner
+_run shlib::banner "COSMOS"
+echo
 
-# Render ASCII art banner using built-in block font
-shlib::banner_builtin "NOVA"
+_header shlib::banner_builtin
+_run shlib::banner_builtin "NOVA"
+echo
 
-# Render ASCII art banner using figlet
+_header shlib::banner_figlet
 if shlib::cmd_exists figlet; then
-    shlib::banner_figlet "PULSAR"
+    _run shlib::banner_figlet "PULSAR"
 else
     echo "(figlet not installed, skipping)"
 fi
+echo
 
-# Render ASCII art banner using toilet
+_header shlib::banner_toilet
 if shlib::cmd_exists toilet; then
-    shlib::banner_toilet "QUASAR" "" "gay"
+    _run shlib::banner_toilet "QUASAR" "" "gay"
 else
     echo "(toilet not installed, skipping)"
 fi
+echo
 
-# Print a bold header (without newline)
-shlib::header "Observation Log"
+_header shlib::header
+_run shlib::header "Observation Log"
 echo " <- no newline variant"
+echo
 
-# Print a bold header (with newline)
-shlib::headern "Observation Log"
+_header shlib::headern
+_run shlib::headern "Observation Log"
+echo
 
-# Draw a horizontal rule
-shlib::hrn
-shlib::hrn "Telemetry" 40 "="
+_header shlib::hr
+_run shlib::hrn
+_run shlib::hrn "Telemetry" 40 "="
+echo
 
-# Draw a horizontal rule (with newline)
-shlib::hrn "Session Start"
-shlib::hrn "" 50 "─"
+_header shlib::hrn
+_run shlib::hrn "Session Start"
+_run shlib::hrn "" 50 "─"
+echo
 
-# Run a command with spinner animation
+_header shlib::spinner
+_show shlib::spinner "Processing star field" sleep 2
 if shlib::spinner "Processing star field" sleep 2; then
     shlib::einfon "Processing complete"
 fi
+echo
 
-# Print failure status indicator
-shlib::status_failn "Sensor readout failed"
+_header shlib::status_fail
+_run shlib::status_failn "Sensor readout failed"
+echo
 
-# Print success status indicator
-shlib::status_okn "Calibration complete"
+_header shlib::status_ok
+_run shlib::status_okn "Calibration complete"
+echo
 
-# Print pending status indicator
-shlib::status_pendingn "Awaiting dark frames..."
+_header shlib::status_pending
+_run shlib::status_pendingn "Awaiting dark frames..."
+echo
 # End of File

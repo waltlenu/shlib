@@ -1,4 +1,4 @@
-# Format elapsed time since a start timestamp
+_header shlib::dt_elapsed
 start=$(shlib::dt_now)
 sleep 1
-echo "dt_elapsed: $(shlib::dt_elapsed "$start")"
+_eval shlib::dt_elapsed "$start"

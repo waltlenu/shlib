@@ -1,7 +1,9 @@
-# Check if a string starts with a prefix
+_header shlib::str_startswith
+_show shlib::str_startswith "NGC 4321" "NGC"
 if shlib::str_startswith "NGC 4321" "NGC"; then
-    echo "str_startswith \"NGC 4321\" \"NGC\": true"
+    echo "true"
 fi
+_show shlib::str_startswith "NGC 4321" "IC"
 if ! shlib::str_startswith "NGC 4321" "IC"; then
-    echo "str_startswith \"NGC 4321\" \"IC\": false"
+    echo "false"
 fi

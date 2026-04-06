@@ -1,4 +1,5 @@
-# Remove trailing whitespace
+_header shlib::str_rtrim
 raw="Ring Nebula   "
 echo "Before: [$raw]"
-echo "After str_rtrim: [$(shlib::str_rtrim "$raw")]"
+_show shlib::str_rtrim "$raw"
+echo "After: [$(shlib::str_rtrim "$raw")]"

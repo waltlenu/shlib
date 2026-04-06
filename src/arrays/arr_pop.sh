@@ -1,5 +1,5 @@
-# Remove the last element from an array
+_header shlib::arr_pop
 moons=(Io Europa Ganymede Callisto)
 echo "Before: (${moons[*]})"
-shlib::arr_pop moons
-echo "After arr_pop: (${moons[*]})"
+_run shlib::arr_pop moons
+echo "After: (${moons[*]})"

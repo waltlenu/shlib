@@ -5,6 +5,7 @@
 #######################################
 {{ range glob (printf "%s/*.sh" .) }}
 {{ include . -}}
+echo
 {{ end -}}
 {{ end -}}
 {{ include "src/footer.sh" -}}

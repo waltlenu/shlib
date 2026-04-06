@@ -1,4 +1,5 @@
-# Remove leading whitespace
+_header shlib::str_ltrim
 raw="   Horsehead Nebula"
 echo "Before: [$raw]"
-echo "After str_ltrim: [$(shlib::str_ltrim "$raw")]"
+_show shlib::str_ltrim "$raw"
+echo "After: [$(shlib::str_ltrim "$raw")]"

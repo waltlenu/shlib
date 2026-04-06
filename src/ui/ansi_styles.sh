@@ -1,2 +1,2 @@
-# Display ANSI text styles
-shlib::ansi_styles
+_header shlib::ansi_styles
+_run shlib::ansi_styles

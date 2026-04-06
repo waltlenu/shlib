@@ -1,6 +1,6 @@
-# Render ASCII art banner using figlet
+_header shlib::banner_figlet
 if shlib::cmd_exists figlet; then
-    shlib::banner_figlet "PULSAR"
+    _run shlib::banner_figlet "PULSAR"
 else
     echo "(figlet not installed, skipping)"
 fi

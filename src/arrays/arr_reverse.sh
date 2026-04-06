@@ -1,5 +1,5 @@
-# Reverse an array in place
+_header shlib::arr_reverse
 planets=(Mercury Venus Earth Mars Jupiter)
 echo "Before: (${planets[*]})"
-shlib::arr_reverse planets
-echo "After arr_reverse: (${planets[*]})"
+_run shlib::arr_reverse planets
+echo "After: (${planets[*]})"

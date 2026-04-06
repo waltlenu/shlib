@@ -21,3 +21,16 @@ shlib::banner_toilet "shlib" "" "gay"
 
 shlib::headern "shlib Examples"
 echo
+
+# Example helpers
+_header() { shlib::headern "${1#shlib::}"; }
+_run() {
+    echo "> $*"
+    "$@"
+}
+_show() { echo "> $*"; }
+# shellcheck disable=SC2005
+_eval() {
+    echo "> $*"
+    echo "$("$@")"
+}
