@@ -1,0 +1,42 @@
+.SH EXAMPLES
+.PP
+Source the library, and check if a command exists, then print an ANSI color matrix:
+.RS
+.nf
+
+#!/usr/bin/env bash
+
+source ./shlib.bash
+
+shlib::header "Check if command exists:   "
+if shlib::cmd_exists git; then
+    shlib::status_okn "git is installed"
+else
+    shlib::status_failn "git is NOT installed"
+fi
+echo
+
+shlib::ansi_color_matrix
+
+.fi
+.RE
+.SH ENVIRONMENT
+.TP
+.B SHLIB_VERSION
+Set to the library version string after sourcing.
+.TP
+.B SHLIB_DIR
+Set to the directory containing the library file.
+.TP
+.B SHLIB_LOADED
+Set to 1 after the library is sourced.
+Prevents double\-sourcing on subsequent
+.B source
+calls.
+.SH SEE ALSO
+.BR bash (1),
+.BR shellcheck (1),
+.BR bats (1)
+.SH LICENSE
+{{ .license }} license.
+See LICENSE file for details.

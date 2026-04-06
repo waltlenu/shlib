@@ -1,0 +1,7 @@
+{
+    "project": "shlib",
+    "description": "A library of reusable Bash shell functions",
+    "license": "GPL-3.0-or-later",
+    "version": "0.6.0",
+    "date": "April 2026"
+}

@@ -1,0 +1,10 @@
+{{ include "src/header.sh" -}}
+{{ range dirs "src/*/*.sh" }}
+#######################################
+# {{ basename . }}
+#######################################
+{{ range glob (printf "%s/*.sh" .) }}
+{{ include . -}}
+{{ end -}}
+{{ end -}}
+{{ include "src/footer.sh" -}}

@@ -1,0 +1,2533 @@
+.\" shlib - A library of reusable Bash shell functions
+.TH SHLIB 7 "April 2026" "shlib 0.6.0" "Bash Library"
+.SH NAME
+shlib \- A library of reusable Bash shell functions
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.bash
+.SH DESCRIPTION
+.B shlib
+is a library of reusable Bash functions that can be sourced into shell scripts.
+It provides common utilities for arrays, strings, logging, ANSI colors,
+key\-value stores, and other frequently needed operations.
+.PP
+The library is distributed as a single file
+.RB ( shlib.bash )
+for easy download and sourcing.
+It is pure Bash with no external binary dependencies wherever possible.
+.PP
+All functions are namespaced with the
+.B shlib::
+prefix, and all global variables are namespaced with the
+.B SHLIB_
+prefix, to avoid polluting the caller's environment.
+.PP
+The library enables strict mode
+.RB ( "set \-euo pipefail" )
+when sourced.
+It includes double\-source protection via the
+.B SHLIB_LOADED
+variable to prevent loading multiple times.
+.SH REQUIREMENTS
+.B shlib
+requires Bash version 3 or higher.
+The key\-value (KV) section requires Bash version 4 or higher
+for associative array support.
+The library will fail to load with an error message
+if sourced in an older version of Bash.
+
+.SH _CORE
+.SS shlib::list_functions
+.PP
+List all shlib functions
+.PP
+\fBStdout:\fR One function name per line, sorted alphabetically
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.SS shlib::list_variables
+.PP
+List all shlib global variables
+.PP
+\fBStdout:\fR One variable name per line, sorted alphabetically
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.SS shlib::version
+.PP
+Print the library version
+.PP
+\fBStdout:\fR The version string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+
+.SH ARRAYS
+.SS shlib::arr_append
+.BI "shlib::arr_append " "string" " " "string"
+.PP
+Append one or more elements to an array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.TP
+\fI$@\fR (string)
+Elements to append
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b)
+shlib::arr_append my_array c d
+# my_array is now (a b c d)
+.fi
+.RE
+.SS shlib::arr_delete
+.BI "shlib::arr_delete " "string" " " "int"
+.PP
+Delete an element from an array by index
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.TP
+\fI$2\fR (int)
+The index to delete
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c d)
+shlib::arr_delete my_array 1
+# my_array is now (a c d)
+.fi
+.RE
+.SS shlib::arr_insert
+.BI "shlib::arr_insert " "string" " " "int" " " "string"
+.PP
+Insert an element at a specific index in an array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.TP
+\fI$2\fR (int)
+The index at which to insert
+.TP
+\fI$3\fR (string)
+The element to insert
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c d)
+shlib::arr_insert my_array 2 "X"
+# my_array is now (a b X c d)
+.fi
+.RE
+.SS shlib::arr_len
+.BI "shlib::arr_len " "string"
+.PP
+Get the number of elements in an array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBStdout:\fR The number of elements in the array
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c d e)
+shlib::arr_len my_array  # outputs 5
+.fi
+.RE
+.SS shlib::arr_merge
+.BI "shlib::arr_merge " "string" " " "string"
+.PP
+Merge multiple arrays into a destination array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination array variable (without $)
+.TP
+\fI$@\fR (string)
+Names of source arrays to merge (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+arr1=(a b)
+arr2=(c d)
+arr3=(e f)
+shlib::arr_merge result arr1 arr2 arr3
+# result is now (a b c d e f)
+.fi
+.RE
+.SS shlib::arr_pop
+.BI "shlib::arr_pop " "string"
+.PP
+Remove the last element from an array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c d)
+shlib::arr_pop my_array
+# my_array is now (a b c)
+.fi
+.RE
+.SS shlib::arr_print
+.BI "shlib::arr_print " "string" " " "string"
+.PP
+Print array elements on one line with a separator
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.TP
+\fI$2\fR (string)
+The separator (default: " ")
+.PP
+\fBStdout:\fR Array elements joined by separator
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c)
+shlib::arr_print my_array      # outputs "a b c"
+shlib::arr_print my_array ","  # outputs "a,b,c"
+.fi
+.RE
+.SS shlib::arr_printn
+.BI "shlib::arr_printn " "string"
+.PP
+Print array elements one per line
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBStdout:\fR Each array element on its own line
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c)
+shlib::arr_printn my_array
+# outputs:
+# a
+# b
+# c
+.fi
+.RE
+.SS shlib::arr_reverse
+.BI "shlib::arr_reverse " "string"
+.PP
+Reverse an array in place
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b c d)
+shlib::arr_reverse my_array
+# my_array is now (d c b a)
+.fi
+.RE
+.SS shlib::arr_sort
+.BI "shlib::arr_sort " "string"
+.PP
+Sort an array in place (lexicographic order)
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(cherry apple banana)
+shlib::arr_sort my_array
+# my_array is now (apple banana cherry)
+.fi
+.RE
+.SS shlib::arr_uniq
+.BI "shlib::arr_uniq " "string"
+.PP
+Remove duplicate elements from an array (keeps first occurrence)
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+my_array=(a b a c b d)
+shlib::arr_uniq my_array
+# my_array is now (a b c d)
+.fi
+.RE
+
+.SH DT
+.SS shlib::dt_add
+.BI "shlib::dt_add " "int" " " "int" " " "string"
+.PP
+Add time units to timestamp
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Unix timestamp
+.TP
+\fI$2\fR (int)
+Amount to add (can be negative)
+.TP
+\fI$3\fR (string)
+Unit: seconds, minutes, hours, days, weeks
+.PP
+\fBStdout:\fR New Unix timestamp
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_add 1704067200 1 days    # add 1 day
+shlib::dt_add 1704067200 -2 hours  # subtract 2 hours
+.fi
+.RE
+.SS shlib::dt_diff
+.BI "shlib::dt_diff " "int" " " "int" " " "string"
+.PP
+Calculate difference between timestamps
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+First Unix timestamp
+.TP
+\fI$2\fR (int)
+Second Unix timestamp
+.TP
+\fI$3\fR (string)
+Optional unit: seconds (default), minutes, hours, days, weeks
+.PP
+\fBStdout:\fR Difference (ts1 - ts2) in specified unit (integer division)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_diff 1704153600 1704067200          # outputs: 86400 (seconds)
+shlib::dt_diff 1704153600 1704067200 hours    # outputs: 24
+shlib::dt_diff 1704153600 1704067200 days     # outputs: 1
+.fi
+.RE
+.SS shlib::dt_duration
+.BI "shlib::dt_duration " "int" " " "string"
+.PP
+Format seconds as human-readable duration
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Number of seconds
+.TP
+\fI$2\fR (string)
+Optional format: short (default), long, compact
+.PP
+\fBStdout:\fR Human-readable duration string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_duration 90061              # outputs: 1d 1h 1m 1s
+shlib::dt_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
+shlib::dt_duration 90061 compact      # outputs: 1d1h1m1s
+.fi
+.RE
+.SS shlib::dt_elapsed
+.BI "shlib::dt_elapsed " "int" " " "string"
+.PP
+Format elapsed time since start timestamp
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Start Unix timestamp
+.TP
+\fI$2\fR (string)
+Optional format: short (default), long, compact
+.PP
+\fBStdout:\fR Elapsed time as human-readable duration
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+start=$(shlib::dt_now)
+sleep 5
+shlib::dt_elapsed "$start"  # outputs: 5s
+.fi
+.RE
+.SS shlib::dt_from_unix
+.BI "shlib::dt_from_unix " "int" " " "string"
+.PP
+Format Unix timestamp with format string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Unix timestamp
+.TP
+\fI$2\fR (string)
+Format string (strftime compatible)
+.PP
+\fBStdout:\fR Formatted date/time string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Success
+.TP
+\fB1\fR
+Invalid timestamp or format
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_from_unix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
+shlib::dt_from_unix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
+.fi
+.RE
+.SS shlib::dt_is_after
+.BI "shlib::dt_is_after " "int" " " "int"
+.PP
+Check if timestamp A is after timestamp B
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+First Unix timestamp
+.TP
+\fI$2\fR (int)
+Second Unix timestamp
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+ts1 > ts2
+.TP
+\fB1\fR
+ts1 <= ts2
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_is_after 1704153600 1704067200 && echo "later"
+.fi
+.RE
+.SS shlib::dt_is_before
+.BI "shlib::dt_is_before " "int" " " "int"
+.PP
+Check if timestamp A is before timestamp B
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+First Unix timestamp
+.TP
+\fI$2\fR (int)
+Second Unix timestamp
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+ts1 < ts2
+.TP
+\fB1\fR
+ts1 >= ts2
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_is_before 1704067200 1704153600 && echo "earlier"
+.fi
+.RE
+.SS shlib::dt_now
+.PP
+Get current Unix timestamp
+.PP
+\fBStdout:\fR The current Unix timestamp in seconds
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_now  # outputs: 1704067200
+.fi
+.RE
+.SS shlib::dt_now_iso
+.BI "shlib::dt_now_iso " "string"
+.PP
+Get current datetime in ISO 8601 format
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Optional: "local" for local time, default is UTC
+.PP
+\fBStdout:\fR Current datetime in ISO 8601 format
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_now_iso         # outputs: 2024-01-01T12:00:00Z
+shlib::dt_now_iso local   # outputs: 2024-01-01T07:00:00-05:00
+.fi
+.RE
+.SS shlib::dt_today
+.PP
+Get current date as YYYY-MM-DD
+.PP
+\fBStdout:\fR Current date in YYYY-MM-DD format
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::dt_today  # outputs: 2024-01-01
+.fi
+.RE
+
+.SH KV
+.SS shlib::kv_clear
+.BI "shlib::kv_clear " "string"
+.PP
+Remove all entries from an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_clear config
+.fi
+.RE
+.SS shlib::kv_copy
+.BI "shlib::kv_copy " "string" " " "string"
+.PP
+Copy an associative array to another
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination associative array (without $)
+.TP
+\fI$2\fR (string)
+The name of the source associative array (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A original
+original[host]="localhost"
+declare -A copy
+shlib::kv_copy copy original
+.fi
+.RE
+.SS shlib::kv_delete
+.BI "shlib::kv_delete " "string" " " "string"
+.PP
+Delete a key from an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The key to delete
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+shlib::kv_delete config "host"
+.fi
+.RE
+.SS shlib::kv_exists
+.BI "shlib::kv_exists " "string" " " "string"
+.PP
+Check if a key exists in an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The key to check
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Key exists
+.TP
+\fB1\fR
+Key does not exist
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+shlib::kv_exists config "host" && echo "exists"
+.fi
+.RE
+.SS shlib::kv_find
+.BI "shlib::kv_find " "string" " " "string" " " "string"
+.PP
+Find all keys with a specific value
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination array variable (without $)
+.TP
+\fI$2\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$3\fR (string)
+The value to search for
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A roles
+roles[alice]="admin"
+roles[bob]="user"
+roles[carol]="admin"
+shlib::kv_find admins roles "admin"
+# admins is now: alice carol
+.fi
+.RE
+.SS shlib::kv_get
+.BI "shlib::kv_get " "string" " " "string"
+.PP
+Get a value by key from an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The key to look up
+.PP
+\fBStdout:\fR The value associated with the key
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Key exists
+.TP
+\fB1\fR
+Key not found
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+shlib::kv_get config "host"  # outputs: localhost
+.fi
+.RE
+.SS shlib::kv_get_default
+.BI "shlib::kv_get_default " "string" " " "string" " " "string"
+.PP
+Get a value by key with a fallback default
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The key to look up
+.TP
+\fI$3\fR (string)
+The default value if key not found
+.PP
+\fBStdout:\fR The value associated with the key, or default if not found
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+shlib::kv_get_default config "port" "8080"  # outputs: 8080
+.fi
+.RE
+.SS shlib::kv_has_value
+.BI "shlib::kv_has_value " "string" " " "string"
+.PP
+Check if a value exists in an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The value to search for
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Value exists
+.TP
+\fB1\fR
+Value does not exist
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+shlib::kv_has_value config "localhost" && echo "found"
+.fi
+.RE
+.SS shlib::kv_keys
+.BI "shlib::kv_keys " "string" " " "string"
+.PP
+Get all keys from an associative array into a regular array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination array variable (without $)
+.TP
+\fI$2\fR (string)
+The name of the associative array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_keys keys config
+# keys is now an array of: host port (order may vary)
+.fi
+.RE
+.SS shlib::kv_len
+.BI "shlib::kv_len " "string"
+.PP
+Get the count of entries in an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.PP
+\fBStdout:\fR The number of key-value pairs
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_len config  # outputs: 2
+.fi
+.RE
+.SS shlib::kv_map
+.BI "shlib::kv_map " "string" " " "string"
+.PP
+Apply a transformation command to all values
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The command to apply (receives value via stdin, outputs to stdout)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A data
+data[name]="hello"
+data[greeting]="world"
+shlib::kv_map data 'tr a-z A-Z'
+# data is now: name=HELLO greeting=WORLD
+.fi
+.RE
+.SS shlib::kv_merge
+.BI "shlib::kv_merge " "string" " " "string"
+.PP
+Merge multiple associative arrays (later arrays override earlier)
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination associative array (without $)
+.TP
+\fI$@\fR (string)
+Names of source associative arrays to merge (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A defaults
+defaults[host]="localhost"
+defaults[port]="80"
+declare -A overrides
+overrides[port]="8080"
+declare -A result
+shlib::kv_merge result defaults overrides
+# result is now: host=localhost port=8080
+.fi
+.RE
+.SS shlib::kv_print
+.BI "shlib::kv_print " "string" " " "string" " " "string"
+.PP
+Print key-value pairs on one line with separators
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+Key-value separator (default: "=")
+.TP
+\fI$3\fR (string)
+Pair separator (default: " ")
+.PP
+\fBStdout:\fR Key-value pairs joined by separators
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_print config           # outputs: host=localhost port=8080
+shlib::kv_print config ":" ", "  # outputs: host:localhost, port:8080
+.fi
+.RE
+.SS shlib::kv_printn
+.BI "shlib::kv_printn " "string" " " "string"
+.PP
+Print key-value pairs one per line
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+Key-value separator (default: "=")
+.PP
+\fBStdout:\fR Each key-value pair on its own line
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_printn config
+# outputs:
+# host=localhost
+# port=8080
+.fi
+.RE
+.SS shlib::kv_set
+.BI "shlib::kv_set " "string" " " "string" " " "string"
+.PP
+Set a key-value pair in an associative array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the associative array variable (without $)
+.TP
+\fI$2\fR (string)
+The key to set
+.TP
+\fI$3\fR (string)
+The value to set
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+shlib::kv_set config "host" "localhost"
+.fi
+.RE
+.SS shlib::kv_values
+.BI "shlib::kv_values " "string" " " "string"
+.PP
+Get all values from an associative array into a regular array
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the destination array variable (without $)
+.TP
+\fI$2\fR (string)
+The name of the associative array variable (without $)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+declare -A config
+config[host]="localhost"
+config[port]="8080"
+shlib::kv_values values config
+# values is now an array of: localhost 8080 (order may vary)
+.fi
+.RE
+
+.SH LOGGING
+.SS shlib::cerror
+.BI "shlib::cerror " "string"
+.PP
+Print a colorized error message to stderr (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and red "error: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cerror "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+.fi
+.RE
+.SS shlib::cerrorn
+.BI "shlib::cerrorn " "string"
+.PP
+Print a colorized error message to stderr (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and red "error: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cerrorn "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+.fi
+.RE
+.SS shlib::cinfo
+.BI "shlib::cinfo " "string"
+.PP
+Print a colorized info message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and blue "info: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cinfo "Processing file"
+# outputs: [2024-01-01T12:00:00-05:00] info: Processing file
+.fi
+.RE
+.SS shlib::cinfon
+.BI "shlib::cinfon " "string"
+.PP
+Print a colorized info message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and blue "info: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cinfon "Processing complete"
+# outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
+.fi
+.RE
+.SS shlib::cwarn
+.BI "shlib::cwarn " "string"
+.PP
+Print a colorized warning message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and yellow "warning: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cwarn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+.fi
+.RE
+.SS shlib::cwarnn
+.BI "shlib::cwarnn " "string"
+.PP
+Print a colorized warning message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and yellow "warning: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cwarnn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+.fi
+.RE
+.SS shlib::eerror
+.BI "shlib::eerror " "string"
+.PP
+Print an emoji error message to stderr (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and "❌️ "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::eerror "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
+.fi
+.RE
+.SS shlib::eerrorn
+.BI "shlib::eerrorn " "string"
+.PP
+Print an emoji error message to stderr (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and "❌️ " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::eerrorn "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
+.fi
+.RE
+.SS shlib::einfo
+.BI "shlib::einfo " "string"
+.PP
+Print an emoji info message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "ℹ️ "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::einfo "Processing file"
+# outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
+.fi
+.RE
+.SS shlib::einfon
+.BI "shlib::einfon " "string"
+.PP
+Print an emoji info message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "ℹ️ " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::einfon "Processing complete"
+# outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
+.fi
+.RE
+.SS shlib::error
+.BI "shlib::error " "string"
+.PP
+Print an error message to stderr (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and "error: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::error "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+.fi
+.RE
+.SS shlib::errorn
+.BI "shlib::errorn " "string"
+.PP
+Print an error message to stderr (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The error message to print
+.PP
+\fBStderr:\fR The message prefixed with ISO8601 timestamp and "error: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::errorn "Something went wrong"
+# outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
+.fi
+.RE
+.SS shlib::ewarn
+.BI "shlib::ewarn " "string"
+.PP
+Print an emoji warning message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "⚠️ "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ewarn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
+.fi
+.RE
+.SS shlib::ewarnn
+.BI "shlib::ewarnn " "string"
+.PP
+Print an emoji warning message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "⚠️ " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ewarnn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
+.fi
+.RE
+.SS shlib::info
+.BI "shlib::info " "string"
+.PP
+Print an info message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "info: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::info "Processing file"
+# outputs: [2024-01-01T12:00:00-05:00] info: Processing file
+.fi
+.RE
+.SS shlib::infon
+.BI "shlib::infon " "string"
+.PP
+Print an info message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The info message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "info: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::infon "Processing complete"
+# outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
+.fi
+.RE
+.SS shlib::warn
+.BI "shlib::warn " "string"
+.PP
+Print a warning message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "warning: "
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::warn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+.fi
+.RE
+.SS shlib::warnn
+.BI "shlib::warnn " "string"
+.PP
+Print a warning message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The warning message to print
+.PP
+\fBStdout:\fR The message prefixed with ISO8601 timestamp and "warning: " followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::warnn "This might cause issues"
+# outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
+.fi
+.RE
+
+.SH STRINGS
+.SS shlib::str_contains
+.BI "shlib::str_contains " "string" " " "string"
+.PP
+Check if a string contains a substring
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to search in
+.TP
+\fI$2\fR (string)
+The substring to search for
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+String contains substring
+.TP
+\fB1\fR
+String does not contain substring
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_contains "hello world" "world" && echo "found"
+.fi
+.RE
+.SS shlib::str_endswith
+.BI "shlib::str_endswith " "string" " " "string"
+.PP
+Check if a string ends with a suffix
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to check
+.TP
+\fI$2\fR (string)
+The suffix to check for
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+String ends with suffix
+.TP
+\fB1\fR
+String does not end with suffix
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_endswith "hello world" "world" && echo "yes"
+.fi
+.RE
+.SS shlib::str_is_empty
+.BI "shlib::str_is_empty " "string"
+.PP
+Check if a string is empty or contains only whitespace
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to check
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+String is empty or whitespace only
+.TP
+\fB1\fR
+String contains non-whitespace characters
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_is_empty "   " && echo "empty"
+.fi
+.RE
+.SS shlib::str_len
+.BI "shlib::str_len " "string"
+.PP
+Get the length of a string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to measure
+.PP
+\fBStdout:\fR The length of the string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_len "hello"
+.fi
+.RE
+.SS shlib::str_ltrim
+.BI "shlib::str_ltrim " "string"
+.PP
+Remove leading whitespace from a string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to trim
+.PP
+\fBStdout:\fR The string with leading whitespace removed
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_ltrim "  hello world"
+.fi
+.RE
+.SS shlib::str_padleft
+.BI "shlib::str_padleft " "string" " " "int" " " "string"
+.PP
+Pad a string on the left to a specified length
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to pad
+.TP
+\fI$2\fR (int)
+The desired total length
+.TP
+\fI$3\fR (string)
+The padding character (default: space)
+.PP
+\fBStdout:\fR The padded string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_padleft "42" 5 "0"  # outputs "00042"
+.fi
+.RE
+.SS shlib::str_padright
+.BI "shlib::str_padright " "string" " " "int" " " "string"
+.PP
+Pad a string on the right to a specified length
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to pad
+.TP
+\fI$2\fR (int)
+The desired total length
+.TP
+\fI$3\fR (string)
+The padding character (default: space)
+.PP
+\fBStdout:\fR The padded string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_padright "hi" 5 "-"  # outputs "hi---"
+.fi
+.RE
+.SS shlib::str_repeat
+.BI "shlib::str_repeat " "string" " " "int"
+.PP
+Repeat a string N times
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to repeat
+.TP
+\fI$2\fR (int)
+The number of times to repeat (default: 1)
+.PP
+\fBStdout:\fR The repeated string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_repeat "ab" 3  # outputs "ababab"
+shlib::str_repeat "-" 10  # outputs "----------"
+.fi
+.RE
+.SS shlib::str_rtrim
+.BI "shlib::str_rtrim " "string"
+.PP
+Remove trailing whitespace from a string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to trim
+.PP
+\fBStdout:\fR The string with trailing whitespace removed
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_rtrim "hello world  "
+.fi
+.RE
+.SS shlib::str_split
+.BI "shlib::str_split " "string" " " "string" " " "string"
+.PP
+Split a string into an array using a separator
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The name of the array variable to store results (without $)
+.TP
+\fI$2\fR (string)
+The string to split
+.TP
+\fI$3\fR (string)
+The separator (default: " ")
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_split result "a,b,c" ","
+# result is now (a b c)
+.fi
+.RE
+.SS shlib::str_startswith
+.BI "shlib::str_startswith " "string" " " "string"
+.PP
+Check if a string starts with a prefix
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to check
+.TP
+\fI$2\fR (string)
+The prefix to check for
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+String starts with prefix
+.TP
+\fB1\fR
+String does not start with prefix
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_startswith "hello world" "hello" && echo "yes"
+.fi
+.RE
+.SS shlib::str_to_lower
+.BI "shlib::str_to_lower " "string"
+.PP
+Convert a string to lowercase
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to convert
+.PP
+\fBStdout:\fR The lowercase string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_to_lower "HELLO"
+.fi
+.RE
+.SS shlib::str_to_upper
+.BI "shlib::str_to_upper " "string"
+.PP
+Convert a string to uppercase
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to convert
+.PP
+\fBStdout:\fR The uppercase string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_to_upper "hello"
+.fi
+.RE
+.SS shlib::str_trim
+.BI "shlib::str_trim " "string"
+.PP
+Remove leading and trailing whitespace from a string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The string to trim
+.PP
+\fBStdout:\fR The trimmed string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::str_trim "  hello world  "
+.fi
+.RE
+
+.SH SYSTEM
+.SS shlib::cmd_exists
+.BI "shlib::cmd_exists " "string"
+.PP
+Check if a command exists in PATH
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The command name to check
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command exists
+.TP
+\fB1\fR
+Command not found
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_exists git
+.fi
+.RE
+.SS shlib::cmd_locked
+.BI "shlib::cmd_locked " "string" " " "int" " " "string"
+.PP
+Run a command protected by file-based locking
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Path to the lock file (a .lock directory will be created)
+.TP
+\fI$2\fR (int)
+Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command completed successfully
+.TP
+\fB1\fR
+Failed to acquire lock within timeout, or invalid arguments
+.TP
+\fB*\fR
+Command's exit code if lock was acquired
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
+shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
+shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
+.fi
+.RE
+.SS shlib::cmd_retry
+.BI "shlib::cmd_retry " "int" " " "int" " " "string"
+.PP
+Retry a command multiple times with optional delay
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Maximum number of attempts
+.TP
+\fI$2\fR (int)
+Delay in seconds between attempts (0 for no delay)
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output from the successful attempt (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command succeeded within max attempts
+.TP
+\fB1\fR
+All attempts failed
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
+shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+.fi
+.RE
+.SS shlib::cmd_timeout
+.BI "shlib::cmd_timeout " "int" " " "string"
+.PP
+Run a command with a timeout
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Timeout in seconds
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command completed successfully within timeout
+.TP
+\fB124\fR
+Command timed out
+.TP
+\fB*\fR
+Command's exit code if it completed before timeout
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_timeout 5 sleep 2    # succeeds
+shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
+.fi
+.RE
+
+.SH UI
+.SS shlib::ansi_256_palette
+.PP
+Display the 256 color palette
+.PP
+\fBStdout:\fR The 256 color palette with standard colors, 216 colors, and grayscale
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_256_palette
+.fi
+.RE
+.SS shlib::ansi_bg_colors
+.PP
+Display 16 background ANSI color codes (40-47, 100-107)
+.PP
+\fBStdout:\fR A formatted table showing background colors
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_bg_colors
+.fi
+.RE
+.SS shlib::ansi_color_matrix
+.PP
+Display standard foreground/background color combinations matrix
+.PP
+\fBStdout:\fR A matrix of standard FG (30-37) x BG (40-47) combinations
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_color_matrix
+.fi
+.RE
+.SS shlib::ansi_color_matrix_bright
+.PP
+Display bright foreground/background color combinations matrix
+.PP
+\fBStdout:\fR A matrix of bright FG (90-97) x BG (100-107) combinations
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_color_matrix_bright
+.fi
+.RE
+.SS shlib::ansi_fg_colors
+.PP
+Display 16 foreground ANSI color codes (30-37, 90-97)
+.PP
+\fBStdout:\fR A formatted table showing foreground colors
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_fg_colors
+.fi
+.RE
+.SS shlib::ansi_styles
+.PP
+Display ANSI text styles with codes and examples
+.PP
+\fBStdout:\fR A formatted table showing text styles
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::ansi_styles
+.fi
+.RE
+.SS shlib::banner
+.BI "shlib::banner " "string"
+.PP
+Render text as ASCII art banner using best available method
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The text to render
+.PP
+\fBStdout:\fR ASCII art banner (toilet > figlet > builtin)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds (falls back to builtin)
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::banner "HELLO"
+.fi
+.RE
+.SS shlib::banner_builtin
+.BI "shlib::banner_builtin " "string"
+.PP
+Render text as ASCII art banner using pure bash 5x5 block font
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The text to render (A-Z, 0-9, space, and ! ? . - : _)
+.PP
+\fBStdout:\fR Five lines of ASCII art block letters
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::banner_builtin "HELLO"
+shlib::banner_builtin "TEST 123"
+.fi
+.RE
+.SS shlib::banner_figlet
+.BI "shlib::banner_figlet " "string" " " "string"
+.PP
+Render text as ASCII art banner using figlet
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The text to render
+.TP
+\fI$2\fR (string)
+Font name (optional, default: standard)
+.PP
+\fBStdout:\fR ASCII art from figlet
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Success
+.TP
+\fB1\fR
+figlet not installed
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::banner_figlet "Hello"
+shlib::banner_figlet "Hello" "banner"
+.fi
+.RE
+.SS shlib::banner_toilet
+.BI "shlib::banner_toilet " "string" " " "string" " " "string"
+.PP
+Render text as ASCII art banner using toilet
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The text to render
+.TP
+\fI$2\fR (string)
+Font name (optional, default: standard)
+.TP
+\fI$3\fR (string)
+Filter (optional, e.g., gay, metal, border)
+.PP
+\fBStdout:\fR ASCII art from toilet
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Success
+.TP
+\fB1\fR
+toilet not installed
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::banner_toilet "Hello"
+shlib::banner_toilet "Hello" "mono12"
+shlib::banner_toilet "Hello" "mono12" "gay"
+.fi
+.RE
+.SS shlib::header
+.BI "shlib::header " "string"
+.PP
+Print a bold header message to stdout (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The header message to print
+.PP
+\fBStdout:\fR The message in bold
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::header "Section Title"
+.fi
+.RE
+.SS shlib::headern
+.BI "shlib::headern " "string"
+.PP
+Print a bold header message to stdout (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The header message to print
+.PP
+\fBStdout:\fR The message in bold followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::headern "Section Title"
+.fi
+.RE
+.SS shlib::hr
+.BI "shlib::hr " "string" " " "int" " " "string"
+.PP
+Draw a horizontal rule/divider line
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Optional label to display in the middle
+.TP
+\fI$2\fR (int)
+Width of the rule (default: 40)
+.TP
+\fI$3\fR (string)
+Character to use (default: ─)
+.PP
+\fBStdout:\fR A horizontal divider line
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::hr
+shlib::hr "Section"
+shlib::hr "Title" 60 "="
+.fi
+.RE
+.SS shlib::hrn
+.BI "shlib::hrn " "string" " " "int" " " "string"
+.PP
+Draw a horizontal rule with newline
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Optional label to display in the middle
+.TP
+\fI$2\fR (int)
+Width of the rule (default: 40)
+.TP
+\fI$3\fR (string)
+Character to use (default: ─)
+.PP
+\fBStdout:\fR A horizontal divider line followed by newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::hrn "Section Title"
+.fi
+.RE
+.SS shlib::spinner
+.BI "shlib::spinner " "string" " " "string"
+.PP
+Run a command with a spinner animation
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+The message to display next to the spinner
+.TP
+\fI$@\fR (string)
+The command and its arguments to run
+.PP
+\fBStdout:\fR The spinner animation and message while running
+.PP
+\fBExit codes:\fR
+.TP
+\fBReturns\fR
+the exit code of the executed command
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::spinner "Installing packages" apt-get install -y curl
+shlib::spinner "Building project" make -j4
+.fi
+.RE
+.SS shlib::status_fail
+.BI "shlib::status_fail " "string"
+.PP
+Print a failure status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Red X followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_fail "Task failed"
+.fi
+.RE
+.SS shlib::status_failn
+.BI "shlib::status_failn " "string"
+.PP
+Print a failure status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Red X followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_failn "Task failed"
+.fi
+.RE
+.SS shlib::status_ok
+.BI "shlib::status_ok " "string"
+.PP
+Print a success status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Green checkmark followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_ok "Task completed"
+.fi
+.RE
+.SS shlib::status_okn
+.BI "shlib::status_okn " "string"
+.PP
+Print a success status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Green checkmark followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_okn "Task completed"
+.fi
+.RE
+.SS shlib::status_pending
+.BI "shlib::status_pending " "string"
+.PP
+Print a pending status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Yellow hourglass followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_pending "Waiting..."
+.fi
+.RE
+.SS shlib::status_pendingn
+.BI "shlib::status_pendingn " "string"
+.PP
+Print a pending status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Yellow hourglass followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::status_pendingn "Waiting..."
+.fi
+.RE
+.SH EXAMPLES
+.PP
+Source the library, and check if a command exists, then print an ANSI color matrix:
+.RS
+.nf
+
+#!/usr/bin/env bash
+
+source ./shlib.bash
+
+shlib::header "Check if command exists:   "
+if shlib::cmd_exists git; then
+    shlib::status_okn "git is installed"
+else
+    shlib::status_failn "git is NOT installed"
+fi
+echo
+
+shlib::ansi_color_matrix
+
+.fi
+.RE
+.SH ENVIRONMENT
+.TP
+.B SHLIB_VERSION
+Set to the library version string after sourcing.
+.TP
+.B SHLIB_DIR
+Set to the directory containing the library file.
+.TP
+.B SHLIB_LOADED
+Set to 1 after the library is sourced.
+Prevents double\-sourcing on subsequent
+.B source
+calls.
+.SH SEE ALSO
+.BR bash (1),
+.BR shellcheck (1),
+.BR bats (1)
+.SH LICENSE
+GPL-3.0-or-later license.
+See LICENSE file for details.
+

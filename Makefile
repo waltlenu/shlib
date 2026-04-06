@@ -2,8 +2,7 @@
 #
 # Usage:
 #   make help   - Show available targets
-#   make all    - Run all checks (lint + test)
-
+#   make all    - Build, lint, format-check, and test
 
 # Shell configuration
 SHELL := /bin/bash
@@ -13,30 +12,35 @@ SHELL := /bin/bash
 SHELLCHECK := shellcheck
 SHFMT := shfmt
 BATS := bats
+GO := go
 
 # Tool options
 SHELLCHECK_OPTS := -s bash
 SHFMT_OPTS := -i 4 -ci -bn
 
 # Files
-SHELL_FILES := shlib.sh
-EXAMPLE_FILES := $(wildcard examples/*.sh)
-HACK_FILES := $(wildcard hack/*.sh)
-TEST_FILES := $(wildcard tests/*.bats)
-ALL_SHELL_FILES := $(SHELL_FILES) $(EXAMPLE_FILES) $(HACK_FILES) $(TEST_FILES)
+SHELL_FILE := shlib.bash
+TEST_FILE := shlib.bats
+EXAMPLE_FILE := shlib.example.bash
+MAN_FILE := shlib.7
+PARAMS_FILE := params.json
+ALL_SHELL_FILES := $(SHELL_FILE) $(TEST_FILE) $(EXAMPLE_FILE)
+ALL_OUTPUT_FILES := $(ALL_SHELL_FILES) $(MAN_FILE)
+
+# Build tool
+RENDER_SRC := ./hack/render.go
+RENDER_BIN := ./hack/render
 
 # Colors for output
 BOLD := $(shell tput bold 2>/dev/null || echo '')
 GREEN := $(shell tput setaf 2 2>/dev/null || echo '')
-YELLOW := $(shell tput setaf 3 2>/dev/null || echo '')
 RESET := $(shell tput sgr0 2>/dev/null || echo '')
 
 # Default target
 .DEFAULT_GOAL := help
 
 # Phony targets
-.PHONY: all lint format test \
-		example man changelog release-notes version hels
+.PHONY: help all build lint format fmt test example man version clean
 
 ## help: Show this help message
 help:
@@ -48,44 +52,55 @@ help:
 	@echo '$(BOLD)Targets:$(RESET)'
 	@sed -n 's/^## //p' $(MAKEFILE_LIST) | column -t -s ':' | sed 's/^/  /'
 
-## all: Run all linters, formatters, tests
-all: lint format test
+## all: Run all builds, linters, formatters, tests
+all: build lint format test
 	@echo '$(GREEN)All checks passed$(RESET)'
 
+## build: Assemble output files from src/ fragments
+build: $(RENDER_BIN)
+	@for f in $(ALL_OUTPUT_FILES); do \
+		$(RENDER_BIN) -f $(PARAMS_FILE) -t tmpl/$${f}.gotmpl -o $${f}; \
+	done
+
+$(RENDER_BIN): $(RENDER_SRC)
+	@$(GO) build -o $(RENDER_BIN) $(RENDER_SRC)
+
 ## lint: Run static analysis
-lint:
+lint: build
 	@echo '$(BOLD)Running shellcheck...$(RESET)'
 	@$(SHELLCHECK) $(SHELLCHECK_OPTS) $(ALL_SHELL_FILES)
 	@echo '$(GREEN)shellcheck passed$(RESET)'
 
-## format: Check for code formatting
-format:
+## format: Check code formatting
+format: build
 	@echo '$(BOLD)Running shfmt...$(RESET)'
 	@$(SHFMT) $(SHFMT_OPTS) -d $(ALL_SHELL_FILES)
 	@echo '$(GREEN)Formatting check passed$(RESET)'
 
-## test: Unit-Test all functions
-test:
+## fmt: Auto-fix code formatting
+fmt: build
+	@$(SHFMT) $(SHFMT_OPTS) -w $(ALL_SHELL_FILES)
+	@echo '$(GREEN)Formatting applied$(RESET)'
+
+## test: Unit-test all functions
+test: build
 	@echo '$(BOLD)Running BATS...$(RESET)'
-	@$(BATS) tests/
+	@$(BATS) $(TEST_FILE)
 	@echo '$(GREEN)All tests passed$(RESET)'
 
 ## example: Run the example script
-example:
-	@bash examples/usage.sh
+example: build
+	@bash $(EXAMPLE_FILE)
 
-## man: View the main man page
-man:
-	@man man/shlib.7
-
-## changelog: Generate changelog.md from git history
-changelog:
-	@./hack/changelog.sh
-
-## release-notes: Generate changelog to stdout
-release-notes:
-	@./hack/changelog.sh --stdout
+## man: View the man page
+man: build
+	@man ./$(MAN_FILE)
 
 ## version: Show shlib version
-version:
-	@bash -c 'source shlib.sh && shlib::version'
+version: build
+	@bash -c 'source $(SHELL_FILE) && shlib::version'
+
+## clean: Remove generated files
+clean:
+	@rm -f $(ALL_OUTPUT_FILES) $(RENDER_BIN)
+	@echo '$(GREEN)Cleaned$(RESET)'

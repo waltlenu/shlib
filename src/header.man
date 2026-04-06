@@ -1,0 +1,37 @@
+.\" {{ .project }} - {{ .description }}
+.TH SHLIB 7 "{{ .date }}" "{{ .project }} {{ .version }}" "Bash Library"
+.SH NAME
+{{ .project }} \- {{ .description }}
+.SH SYNOPSIS
+.B source
+.I /path/to/shlib.bash
+.SH DESCRIPTION
+.B {{ .project }}
+is a library of reusable Bash functions that can be sourced into shell scripts.
+It provides common utilities for arrays, strings, logging, ANSI colors,
+key\-value stores, and other frequently needed operations.
+.PP
+The library is distributed as a single file
+.RB ( shlib.bash )
+for easy download and sourcing.
+It is pure Bash with no external binary dependencies wherever possible.
+.PP
+All functions are namespaced with the
+.B shlib::
+prefix, and all global variables are namespaced with the
+.B SHLIB_
+prefix, to avoid polluting the caller's environment.
+.PP
+The library enables strict mode
+.RB ( "set \-euo pipefail" )
+when sourced.
+It includes double\-source protection via the
+.B SHLIB_LOADED
+variable to prevent loading multiple times.
+.SH REQUIREMENTS
+.B {{ .project }}
+requires Bash version 3 or higher.
+The key\-value (KV) section requires Bash version 4 or higher
+for associative array support.
+The library will fail to load with an error message
+if sourced in an older version of Bash.

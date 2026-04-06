@@ -12,7 +12,7 @@
 #   docker run --rm -v "$PWD:/app" shlib -c "bats tests/"
 #
 # Run shellcheck:
-#   docker run --rm -v "$PWD:/app" shlib -c "shellcheck -s bash shlib.sh"
+#   docker run --rm -v "$PWD:/app" shlib -c "shellcheck -s bash shlib.bash"
 #
 # Interactive shell:
 #   docker run --rm -it -v "$PWD:/app" shlib

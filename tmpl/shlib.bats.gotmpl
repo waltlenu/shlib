@@ -1,0 +1,10 @@
+{{ include "src/header.bats" -}}
+{{ range dirs "src/*/*.bats" }}
+#######################################
+# {{ basename . }}
+#######################################
+{{ range glob (printf "%s/*.bats" .) }}
+{{ include . -}}
+{{ end -}}
+{{ end -}}
+{{ include "src/footer.bats" -}}

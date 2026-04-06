@@ -1,0 +1,12 @@
+{{ include "src/header.man" -}}
+{{ range dirs "src/*/*.bash" }}
+.SH {{ basename . | upper }}
+{{ range glob (printf "%s/*.bash" .) -}}
+{{ shdoc . -}}
+{{ $man := replace . ".bash" ".man" -}}
+{{ if exists $man -}}
+{{ include $man -}}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ include "src/footer.man" }}

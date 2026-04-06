@@ -4,7 +4,7 @@
 
 A library of reusable [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) shell functions.
 
-- Just [one file](shlib.sh), but a long one 😜 -> easy to download and source
+- Just [one file](shlib.bash), but a long one 😜 -> easy to download and source
 - Pure Bash:
   - Idiomatic
   - No external binaries[^1]
@@ -25,7 +25,7 @@ A library of reusable [Bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)) sh
 
 _**Don't** just "curl pipe bash it"_
 
-⚠️ First, **please read** the [code](shlib.sh), at least the top of the file.
+⚠️ First, **please read** the [code](shlib.bash), at least the top of the file.
 
 That's where all the global instructions/variables are located. The rest of the file is made up Bash function definitions. Everything _should_ be inoffensive because I don't want errors in my own scripts, but **don't** take my word for it.
 
@@ -38,16 +38,16 @@ REMOTE='waltlenu/shlib'
 LATEST_TAG=$(curl -sL "https://api.github.com/repos/$REMOTE/releases/latest" \
   | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 curl -fsSL --remote-name \
-  "https://raw.githubusercontent.com/$REMOTE/refs/tags/$LATEST_TAG/shlib.sh"
+  "https://raw.githubusercontent.com/$REMOTE/refs/tags/$LATEST_TAG/shlib.bash"
 
 # Load library
-source shlib.sh
+source shlib.bash
 
 # Use library functions
 shlib::einfon "Hello 🌍"
 ```
 
-But if you prefer the very [latest](https://raw.githubusercontent.com/waltlenu/shlib/refs/heads/main/shlib.sh), or just copy a function, go ahead.
+But if you prefer the very [latest](https://raw.githubusercontent.com/waltlenu/shlib/refs/heads/main/shlib.bash), or just copy a function, go ahead.
 
 ### Examples
 
@@ -58,7 +58,7 @@ Try running the [examples/usage.sh](examples/usage.sh) script. The `shlib::ansi_
 Read the man page(s):
 
 ```bash
-man man/shlib.7
+man ./shlib.7
 ```
 
 ## Contributing
@@ -67,16 +67,19 @@ man man/shlib.7
 
 ```text
 shlib/
-├── shlib.sh     # THE library
-├── man/         # Man pages
-├── tests/       # Bats test files
-├── examples/    # Usage examples
-└── README.md    # This file (!)
+├── shlib.bash          # THE library
+├── shlib.7             # Man page
+├── shlib.bats          # Bats tests
+├── shlib.example.bash  # Usage example
+|
+├── hack/               # Building scripts
+├── src/                # Codebase fragments
+└── tmpl/               # Template files
 ```
 
 ### Adding New Functions
 
-Insert/Append functions to `shlib.sh` making sure you add the `shlib::` namespace prefix:
+Insert/Append functions to `shlib.bash` by adding files to `src/` and making sure you add the `shlib::` namespace prefix:
 
 ```bash
 shlib::my_function() {
@@ -95,8 +98,8 @@ This project uses:
 make all
 
 # or:
-shellcheck -s bash shlib.sh
-shfmt -i 4 -ci -bn shlib.sh
+shellcheck -s bash shlib.bash
+shfmt -i 4 -ci -bn shlib.bash
 bats tests/
 ```
 
