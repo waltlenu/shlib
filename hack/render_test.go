@@ -716,6 +716,273 @@ func TestColorizeDisabled(t *testing.T) {
 	}
 }
 
+// --- engine selection tests ---
+
+func TestUseHTMLEngine(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{"foo.html.gotmpl", true},
+		{"foo.htm.gotmpl", true},
+		{"foo.html.tmpl", true},
+		{"foo.html", true},
+		{"foo.htm", true},
+		{"path/to/page.html.gotmpl", true},
+		{"foo.gotmpl", false},
+		{"foo.md.gotmpl", false},
+		{"foo.bash.gotmpl", false},
+		{"foo.txt", false},
+		{"html.gotmpl", false}, // no extension before .gotmpl
+	}
+	for _, tc := range cases {
+		if got := useHTMLEngine(tc.path); got != tc.want {
+			t.Errorf("useHTMLEngine(%q) = %v, want %v", tc.path, got, tc.want)
+		}
+	}
+}
+
+func TestRenderHTMLEngineAutoEscape(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.html.gotmpl", `<p>{{ .name }}</p>`)
+
+	out, err := renderTemplate(tmplPath, map[string]any{
+		"name": "<script>alert(1)</script>",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// html/template should escape < and > in body context.
+	if !strings.Contains(string(out), "&lt;script&gt;") {
+		t.Errorf("expected HTML escaping of user data, got: %s", out)
+	}
+	if strings.Contains(string(out), "<script>alert") {
+		t.Errorf("user data leaked unescaped, got: %s", out)
+	}
+}
+
+func TestRenderHTMLEngineAttributeContext(t *testing.T) {
+	// html/template is context-aware: in an attribute value, quotes
+	// and angle brackets must be escaped differently than in body.
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.html.gotmpl",
+		`<a href="{{ .url }}">link</a>`)
+
+	out, err := renderTemplate(tmplPath, map[string]any{
+		"url": `" onclick="alert(1)`,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// The unescaped attribute-breaking content must not appear.
+	if strings.Contains(string(out), `" onclick="alert(1)"`) {
+		t.Errorf("attribute injection not escaped, got: %s", out)
+	}
+}
+
+func TestRenderTextEngineDoesNotEscape(t *testing.T) {
+	// A non-HTML template should pass angle brackets through unchanged.
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl", `<p>{{ .name }}</p>`)
+
+	out, err := renderTemplate(tmplPath, map[string]any{
+		"name": "<b>raw</b>",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "<p><b>raw</b></p>" {
+		t.Errorf("text engine should not escape, got: %s", out)
+	}
+}
+
+func TestIncludeInHTMLEngineNotReEscaped(t *testing.T) {
+	// Content returned from include() has type template.HTML, so the
+	// HTML engine trusts it and does not escape it a second time.
+	dir := t.TempDir()
+	incPath := writeTestFile(t, dir, "frag.html", "<b>bold</b>")
+	tmplPath := writeTestFile(t, dir, "test.html.gotmpl",
+		fmt.Sprintf(`<div>{{ include %q }}</div>`, incPath))
+
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(string(out), "<b>bold</b>") {
+		t.Errorf("include should produce raw HTML, got: %s", out)
+	}
+	if strings.Contains(string(out), "&lt;b&gt;") {
+		t.Errorf("include content was re-escaped, got: %s", out)
+	}
+}
+
+// --- new helper tests ---
+
+func TestJoinFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl", `{{ join .items ", " }}`)
+	out, err := renderTemplate(tmplPath, map[string]any{"items": []string{"a", "b", "c"}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "a, b, c" {
+		t.Errorf("output = %q, want %q", string(out), "a, b, c")
+	}
+}
+
+func TestSplitFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`{{ range split "a,b,c" "," }}[{{ . }}]{{ end }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "[a][b][c]" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestHasPrefixSuffixFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`{{ hasPrefix "src/foo" "src/" }}/{{ hasSuffix "foo.bash" ".bash" }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "true/true" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestTrimPrefixSuffixFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`{{ trimPrefix "src/foo" "src/" }}|{{ trimSuffix "foo.bash" ".bash" }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "foo|foo" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestRepeatFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl", `{{ repeat "=" 5 }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "=====" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestIndentFunc(t *testing.T) {
+	got := indentLines(2, "foo\nbar")
+	if got != "  foo\n  bar" {
+		t.Errorf("indent = %q", got)
+	}
+	// Empty lines should not be padded (no trailing whitespace).
+	got = indentLines(4, "a\n\nb")
+	if got != "    a\n\n    b" {
+		t.Errorf("indent with blank = %q", got)
+	}
+	// Single line.
+	got = indentLines(3, "single")
+	if got != "   single" {
+		t.Errorf("indent single = %q", got)
+	}
+}
+
+func TestIndentFuncInTemplate(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl", `body:
+{{ .content | indent 2 }}`)
+	out, err := renderTemplate(tmplPath, map[string]any{"content": "line1\nline2"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "body:\n  line1\n  line2" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestNindentFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl", `tag:{{ .body | nindent 2 }}`)
+	out, err := renderTemplate(tmplPath, map[string]any{"body": "one\ntwo"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "tag:\n  one\n  two" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestTitleFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`{{ title "hello" }}/{{ title "" }}/{{ title "ALREADY" }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "Hello//ALREADY" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestAnchorFunc(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"Hello World", "hello-world"},
+		{"Hello, World!", "hello-world"},
+		{"Hello  World", "hello-world"},
+		{"  leading", "leading"},
+		{"trailing  ", "trailing"},
+		{"keep_under", "keep_under"},
+		{"shlib::cmd_exists", "shlib-cmd_exists"},
+		{"A--B", "a-b"},
+		{"!!!", ""},
+		{"", ""},
+	}
+	for _, tc := range cases {
+		if got := anchorSlug(tc.in); got != tc.want {
+			t.Errorf("anchorSlug(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestAnchorFuncInTemplate(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`[{{ .title }}](#{{ .title | anchor }})`)
+	out, err := renderTemplate(tmplPath, map[string]any{"title": "Hello World"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(out) != "[Hello World](#hello-world)" {
+		t.Errorf("output = %q", string(out))
+	}
+}
+
+func TestCodeFunc(t *testing.T) {
+	dir := t.TempDir()
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		`{{ code "bash" "echo hi" }}`)
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := "```bash\necho hi\n```"
+	if string(out) != want {
+		t.Errorf("output = %q, want %q", string(out), want)
+	}
+}
+
 // --- End-to-end test ---
 
 func TestEndToEnd(t *testing.T) {

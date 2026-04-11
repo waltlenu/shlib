@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	htmltemplate "html/template"
 	"os"
 	"path/filepath"
 	"sort"
@@ -107,22 +108,90 @@ func printError(msg string, color bool) {
 // ---------------------------------------------------------------------
 
 // templateFuncs returns the custom function map for templates.
-// data is passed through so that included files are rendered as
-// templates with the same values and helpers.
-func templateFuncs(data map[string]any) template.FuncMap {
-	var funcs template.FuncMap
-	funcs = template.FuncMap{
+// The map is returned as map[string]any so it can be passed to either
+// text/template or html/template (both accept this type via
+// conversion). data is passed through so that included files are
+// rendered as templates with the same values and helpers.
+func templateFuncs(data map[string]any) map[string]any {
+	var funcs map[string]any
+	funcs = map[string]any{
+		// --- string helpers ---
+
 		// upper converts a string to uppercase.
 		"upper": strings.ToUpper,
 
 		// lower converts a string to lowercase.
 		"lower": strings.ToLower,
 
-		// title converts a string to title case.
-		"title": strings.ToTitle,
+		// title capitalizes the first rune of a string.
+		// Usage: {{ .name | title }}
+		"title": func(s string) string {
+			if s == "" {
+				return s
+			}
+			return strings.ToUpper(s[:1]) + s[1:]
+		},
 
 		// trim removes leading and trailing whitespace.
 		"trim": strings.TrimSpace,
+
+		// join joins a slice of strings with a separator.
+		// Usage: {{ join .items ", " }}
+		"join": strings.Join,
+
+		// split splits s on sep into a slice of strings.
+		// Usage: {{ range split .csv "," }}{{ . }}{{ end }}
+		"split": strings.Split,
+
+		// hasPrefix reports whether s begins with prefix.
+		// Usage: {{ if hasPrefix .path "src/" }}...{{ end }}
+		"hasPrefix": strings.HasPrefix,
+
+		// hasSuffix reports whether s ends with suffix.
+		// Usage: {{ if hasSuffix .name ".bash" }}...{{ end }}
+		"hasSuffix": strings.HasSuffix,
+
+		// trimPrefix removes prefix from s if present.
+		// Usage: {{ trimPrefix .path "src/" }}
+		"trimPrefix": strings.TrimPrefix,
+
+		// trimSuffix removes suffix from s if present.
+		// Usage: {{ trimSuffix .name ".bash" }}
+		"trimSuffix": strings.TrimSuffix,
+
+		// replace performs string substitution.
+		// Usage: {{ replace "foo.bash" ".bash" ".man" }}
+		"replace": strings.ReplaceAll,
+
+		// repeat returns s repeated n times.
+		// Usage: {{ repeat "=" 40 }}
+		"repeat": strings.Repeat,
+
+		// indent prepends n spaces to every non-empty line of s.
+		// Pipe-friendly: the string is the last argument.
+		// Usage: {{ .body | indent 4 }}
+		"indent": indentLines,
+
+		// nindent is indent with a leading newline — useful when the
+		// trigger point is at the end of a line.
+		// Usage: body:{{ .body | nindent 2 }}
+		"nindent": func(n int, s string) string { return "\n" + indentLines(n, s) },
+
+		// --- markdown/HTML helpers ---
+
+		// anchor converts a heading to a GitHub-flavored markdown
+		// anchor slug: lowercased; alphanumerics and underscores are
+		// preserved; runs of other characters collapse to a single
+		// dash; leading and trailing dashes are stripped.
+		// Usage: [{{ .title }}](#{{ .title | anchor }})
+		"anchor": anchorSlug,
+
+		// code wraps s in a fenced markdown code block with the given
+		// language identifier.
+		// Usage: {{ code "bash" .example }}
+		"code": func(lang, s string) string { return "```" + lang + "\n" + s + "\n```" },
+
+		// --- data helpers ---
 
 		// default returns the value if non-empty, otherwise the fallback.
 		// Usage: {{ .version | default "dev" }}
@@ -140,17 +209,27 @@ func templateFuncs(data map[string]any) template.FuncMap {
 		// Usage: {{ env "HOME" }}
 		"env": os.Getenv,
 
-		// include reads a file, renders it as a Go template with the
-		// same function map and data, and returns the result as a string.
-		// Paths are relative to the working directory.
+		// --- file and path helpers ---
+
+		// include reads a file, renders it as a text/template with the
+		// same function map and data, and returns the result as
+		// template.HTML. The template.HTML return type tells the HTML
+		// engine to treat the content as safe and not re-escape it;
+		// in text/template mode it prints as a plain string.
+		//
+		// SECURITY: the caller is responsible for trusting the content
+		// of the included file. Template values substituted inside an
+		// included file are NOT contextually HTML-escaped even when
+		// the top-level template uses the HTML engine.
+		//
 		// Usage: {{ include "src/header.bash" }}
-		"include": func(path string) (string, error) {
+		"include": func(path string) (htmltemplate.HTML, error) {
 			raw, err := os.ReadFile(path)
 			if err != nil {
 				return "", fmt.Errorf("include %q: %w", path, err)
 			}
 			tmpl, err := template.New(filepath.Base(path)).
-				Funcs(funcs).
+				Funcs(template.FuncMap(funcs)).
 				Option("missingkey=zero").
 				Parse(string(raw))
 			if err != nil {
@@ -160,7 +239,7 @@ func templateFuncs(data map[string]any) template.FuncMap {
 			if err := tmpl.Execute(&buf, data); err != nil {
 				return "", fmt.Errorf("include %q: %w", path, err)
 			}
-			return buf.String(), nil
+			return htmltemplate.HTML(buf.String()), nil
 		},
 
 		// glob returns a sorted list of file paths matching a pattern.
@@ -202,6 +281,15 @@ func templateFuncs(data map[string]any) template.FuncMap {
 		// Usage: {{ basename "src/arrays" }} → "arrays"
 		"basename": filepath.Base,
 
+		// exists reports whether a file exists.
+		// Usage: {{ if exists "src/arrays/push.man" }}...{{ end }}
+		"exists": func(path string) bool {
+			_, err := os.Stat(path)
+			return err == nil
+		},
+
+		// --- shdoc helpers ---
+
 		// shdoc parses structured comments from a bash file and returns
 		// a []FuncDoc slice so templates can render documentation in
 		// any format (markdown, HTML, plain text, etc.).
@@ -213,19 +301,45 @@ func templateFuncs(data map[string]any) template.FuncMap {
 		// around shdoc for the man page template.
 		// Usage: {{ shdocTroff "src/arrays/push.bash" }}
 		"shdocTroff": shdocTroff,
-
-		// replace performs string substitution.
-		// Usage: {{ replace "foo.bash" ".bash" ".man" }}
-		"replace": strings.ReplaceAll,
-
-		// exists reports whether a file exists.
-		// Usage: {{ if exists "src/arrays/push.man" }}...{{ end }}
-		"exists": func(path string) bool {
-			_, err := os.Stat(path)
-			return err == nil
-		},
 	}
 	return funcs
+}
+
+// indentLines prepends n spaces to every non-empty line of s.
+// Empty lines are preserved as-is to avoid introducing trailing
+// whitespace.
+func indentLines(n int, s string) string {
+	pad := strings.Repeat(" ", n)
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		if line != "" {
+			lines[i] = pad + line
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// anchorSlug converts a heading to a GitHub-flavored markdown anchor
+// slug: lowercased; a-z, 0-9, and underscore preserved; runs of other
+// characters collapse to a single dash; leading and trailing dashes
+// stripped. Example: "Hello, World!" → "hello-world".
+func anchorSlug(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	lastDash := true // suppresses leading dash
+	for _, r := range strings.ToLower(s) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '_':
+			b.WriteRune(r)
+			lastDash = false
+		default:
+			if !lastDash {
+				b.WriteByte('-')
+				lastDash = true
+			}
+		}
+	}
+	return strings.TrimSuffix(b.String(), "-")
 }
 
 // ---------------------------------------------------------------------
@@ -524,9 +638,24 @@ func loadValues(jsonPath string, kvPairs []string) (map[string]any, error) {
 	return data, nil
 }
 
+// useHTMLEngine reports whether the template at path should be rendered
+// using html/template based on its filename. Templates whose effective
+// extension (after stripping .gotmpl / .tmpl) is .html or .htm use the
+// HTML engine for contextual auto-escaping. All other templates use
+// text/template unchanged.
+func useHTMLEngine(path string) bool {
+	base := filepath.Base(path)
+	base = strings.TrimSuffix(base, ".gotmpl")
+	base = strings.TrimSuffix(base, ".tmpl")
+	return strings.HasSuffix(base, ".html") || strings.HasSuffix(base, ".htm")
+}
+
 // renderTemplate parses and executes the template at tmplPath with the
-// given data. It returns the rendered bytes. Rendering happens into a
-// buffer so that no partial output is produced on error.
+// given data. The template engine is selected by useHTMLEngine based on
+// the filename: *.html.gotmpl (or *.htm.gotmpl) uses html/template for
+// contextual auto-escaping; everything else uses text/template.
+// Rendering happens into a buffer so that no partial output is produced
+// on error.
 func renderTemplate(tmplPath string, data map[string]any) ([]byte, error) {
 	raw, err := os.ReadFile(tmplPath)
 	if err != nil {
@@ -535,17 +664,31 @@ func renderTemplate(tmplPath string, data map[string]any) ([]byte, error) {
 
 	// Use the file's base name as the template name for clearer errors.
 	name := filepath.Base(tmplPath)
-	tmpl, err := template.New(name).
-		Funcs(templateFuncs(data)).
-		Option("missingkey=zero").
-		Parse(string(raw))
-	if err != nil {
-		return nil, fmt.Errorf("parsing template: %w", err)
-	}
+	funcs := templateFuncs(data)
 
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return nil, fmt.Errorf("rendering template: %w", err)
+	if useHTMLEngine(tmplPath) {
+		tmpl, err := htmltemplate.New(name).
+			Funcs(htmltemplate.FuncMap(funcs)).
+			Option("missingkey=zero").
+			Parse(string(raw))
+		if err != nil {
+			return nil, fmt.Errorf("parsing template %q: %w", tmplPath, err)
+		}
+		if err := tmpl.Execute(&buf, data); err != nil {
+			return nil, fmt.Errorf("rendering template %q: %w", tmplPath, err)
+		}
+	} else {
+		tmpl, err := template.New(name).
+			Funcs(template.FuncMap(funcs)).
+			Option("missingkey=zero").
+			Parse(string(raw))
+		if err != nil {
+			return nil, fmt.Errorf("parsing template %q: %w", tmplPath, err)
+		}
+		if err := tmpl.Execute(&buf, data); err != nil {
+			return nil, fmt.Errorf("rendering template %q: %w", tmplPath, err)
+		}
 	}
 
 	return buf.Bytes(), nil
@@ -590,15 +733,23 @@ func usage(color bool) {
   file. Key=value arguments are always treated as strings. JSON values
   can be any type (strings, numbers, booleans, arrays, objects).
 
+  Template files named *.html.gotmpl (or *.htm.gotmpl) are rendered
+  with html/template for contextual auto-escaping. All other files
+  use text/template.
+
 %s
   go run ./hack/render.go -t tmpl/readme.gotmpl -o README.md
   go run ./hack/render.go -t tmpl/readme.gotmpl -o - name=shlib version=1.0
-  go run ./hack/render.go -t tmpl/readme.gotmpl -o out.md -f values.json name=override
+  go run ./hack/render.go -t tmpl/page.html.gotmpl -o out.html -f values.json
 
 %s
-  upper, lower, title, trim, default, env,
-  include, glob, dirs, basename, shdoc,
-  replace, exists
+  strings:  upper, lower, title, trim, join, split,
+            hasPrefix, hasSuffix, trimPrefix, trimSuffix,
+            replace, repeat, indent, nindent
+  markdown: anchor, code
+  data:     default, env
+  files:    include, glob, dirs, basename, exists
+  shdoc:    shdoc, shdocTroff
 `,
 		title,
 		bold("Usage:"),
