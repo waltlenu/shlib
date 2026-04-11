@@ -203,9 +203,16 @@ func templateFuncs(data map[string]any) template.FuncMap {
 		"basename": filepath.Base,
 
 		// shdoc parses structured comments from a bash file and returns
-		// troff-formatted man page content for all documented functions.
-		// Usage: {{ shdoc "src/arrays/push.bash" }}
-		"shdoc": shdocTroff,
+		// a []FuncDoc slice so templates can render documentation in
+		// any format (markdown, HTML, plain text, etc.).
+		// Usage: {{ range shdoc "src/arrays/push.bash" }}{{ .Name }}{{ end }}
+		"shdoc": parseShdoc,
+
+		// shdocTroff parses structured comments from a bash file and
+		// returns troff-formatted man page content. Convenience wrapper
+		// around shdoc for the man page template.
+		// Usage: {{ shdocTroff "src/arrays/push.bash" }}
+		"shdocTroff": shdocTroff,
 
 		// replace performs string substitution.
 		// Usage: {{ replace "foo.bash" ".bash" ".man" }}
@@ -222,35 +229,83 @@ func templateFuncs(data map[string]any) template.FuncMap {
 }
 
 // ---------------------------------------------------------------------
-// shdoc: extract structured comments from bash files and emit troff
+// shdoc: extract structured comments from bash files
 //
 // Parses comment blocks with @description, @arg, @stdout, @stderr,
-// @exitcode, and @example tags above function definitions, then
-// formats each function as a man page subsection.
+// @exitcode, and @example tags above function definitions into
+// structured FuncDoc values. Templates consume these directly to
+// render documentation in any format (troff, markdown, HTML, ...).
+// shdocTroff is a convenience wrapper that emits troff for the man
+// page template.
 // ---------------------------------------------------------------------
 
-// funcDoc holds the parsed documentation for a single shell function.
-type funcDoc struct {
-	name        string   // function name (e.g. "shlib::version")
-	description string   // @description text
-	args        []string // @arg lines (e.g. "$1 string The command name")
-	stdout      string   // @stdout text
-	stderr      string   // @stderr text
-	exitcodes   []string // @exitcode lines (e.g. "0 Success")
-	examples    []string // @example lines (raw code lines)
+// FuncDoc holds the parsed documentation for a single shell function.
+// Fields are exported so they can be accessed from templates, e.g.
+// {{ range shdoc "src/arrays/push.bash" }}{{ .Name }}{{ end }}.
+type FuncDoc struct {
+	Name        string     // function name (e.g. "shlib::version")
+	Description string     // @description text
+	Args        []ArgDoc   // parsed @arg lines
+	Stdout      string     // @stdout text
+	Stderr      string     // @stderr text
+	ExitCodes   []ExitCode // parsed @exitcode lines
+	Examples    []string   // @example lines (raw code lines)
 }
 
-// parseShdoc reads a bash file and extracts funcDoc entries from
+// ArgDoc is one parsed @arg line: "$1 string The command name".
+// Type and Description may be empty when the source line has fewer
+// than three whitespace-separated fields.
+type ArgDoc struct {
+	Position    string // e.g. "$1", "$@"
+	Type        string // e.g. "string", "int"
+	Description string // human-readable description
+}
+
+// ExitCode is one parsed @exitcode line: "0 Always succeeds".
+// Description may be empty when the source line has only a code.
+type ExitCode struct {
+	Code        string // e.g. "0", "127"
+	Description string // human-readable description
+}
+
+// parseArgLine splits "$1 string The command name" into an ArgDoc.
+// Missing fields are left empty.
+func parseArgLine(s string) ArgDoc {
+	parts := strings.SplitN(s, " ", 3)
+	a := ArgDoc{Position: parts[0]}
+	if len(parts) >= 2 {
+		a.Type = parts[1]
+	}
+	if len(parts) >= 3 {
+		a.Description = parts[2]
+	}
+	return a
+}
+
+// parseExitCodeLine splits "0 Always succeeds" into an ExitCode.
+// Description may be empty.
+func parseExitCodeLine(s string) ExitCode {
+	parts := strings.SplitN(s, " ", 2)
+	e := ExitCode{Code: parts[0]}
+	if len(parts) >= 2 {
+		e.Description = parts[1]
+	}
+	return e
+}
+
+// parseShdoc reads a bash file and extracts FuncDoc entries from
 // structured comment blocks immediately preceding function definitions.
-func parseShdoc(path string) ([]funcDoc, error) {
+// Functions without a @description tag are silently skipped — this is
+// deliberate, so that undocumented helpers don't appear in generated docs.
+func parseShdoc(path string) ([]FuncDoc, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("shdoc %q: %w", path, err)
 	}
 	defer f.Close()
 
-	var docs []funcDoc
-	var current funcDoc
+	var docs []FuncDoc
+	var current FuncDoc
 	inComment := false
 	inExample := false
 
@@ -261,7 +316,7 @@ func parseShdoc(path string) ([]funcDoc, error) {
 
 		// Check for function definition — captures the preceding comment block.
 		// Matches patterns like: shlib::name() { or function shlib::name() {
-		if (strings.Contains(trimmed, "()") || strings.HasPrefix(trimmed, "function ")) && current.description != "" {
+		if (strings.Contains(trimmed, "()") || strings.HasPrefix(trimmed, "function ")) && current.Description != "" {
 			// Extract function name.
 			name := trimmed
 			name = strings.TrimPrefix(name, "function ")
@@ -269,9 +324,9 @@ func parseShdoc(path string) ([]funcDoc, error) {
 				name = name[:idx]
 			}
 			name = strings.TrimSpace(name)
-			current.name = name
+			current.Name = name
 			docs = append(docs, current)
-			current = funcDoc{}
+			current = FuncDoc{}
 			inComment = false
 			inExample = false
 			continue
@@ -279,40 +334,38 @@ func parseShdoc(path string) ([]funcDoc, error) {
 
 		// Parse comment lines.
 		if strings.HasPrefix(trimmed, "#") {
-			// Strip the leading "# " or "#" prefix.
-			content := strings.TrimPrefix(trimmed, "# ")
-			if content == "#" || content == trimmed {
-				content = strings.TrimPrefix(trimmed, "#")
-			}
+			// Strip the leading "#" and any single following space.
+			content := strings.TrimPrefix(trimmed, "#")
+			content = strings.TrimPrefix(content, " ")
 
 			switch {
 			case strings.HasPrefix(content, "@description "):
 				inComment = true
 				inExample = false
-				current.description = strings.TrimPrefix(content, "@description ")
+				current.Description = strings.TrimPrefix(content, "@description ")
 
 			case strings.HasPrefix(content, "@arg "):
 				inExample = false
-				current.args = append(current.args, strings.TrimPrefix(content, "@arg "))
+				current.Args = append(current.Args, parseArgLine(strings.TrimPrefix(content, "@arg ")))
 
 			case strings.HasPrefix(content, "@stdout "):
 				inExample = false
-				current.stdout = strings.TrimPrefix(content, "@stdout ")
+				current.Stdout = strings.TrimPrefix(content, "@stdout ")
 
 			case strings.HasPrefix(content, "@stderr "):
 				inExample = false
-				current.stderr = strings.TrimPrefix(content, "@stderr ")
+				current.Stderr = strings.TrimPrefix(content, "@stderr ")
 
 			case strings.HasPrefix(content, "@exitcode "):
 				inExample = false
-				current.exitcodes = append(current.exitcodes, strings.TrimPrefix(content, "@exitcode "))
+				current.ExitCodes = append(current.ExitCodes, parseExitCodeLine(strings.TrimPrefix(content, "@exitcode ")))
 
 			case strings.HasPrefix(content, "@example"):
 				inExample = true
 
 			case inExample:
 				// Example lines are indented code following @example.
-				current.examples = append(current.examples, strings.TrimPrefix(content, "  "))
+				current.Examples = append(current.Examples, strings.TrimPrefix(content, "  "))
 
 			default:
 				// Non-tag comment lines — ignore (or could append to description).
@@ -322,7 +375,7 @@ func parseShdoc(path string) ([]funcDoc, error) {
 
 		// Non-comment, non-function line — reset if we were tracking.
 		if inComment && trimmed != "" {
-			current = funcDoc{}
+			current = FuncDoc{}
 			inComment = false
 			inExample = false
 		}
@@ -336,7 +389,8 @@ func parseShdoc(path string) ([]funcDoc, error) {
 }
 
 // shdocTroff parses a bash file and returns troff-formatted man page
-// content for all documented functions found in it.
+// content for all documented functions found in it. It is a thin
+// wrapper around parseShdoc that consumes the structured FuncDoc data.
 func shdocTroff(path string) (string, error) {
 	docs, err := parseShdoc(path)
 	if err != nil {
@@ -346,76 +400,71 @@ func shdocTroff(path string) (string, error) {
 	var buf bytes.Buffer
 	for _, d := range docs {
 		// Function name as subsection header.
-		fmt.Fprintf(&buf, ".SS %s\n", d.name)
+		fmt.Fprintf(&buf, ".SS %s\n", d.Name)
 
 		// Calling convention: bold name, italic arguments.
 		// e.g. .BI "shlib::cmd_exists " "command"
-		if len(d.args) > 0 {
-			// Build: "name " "arg1" " " "arg2" ...
-			fmt.Fprintf(&buf, ".BI \"%s \"", d.name)
-			for i, arg := range d.args {
-				parts := strings.SplitN(arg, " ", 3)
-				// Use the type as the displayed argument name,
-				// or the positional ($1, $@) if type is not descriptive.
-				argName := parts[0]
-				if len(parts) >= 3 {
-					argName = parts[1]
+		// In troff .BI, alternating quoted strings flip bold/italic:
+		// the name is bold, the first arg italic; a literal " " between
+		// args keeps the next arg italic instead of bold.
+		if len(d.Args) > 0 {
+			fmt.Fprintf(&buf, ".BI %q", d.Name+" ")
+			for i, a := range d.Args {
+				// Prefer the type as the displayed placeholder,
+				// falling back to the positional ($1, $@) if absent.
+				name := a.Position
+				if a.Type != "" {
+					name = a.Type
 				}
 				if i > 0 {
-					fmt.Fprintf(&buf, " \" \" \"%s\"", argName)
-				} else {
-					fmt.Fprintf(&buf, " \"%s\"", argName)
+					buf.WriteString(" \" \"")
 				}
+				fmt.Fprintf(&buf, " %q", name)
 			}
 			buf.WriteString("\n")
 		}
 
 		// Description.
-		buf.WriteString(".PP\n")
-		fmt.Fprintf(&buf, "%s\n", d.description)
+		fmt.Fprintf(&buf, ".PP\n%s\n", d.Description)
 
-		// Arguments — detailed list.
-		if len(d.args) > 0 {
+		// Arguments — detailed tagged list.
+		if len(d.Args) > 0 {
 			buf.WriteString(".PP\n\\fBArguments:\\fR\n")
-			for _, arg := range d.args {
-				// Parse "$1 string Description" into parts.
-				parts := strings.SplitN(arg, " ", 3)
-				if len(parts) >= 3 {
-					fmt.Fprintf(&buf, ".TP\n\\fI%s\\fR (%s)\n%s\n", parts[0], parts[1], parts[2])
+			for _, a := range d.Args {
+				if a.Type != "" || a.Description != "" {
+					fmt.Fprintf(&buf, ".TP\n\\fI%s\\fR (%s)\n%s\n", a.Position, a.Type, a.Description)
 				} else {
-					fmt.Fprintf(&buf, ".TP\n%s\n", arg)
+					fmt.Fprintf(&buf, ".TP\n%s\n", a.Position)
 				}
 			}
 		}
 
 		// Stdout.
-		if d.stdout != "" {
-			fmt.Fprintf(&buf, ".PP\n\\fBStdout:\\fR %s\n", d.stdout)
+		if d.Stdout != "" {
+			fmt.Fprintf(&buf, ".PP\n\\fBStdout:\\fR %s\n", d.Stdout)
 		}
 
 		// Stderr.
-		if d.stderr != "" {
-			fmt.Fprintf(&buf, ".PP\n\\fBStderr:\\fR %s\n", d.stderr)
+		if d.Stderr != "" {
+			fmt.Fprintf(&buf, ".PP\n\\fBStderr:\\fR %s\n", d.Stderr)
 		}
 
-		// Exit codes — use .TP tagged list for clean formatting.
-		if len(d.exitcodes) > 0 {
+		// Exit codes — tagged list.
+		if len(d.ExitCodes) > 0 {
 			buf.WriteString(".PP\n\\fBExit codes:\\fR\n")
-			for _, ec := range d.exitcodes {
-				// Parse "0 Description" into code + text.
-				parts := strings.SplitN(ec, " ", 2)
-				if len(parts) == 2 {
-					fmt.Fprintf(&buf, ".TP\n\\fB%s\\fR\n%s\n", parts[0], parts[1])
+			for _, ec := range d.ExitCodes {
+				if ec.Description != "" {
+					fmt.Fprintf(&buf, ".TP\n\\fB%s\\fR\n%s\n", ec.Code, ec.Description)
 				} else {
-					fmt.Fprintf(&buf, ".TP\n%s\n", ec)
+					fmt.Fprintf(&buf, ".TP\n%s\n", ec.Code)
 				}
 			}
 		}
 
-		// Examples — use indented no-fill block.
-		if len(d.examples) > 0 {
+		// Examples — indented no-fill block.
+		if len(d.Examples) > 0 {
 			buf.WriteString(".PP\n\\fBExample:\\fR\n.RS\n.nf\n")
-			for _, ex := range d.examples {
+			for _, ex := range d.Examples {
 				fmt.Fprintf(&buf, "%s\n", ex)
 			}
 			buf.WriteString(".fi\n.RE\n")

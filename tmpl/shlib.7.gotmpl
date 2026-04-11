@@ -2,7 +2,7 @@
 {{ range dirs "src/*/*.bash" }}
 .SH {{ basename . | upper }}
 {{ range glob (printf "%s/*.bash" .) -}}
-{{ shdoc . -}}
+{{ shdocTroff . -}}
 {{ $man := replace . ".bash" ".man" -}}
 {{ if exists $man -}}
 {{ include $man -}}

@@ -58,12 +58,19 @@ all: build lint format test
 
 ## build: Assemble output files from src/ fragments
 build: $(RENDER_BIN)
+	@echo '$(BOLD)Assembling "$(RENDER_SRC)" fragments...$(RESET)'
 	@for f in $(ALL_OUTPUT_FILES); do \
 		$(RENDER_BIN) -f $(PARAMS_FILE) -t tmpl/$${f}.gotmpl -o $${f}; \
 	done
+	@echo '$(GREEN)All fragments assembled$(RESET)'
 
 $(RENDER_BIN): $(RENDER_SRC)
+	@echo '$(BOLD)Compiling "$(RENDER_SRC)" tool...$(RESET)'
 	@$(GO) build -o $(RENDER_BIN) $(RENDER_SRC)
+	@echo '$(GREEN)Compiled$(RESET)'
+	@echo '$(BOLD)Testing "$(RENDER_SRC)" tool...$(RESET)'
+	@$(GO) test -v ./hack/
+	@echo '$(GREEN)All tests passed$(RESET)'
 
 ## lint: Run static analysis
 lint: build

@@ -478,38 +478,142 @@ func TestParseShdocBasic(t *testing.T) {
 
 	// First function: shlib::version
 	d := docs[0]
-	if d.name != "shlib::version" {
-		t.Errorf("name = %q, want %q", d.name, "shlib::version")
+	if d.Name != "shlib::version" {
+		t.Errorf("Name = %q, want %q", d.Name, "shlib::version")
 	}
-	if d.description != "Print the library version" {
-		t.Errorf("description = %q", d.description)
+	if d.Description != "Print the library version" {
+		t.Errorf("Description = %q", d.Description)
 	}
-	if d.stdout != "The version string" {
-		t.Errorf("stdout = %q", d.stdout)
+	if d.Stdout != "The version string" {
+		t.Errorf("Stdout = %q", d.Stdout)
 	}
-	if len(d.args) != 0 {
-		t.Errorf("expected no args, got %d", len(d.args))
+	if len(d.Args) != 0 {
+		t.Errorf("expected no args, got %d", len(d.Args))
 	}
-	if len(d.exitcodes) != 1 || d.exitcodes[0] != "0 Always succeeds" {
-		t.Errorf("exitcodes = %v", d.exitcodes)
+	if len(d.ExitCodes) != 1 {
+		t.Fatalf("expected 1 exitcode, got %d", len(d.ExitCodes))
 	}
-	if len(d.examples) != 1 || d.examples[0] != "shlib::version" {
-		t.Errorf("examples = %v", d.examples)
+	if d.ExitCodes[0].Code != "0" || d.ExitCodes[0].Description != "Always succeeds" {
+		t.Errorf("ExitCodes[0] = %+v", d.ExitCodes[0])
+	}
+	if len(d.Examples) != 1 || d.Examples[0] != "shlib::version" {
+		t.Errorf("Examples = %v", d.Examples)
 	}
 
 	// Second function: shlib::cmd_exists
 	d = docs[1]
-	if d.name != "shlib::cmd_exists" {
-		t.Errorf("name = %q, want %q", d.name, "shlib::cmd_exists")
+	if d.Name != "shlib::cmd_exists" {
+		t.Errorf("Name = %q, want %q", d.Name, "shlib::cmd_exists")
 	}
-	if len(d.args) != 1 {
-		t.Errorf("expected 1 arg, got %d", len(d.args))
+	if len(d.Args) != 1 {
+		t.Fatalf("expected 1 arg, got %d", len(d.Args))
 	}
-	if len(d.exitcodes) != 2 {
-		t.Errorf("expected 2 exitcodes, got %d", len(d.exitcodes))
+	if got := d.Args[0]; got.Position != "$1" || got.Type != "string" || got.Description != "The command name to check" {
+		t.Errorf("Args[0] = %+v", got)
 	}
-	if len(d.examples) != 2 {
-		t.Errorf("expected 2 examples, got %d", len(d.examples))
+	if len(d.ExitCodes) != 2 {
+		t.Errorf("expected 2 exitcodes, got %d", len(d.ExitCodes))
+	}
+	if len(d.Examples) != 2 {
+		t.Errorf("expected 2 examples, got %d", len(d.Examples))
+	}
+}
+
+// --- parseArgLine / parseExitCodeLine tests ---
+
+func TestParseArgLineFull(t *testing.T) {
+	got := parseArgLine("$1 string The command name")
+	want := ArgDoc{Position: "$1", Type: "string", Description: "The command name"}
+	if got != want {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
+func TestParseArgLinePartial(t *testing.T) {
+	got := parseArgLine("$1 string")
+	want := ArgDoc{Position: "$1", Type: "string"}
+	if got != want {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
+func TestParseArgLineBare(t *testing.T) {
+	got := parseArgLine("$@")
+	want := ArgDoc{Position: "$@"}
+	if got != want {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
+func TestParseExitCodeLineFull(t *testing.T) {
+	got := parseExitCodeLine("0 Always succeeds")
+	want := ExitCode{Code: "0", Description: "Always succeeds"}
+	if got != want {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
+func TestParseExitCodeLineBare(t *testing.T) {
+	got := parseExitCodeLine("127")
+	want := ExitCode{Code: "127"}
+	if got != want {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
+// TestParseShdocFunctionKeyword verifies that "function name() {" syntax
+// is parsed alongside the more common "name() {" form.
+func TestParseShdocFunctionKeyword(t *testing.T) {
+	dir := t.TempDir()
+	src := `#!/usr/bin/env bash
+# @description Does a thing
+function shlib::thing() {
+    :
+}
+`
+	bashPath := writeTestFile(t, dir, "f.bash", src)
+	docs, err := parseShdoc(bashPath)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(docs) != 1 || docs[0].Name != "shlib::thing" {
+		t.Errorf("got %+v, want one function named shlib::thing", docs)
+	}
+}
+
+// TestShdocTemplateFuncReturnsData verifies that {{ shdoc }} exposes
+// structured FuncDoc data to templates (not a pre-rendered string).
+func TestShdocTemplateFuncReturnsData(t *testing.T) {
+	dir := t.TempDir()
+	bashPath := writeTestFile(t, dir, "funcs.bash", bashWithDocs)
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		fmt.Sprintf(`{{ range shdoc %q }}[{{ .Name }}]{{ end }}`, bashPath))
+
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := "[shlib::version][shlib::cmd_exists]"
+	if string(out) != want {
+		t.Errorf("output = %q, want %q", string(out), want)
+	}
+}
+
+// TestShdocTemplateFuncArgFields verifies that ArgDoc fields are
+// accessible from templates, proving the data is fully structured.
+func TestShdocTemplateFuncArgFields(t *testing.T) {
+	dir := t.TempDir()
+	bashPath := writeTestFile(t, dir, "funcs.bash", bashWithDocs)
+	tmplPath := writeTestFile(t, dir, "test.gotmpl",
+		fmt.Sprintf(`{{ range (index (shdoc %q) 1).Args }}{{ .Position }}/{{ .Type }}/{{ .Description }}{{ end }}`, bashPath))
+
+	out, err := renderTemplate(tmplPath, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := "$1/string/The command name to check"
+	if string(out) != want {
+		t.Errorf("output = %q, want %q", string(out), want)
 	}
 }
 
@@ -578,11 +682,11 @@ func TestShdocTroffOutput(t *testing.T) {
 	}
 }
 
-func TestShdocInTemplate(t *testing.T) {
+func TestShdocTroffInTemplate(t *testing.T) {
 	dir := t.TempDir()
 	bashPath := writeTestFile(t, dir, "funcs.bash", bashWithDocs)
 	tmplPath := writeTestFile(t, dir, "test.gotmpl",
-		fmt.Sprintf(`{{ shdoc %q }}`, bashPath))
+		fmt.Sprintf(`{{ shdocTroff %q }}`, bashPath))
 
 	out, err := renderTemplate(tmplPath, nil)
 	if err != nil {
