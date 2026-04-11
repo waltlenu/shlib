@@ -335,222 +335,190 @@ shlib::arr_uniq() {
 }
 
 #######################################
-# dt
+# cmd
 #######################################
 
-# @description Add time units to timestamp
-# @arg $1 int Unix timestamp
-# @arg $2 int Amount to add (can be negative)
-# @arg $3 string Unit: seconds, minutes, hours, days, weeks
-# @stdout New Unix timestamp
-# @exitcode 0 Always succeeds
+# @description Check if a command exists in PATH
+# @arg $1 string The command name to check
+# @exitcode 0 Command exists
+# @exitcode 1 Command not found
 # @example
-#   shlib::dt_add 1704067200 1 days    # add 1 day
-#   shlib::dt_add 1704067200 -2 hours  # subtract 2 hours
-shlib::dt_add() {
-    local timestamp="$1"
-    local amount="$2"
-    local unit="$3"
-    local multiplier=1
-
-    case "$unit" in
-        second | seconds) multiplier=1 ;;
-        minute | minutes) multiplier=60 ;;
-        hour | hours) multiplier=3600 ;;
-        day | days) multiplier=86400 ;;
-        week | weeks) multiplier=604800 ;;
-        *) multiplier=1 ;;
-    esac
-
-    echo $((timestamp + amount * multiplier))
+#   shlib::cmd_exists git
+shlib::cmd_exists() {
+    command -v "$1" &>/dev/null
 }
 
-# @description Calculate difference between timestamps
-# @arg $1 int First Unix timestamp
-# @arg $2 int Second Unix timestamp
-# @arg $3 string Optional unit: seconds (default), minutes, hours, days, weeks
-# @stdout Difference (ts1 - ts2) in specified unit (integer division)
-# @exitcode 0 Always succeeds
+# @description Run a command protected by file-based locking
+# @arg $1 string Path to the lock file (a .lock directory will be created)
+# @arg $2 int Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
+# @arg $@ string The command and its arguments
+# @stdout Command output (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command completed successfully
+# @exitcode 1 Failed to acquire lock within timeout, or invalid arguments
+# @exitcode * Command's exit code if lock was acquired
 # @example
-#   shlib::dt_diff 1704153600 1704067200          # outputs: 86400 (seconds)
-#   shlib::dt_diff 1704153600 1704067200 hours    # outputs: 24
-#   shlib::dt_diff 1704153600 1704067200 days     # outputs: 1
-shlib::dt_diff() {
-    local ts1="$1"
-    local ts2="$2"
-    local unit="${3:-seconds}"
-    local diff=$((ts1 - ts2))
-    local divisor=1
+#   shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
+#   shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
+#   shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
+shlib::cmd_locked() {
+    local lockfile="$1"
+    local timeout="$2"
+    shift 2
 
-    case "$unit" in
-        second | seconds) divisor=1 ;;
-        minute | minutes) divisor=60 ;;
-        hour | hours) divisor=3600 ;;
-        day | days) divisor=86400 ;;
-        week | weeks) divisor=604800 ;;
-        *) divisor=1 ;;
-    esac
-
-    echo $((diff / divisor))
-}
-
-# @description Format seconds as human-readable duration
-# @arg $1 int Number of seconds
-# @arg $2 string Optional format: short (default), long, compact
-# @stdout Human-readable duration string
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::dt_duration 90061              # outputs: 1d 1h 1m 1s
-#   shlib::dt_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
-#   shlib::dt_duration 90061 compact      # outputs: 1d1h1m1s
-shlib::dt_duration() {
-    local seconds="$1"
-    local format="${2:-short}"
-    local negative=""
-
-    # Handle negative durations
-    if [[ $seconds -lt 0 ]]; then
-        negative="-"
-        seconds=$((-seconds))
+    # Validate lockfile path
+    if [[ -z "$lockfile" ]]; then
+        return 1
     fi
 
-    local days=$((seconds / 86400))
-    local hours=$(((seconds % 86400) / 3600))
-    local mins=$(((seconds % 3600) / 60))
-    local secs=$((seconds % 60))
-
-    local output=""
-
-    case "$format" in
-        long)
-            local parts=()
-            [[ $days -gt 0 ]] && parts+=("$days day$([[ $days -ne 1 ]] && echo "s")")
-            [[ $hours -gt 0 ]] && parts+=("$hours hour$([[ $hours -ne 1 ]] && echo "s")")
-            [[ $mins -gt 0 ]] && parts+=("$mins minute$([[ $mins -ne 1 ]] && echo "s")")
-            [[ $secs -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("$secs second$([[ $secs -ne 1 ]] && echo "s")")
-
-            local i
-            for ((i = 0; i < ${#parts[@]}; i++)); do
-                [[ $i -gt 0 ]] && output+=", "
-                output+="${parts[$i]}"
-            done
-            ;;
-        compact)
-            [[ $days -gt 0 ]] && output+="${days}d"
-            [[ $hours -gt 0 ]] && output+="${hours}h"
-            [[ $mins -gt 0 ]] && output+="${mins}m"
-            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
-            ;;
-        short | *)
-            [[ $days -gt 0 ]] && output+="${days}d "
-            [[ $hours -gt 0 ]] && output+="${hours}h "
-            [[ $mins -gt 0 ]] && output+="${mins}m "
-            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
-            output="${output% }" # trim trailing space
-            ;;
-    esac
-
-    echo "${negative}${output}"
-}
-
-# @description Format elapsed time since start timestamp
-# @arg $1 int Start Unix timestamp
-# @arg $2 string Optional format: short (default), long, compact
-# @stdout Elapsed time as human-readable duration
-# @exitcode 0 Always succeeds
-# @example
-#   start=$(shlib::dt_now)
-#   sleep 5
-#   shlib::dt_elapsed "$start"  # outputs: 5s
-shlib::dt_elapsed() {
-    local start="$1"
-    local format="${2:-short}"
-    local now
-    now=$(date +%s)
-    local elapsed=$((now - start))
-    shlib::dt_duration "$elapsed" "$format"
-}
-
-# @description Format Unix timestamp with format string
-# @arg $1 int Unix timestamp
-# @arg $2 string Format string (strftime compatible)
-# @stdout Formatted date/time string
-# @exitcode 0 Success
-# @exitcode 1 Invalid timestamp or format
-# @example
-#   shlib::dt_from_unix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
-#   shlib::dt_from_unix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
-shlib::dt_from_unix() {
-    local timestamp="$1"
-    local format="$2"
-
-    # Try BSD date first (macOS)
-    if date -r "$timestamp" +"$format" 2>/dev/null; then
-        return 0
+    # Validate timeout is an integer (including negative)
+    if ! [[ "$timeout" =~ ^-?[0-9]+$ ]]; then
+        return 1
     fi
 
-    # Try GNU date (Linux)
-    if date -d "@$timestamp" +"$format" 2>/dev/null; then
-        return 0
+    # Validate command is provided
+    if [[ $# -eq 0 ]]; then
+        return 1
     fi
+
+    local lockdir="${lockfile}.lock"
+    local pidfile="${lockdir}/pid"
+    local start_time elapsed exit_code lock_pid
+
+    start_time=$(date +%s)
+
+    # Try to acquire lock
+    while true; do
+        # mkdir is atomic on POSIX systems - portable locking mechanism
+        if mkdir "$lockdir" 2>/dev/null; then
+            # Got the lock, write our PID for stale detection
+            echo $$ >"$pidfile"
+
+            # Run command
+            "$@"
+            exit_code=$?
+
+            # Release lock
+            rm -rf "$lockdir"
+
+            return $exit_code
+        fi
+
+        # Check for stale lock (holding process no longer exists)
+        if [[ -f "$pidfile" ]]; then
+            lock_pid=$(cat "$pidfile" 2>/dev/null)
+            if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
+                # Stale lock, try to remove it and retry
+                rm -rf "$lockdir" 2>/dev/null
+                continue
+            fi
+        fi
+
+        # Check timeout
+        if [[ $timeout -eq 0 ]]; then
+            # Non-blocking mode, fail immediately
+            return 1
+        elif [[ $timeout -gt 0 ]]; then
+            elapsed=$(($(date +%s) - start_time))
+            if [[ $elapsed -ge $timeout ]]; then
+                return 1
+            fi
+        fi
+        # timeout -1 means wait forever
+
+        # Wait before retrying (0.1s if available, 1s fallback for older systems)
+        sleep 0.1 2>/dev/null || sleep 1
+    done
+}
+
+# @description Retry a command multiple times with optional delay
+# @arg $1 int Maximum number of attempts
+# @arg $2 int Delay in seconds between attempts (0 for no delay)
+# @arg $@ string The command and its arguments
+# @stdout Command output from the successful attempt (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command succeeded within max attempts
+# @exitcode 1 All attempts failed
+# @example
+#   shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
+#   shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+shlib::cmd_retry() {
+    local max_attempts="$1"
+    local delay="$2"
+    shift 2
+
+    # Validate max_attempts is a positive number
+    if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -le 0 ]]; then
+        return 1
+    fi
+
+    # Validate delay is a non-negative number
+    if ! [[ "$delay" =~ ^[0-9]+$ ]]; then
+        return 1
+    fi
+
+    local attempt=1
+    while [[ $attempt -le $max_attempts ]]; do
+        if "$@"; then
+            return 0
+        fi
+
+        if [[ $attempt -lt $max_attempts ]] && [[ $delay -gt 0 ]]; then
+            sleep "$delay"
+        fi
+
+        ((attempt++))
+    done
 
     return 1
 }
 
-# @description Check if timestamp A is after timestamp B
-# @arg $1 int First Unix timestamp
-# @arg $2 int Second Unix timestamp
-# @exitcode 0 ts1 > ts2
-# @exitcode 1 ts1 <= ts2
+# @description Run a command with a timeout
+# @arg $1 int Timeout in seconds
+# @arg $@ string The command and its arguments
+# @stdout Command output (if any)
+# @stderr Command errors (if any)
+# @exitcode 0 Command completed successfully within timeout
+# @exitcode 124 Command timed out
+# @exitcode * Command's exit code if it completed before timeout
 # @example
-#   shlib::dt_is_after 1704153600 1704067200 && echo "later"
-shlib::dt_is_after() {
-    [[ "$1" -gt "$2" ]]
-}
+#   shlib::cmd_timeout 5 sleep 2    # succeeds
+#   shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
+shlib::cmd_timeout() {
+    local timeout="$1"
+    shift
 
-# @description Check if timestamp A is before timestamp B
-# @arg $1 int First Unix timestamp
-# @arg $2 int Second Unix timestamp
-# @exitcode 0 ts1 < ts2
-# @exitcode 1 ts1 >= ts2
-# @example
-#   shlib::dt_is_before 1704067200 1704153600 && echo "earlier"
-shlib::dt_is_before() {
-    [[ "$1" -lt "$2" ]]
-}
-
-# @description Get current Unix timestamp
-# @stdout The current Unix timestamp in seconds
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::dt_now  # outputs: 1704067200
-shlib::dt_now() {
-    date +%s
-}
-
-# @description Get current datetime in ISO 8601 format
-# @arg $1 string Optional: "local" for local time, default is UTC
-# @stdout Current datetime in ISO 8601 format
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::dt_now_iso         # outputs: 2024-01-01T12:00:00Z
-#   shlib::dt_now_iso local   # outputs: 2024-01-01T07:00:00-05:00
-shlib::dt_now_iso() {
-    local zone="${1:-}"
-    if [[ "$zone" == "local" ]]; then
-        date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/'
-    else
-        date -u +%Y-%m-%dT%H:%M:%SZ
+    # Validate timeout is a positive number
+    if ! [[ "$timeout" =~ ^[0-9]+$ ]] || [[ "$timeout" -le 0 ]]; then
+        return 1
     fi
-}
 
-# @description Get current date as YYYY-MM-DD
-# @stdout Current date in YYYY-MM-DD format
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::dt_today  # outputs: 2024-01-01
-shlib::dt_today() {
-    date +%Y-%m-%d
+    # Run command in background
+    "$@" &
+    local cmd_pid=$!
+
+    # Start a watchdog timer in background
+    (
+        sleep "$timeout"
+        kill -0 "$cmd_pid" 2>/dev/null && kill -TERM "$cmd_pid" 2>/dev/null
+    ) &
+    local watchdog_pid=$!
+
+    # Wait for command to complete
+    local exit_code
+    wait "$cmd_pid" 2>/dev/null
+    exit_code=$?
+
+    # Kill the watchdog if command finished first
+    kill -0 "$watchdog_pid" 2>/dev/null && kill "$watchdog_pid" 2>/dev/null
+    wait "$watchdog_pid" 2>/dev/null
+
+    # Check if command was killed by timeout (SIGTERM = 143, or we check if it was killed)
+    if [[ $exit_code -eq 143 ]] || [[ $exit_code -eq 137 ]]; then
+        return 124
+    fi
+
+    return $exit_code
 }
 
 #######################################
@@ -685,8 +653,8 @@ shlib::kv_get() {
 # @exitcode 0 Always succeeds
 # @example
 #   declare -A config
-#   shlib::kv_get_default config "port" "8080"  # outputs: 8080
-shlib::kv_get_default() {
+#   shlib::kv_getdefault config "port" "8080"  # outputs: 8080
+shlib::kv_getdefault() {
     local arr_name="$1"
     local key="$2"
     local default="$3"
@@ -707,8 +675,8 @@ shlib::kv_get_default() {
 # @example
 #   declare -A config
 #   config[host]="localhost"
-#   shlib::kv_has_value config "localhost" && echo "found"
-shlib::kv_has_value() {
+#   shlib::kv_hasvalue config "localhost" && echo "found"
+shlib::kv_hasvalue() {
     local arr_name="$1"
     local search_value="$2"
     local -a keys
@@ -905,7 +873,7 @@ shlib::kv_values() {
 }
 
 #######################################
-# logging
+# msg
 #######################################
 
 # @description Print a colorized error message to stderr (without newline)
@@ -913,9 +881,9 @@ shlib::kv_values() {
 # @stderr The message prefixed with ISO8601 timestamp and red "error: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cerror "Something went wrong"
+#   shlib::msg_cerror "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::cerror() {
+shlib::msg_cerror() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
@@ -926,9 +894,9 @@ shlib::cerror() {
 # @stderr The message prefixed with ISO8601 timestamp and red "error: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cerrorn "Something went wrong"
+#   shlib::msg_cerrorn "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::cerrorn() {
+shlib::msg_cerrorn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
@@ -939,9 +907,9 @@ shlib::cerrorn() {
 # @stdout The message prefixed with ISO8601 timestamp and blue "info: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cinfo "Processing file"
+#   shlib::msg_cinfo "Processing file"
 #   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
-shlib::cinfo() {
+shlib::msg_cinfo() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
@@ -952,9 +920,9 @@ shlib::cinfo() {
 # @stdout The message prefixed with ISO8601 timestamp and blue "info: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cinfon "Processing complete"
+#   shlib::msg_cinfon "Processing complete"
 #   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
-shlib::cinfon() {
+shlib::msg_cinfon() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
@@ -965,9 +933,9 @@ shlib::cinfon() {
 # @stdout The message prefixed with ISO8601 timestamp and yellow "warning: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cwarn "This might cause issues"
+#   shlib::msg_cwarn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::cwarn() {
+shlib::msg_cwarn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
@@ -978,9 +946,9 @@ shlib::cwarn() {
 # @stdout The message prefixed with ISO8601 timestamp and yellow "warning: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::cwarnn "This might cause issues"
+#   shlib::msg_cwarnn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::cwarnn() {
+shlib::msg_cwarnn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
@@ -991,9 +959,9 @@ shlib::cwarnn() {
 # @stderr The message prefixed with ISO8601 timestamp and "❌️ "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::eerror "Something went wrong"
+#   shlib::msg_eerror "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
-shlib::eerror() {
+shlib::msg_eerror() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] ❌️  $*" >&2
@@ -1004,9 +972,9 @@ shlib::eerror() {
 # @stderr The message prefixed with ISO8601 timestamp and "❌️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::eerrorn "Something went wrong"
+#   shlib::msg_eerrorn "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
-shlib::eerrorn() {
+shlib::msg_eerrorn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] ❌️  $*" >&2
@@ -1017,9 +985,9 @@ shlib::eerrorn() {
 # @stdout The message prefixed with ISO8601 timestamp and "ℹ️ "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::einfo "Processing file"
+#   shlib::msg_einfo "Processing file"
 #   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
-shlib::einfo() {
+shlib::msg_einfo() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] ℹ️  $*"
@@ -1030,9 +998,9 @@ shlib::einfo() {
 # @stdout The message prefixed with ISO8601 timestamp and "ℹ️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::einfon "Processing complete"
+#   shlib::msg_einfon "Processing complete"
 #   # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
-shlib::einfon() {
+shlib::msg_einfon() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] ℹ️  $*"
@@ -1043,9 +1011,9 @@ shlib::einfon() {
 # @stderr The message prefixed with ISO8601 timestamp and "error: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::error "Something went wrong"
+#   shlib::msg_error "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::error() {
+shlib::msg_error() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] error: $*" >&2
@@ -1056,9 +1024,9 @@ shlib::error() {
 # @stderr The message prefixed with ISO8601 timestamp and "error: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::errorn "Something went wrong"
+#   shlib::msg_errorn "Something went wrong"
 #   # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
-shlib::errorn() {
+shlib::msg_errorn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] error: $*" >&2
@@ -1069,9 +1037,9 @@ shlib::errorn() {
 # @stdout The message prefixed with ISO8601 timestamp and "⚠️ "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ewarn "This might cause issues"
+#   shlib::msg_ewarn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
-shlib::ewarn() {
+shlib::msg_ewarn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] ⚠️  $*"
@@ -1082,9 +1050,9 @@ shlib::ewarn() {
 # @stdout The message prefixed with ISO8601 timestamp and "⚠️ " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ewarnn "This might cause issues"
+#   shlib::msg_ewarnn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
-shlib::ewarnn() {
+shlib::msg_ewarnn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] ⚠️  $*"
@@ -1095,9 +1063,9 @@ shlib::ewarnn() {
 # @stdout The message prefixed with ISO8601 timestamp and "info: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::info "Processing file"
+#   shlib::msg_info "Processing file"
 #   # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
-shlib::info() {
+shlib::msg_info() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] info: $*"
@@ -1108,12 +1076,75 @@ shlib::info() {
 # @stdout The message prefixed with ISO8601 timestamp and "info: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::infon "Processing complete"
+#   shlib::msg_infon "Processing complete"
 #   # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
-shlib::infon() {
+shlib::msg_infon() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] info: $*"
+}
+
+# @description Print a failure status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Red X followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statusfail "Task failed"
+shlib::msg_statusfail() {
+    printf '\033[31m✖\033[0m  %s' "$*"
+}
+
+# @description Print a failure status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Red X followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statusfailn "Task failed"
+shlib::msg_statusfailn() {
+    shlib::msg_statusfail "$@"
+    echo
+}
+
+# @description Print a success status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Green checkmark followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statusok "Task completed"
+shlib::msg_statusok() {
+    printf '\033[32m✔\033[0m  %s' "$*"
+}
+
+# @description Print a success status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Green checkmark followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statusokn "Task completed"
+shlib::msg_statusokn() {
+    shlib::msg_statusok "$@"
+    echo
+}
+
+# @description Print a pending status indicator (without newline)
+# @arg $@ string The message to print
+# @stdout Yellow hourglass followed by message
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statuspending "Waiting..."
+shlib::msg_statuspending() {
+    printf '\033[33m⏳\033[0m %s' "$*"
+}
+
+# @description Print a pending status indicator (with newline)
+# @arg $@ string The message to print
+# @stdout Yellow hourglass followed by message and newline
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::msg_statuspendingn "Waiting..."
+shlib::msg_statuspendingn() {
+    shlib::msg_statuspending "$@"
+    echo
 }
 
 # @description Print a warning message to stdout (without newline)
@@ -1121,9 +1152,9 @@ shlib::infon() {
 # @stdout The message prefixed with ISO8601 timestamp and "warning: "
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::warn "This might cause issues"
+#   shlib::msg_warn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::warn() {
+shlib::msg_warn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo -n "[$ts] warning: $*"
@@ -1134,9 +1165,9 @@ shlib::warn() {
 # @stdout The message prefixed with ISO8601 timestamp and "warning: " followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::warnn "This might cause issues"
+#   shlib::msg_warnn "This might cause issues"
 #   # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
-shlib::warnn() {
+shlib::msg_warnn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
     echo "[$ts] warning: $*"
@@ -1173,8 +1204,8 @@ shlib::str_endswith() {
 # @exitcode 0 String is empty or whitespace only
 # @exitcode 1 String contains non-whitespace characters
 # @example
-#   shlib::str_is_empty "   " && echo "empty"
-shlib::str_is_empty() {
+#   shlib::str_isempty "   " && echo "empty"
+shlib::str_isempty() {
     local trimmed
     trimmed="${1#"${1%%[![:space:]]*}"}"
     trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
@@ -1333,8 +1364,8 @@ shlib::str_startswith() {
 # @stdout The lowercase string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::str_to_lower "HELLO"
-shlib::str_to_lower() {
+#   shlib::str_tolower "HELLO"
+shlib::str_tolower() {
     echo "$1" | tr '[:upper:]' '[:lower:]'
 }
 
@@ -1343,8 +1374,8 @@ shlib::str_to_lower() {
 # @stdout The uppercase string
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::str_to_upper "hello"
-shlib::str_to_upper() {
+#   shlib::str_toupper "hello"
+shlib::str_toupper() {
     echo "$1" | tr '[:lower:]' '[:upper:]'
 }
 
@@ -1362,190 +1393,222 @@ shlib::str_trim() {
 }
 
 #######################################
-# system
+# time
 #######################################
 
-# @description Check if a command exists in PATH
-# @arg $1 string The command name to check
-# @exitcode 0 Command exists
-# @exitcode 1 Command not found
+# @description Add time units to timestamp
+# @arg $1 int Unix timestamp
+# @arg $2 int Amount to add (can be negative)
+# @arg $3 string Unit: seconds, minutes, hours, days, weeks
+# @stdout New Unix timestamp
+# @exitcode 0 Always succeeds
 # @example
-#   shlib::cmd_exists git
-shlib::cmd_exists() {
-    command -v "$1" &>/dev/null
+#   shlib::time_add 1704067200 1 days    # add 1 day
+#   shlib::time_add 1704067200 -2 hours  # subtract 2 hours
+shlib::time_add() {
+    local timestamp="$1"
+    local amount="$2"
+    local unit="$3"
+    local multiplier=1
+
+    case "$unit" in
+        second | seconds) multiplier=1 ;;
+        minute | minutes) multiplier=60 ;;
+        hour | hours) multiplier=3600 ;;
+        day | days) multiplier=86400 ;;
+        week | weeks) multiplier=604800 ;;
+        *) multiplier=1 ;;
+    esac
+
+    echo $((timestamp + amount * multiplier))
 }
 
-# @description Run a command protected by file-based locking
-# @arg $1 string Path to the lock file (a .lock directory will be created)
-# @arg $2 int Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
-# @arg $@ string The command and its arguments
-# @stdout Command output (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command completed successfully
-# @exitcode 1 Failed to acquire lock within timeout, or invalid arguments
-# @exitcode * Command's exit code if lock was acquired
+# @description Calculate difference between timestamps
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @arg $3 string Optional unit: seconds (default), minutes, hours, days, weeks
+# @stdout Difference (ts1 - ts2) in specified unit (integer division)
+# @exitcode 0 Always succeeds
 # @example
-#   shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
-#   shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
-#   shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
-shlib::cmd_locked() {
-    local lockfile="$1"
-    local timeout="$2"
-    shift 2
+#   shlib::time_diff 1704153600 1704067200          # outputs: 86400 (seconds)
+#   shlib::time_diff 1704153600 1704067200 hours    # outputs: 24
+#   shlib::time_diff 1704153600 1704067200 days     # outputs: 1
+shlib::time_diff() {
+    local ts1="$1"
+    local ts2="$2"
+    local unit="${3:-seconds}"
+    local diff=$((ts1 - ts2))
+    local divisor=1
 
-    # Validate lockfile path
-    if [[ -z "$lockfile" ]]; then
-        return 1
-    fi
+    case "$unit" in
+        second | seconds) divisor=1 ;;
+        minute | minutes) divisor=60 ;;
+        hour | hours) divisor=3600 ;;
+        day | days) divisor=86400 ;;
+        week | weeks) divisor=604800 ;;
+        *) divisor=1 ;;
+    esac
 
-    # Validate timeout is an integer (including negative)
-    if ! [[ "$timeout" =~ ^-?[0-9]+$ ]]; then
-        return 1
-    fi
-
-    # Validate command is provided
-    if [[ $# -eq 0 ]]; then
-        return 1
-    fi
-
-    local lockdir="${lockfile}.lock"
-    local pidfile="${lockdir}/pid"
-    local start_time elapsed exit_code lock_pid
-
-    start_time=$(date +%s)
-
-    # Try to acquire lock
-    while true; do
-        # mkdir is atomic on POSIX systems - portable locking mechanism
-        if mkdir "$lockdir" 2>/dev/null; then
-            # Got the lock, write our PID for stale detection
-            echo $$ >"$pidfile"
-
-            # Run command
-            "$@"
-            exit_code=$?
-
-            # Release lock
-            rm -rf "$lockdir"
-
-            return $exit_code
-        fi
-
-        # Check for stale lock (holding process no longer exists)
-        if [[ -f "$pidfile" ]]; then
-            lock_pid=$(cat "$pidfile" 2>/dev/null)
-            if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
-                # Stale lock, try to remove it and retry
-                rm -rf "$lockdir" 2>/dev/null
-                continue
-            fi
-        fi
-
-        # Check timeout
-        if [[ $timeout -eq 0 ]]; then
-            # Non-blocking mode, fail immediately
-            return 1
-        elif [[ $timeout -gt 0 ]]; then
-            elapsed=$(($(date +%s) - start_time))
-            if [[ $elapsed -ge $timeout ]]; then
-                return 1
-            fi
-        fi
-        # timeout -1 means wait forever
-
-        # Wait before retrying (0.1s if available, 1s fallback for older systems)
-        sleep 0.1 2>/dev/null || sleep 1
-    done
+    echo $((diff / divisor))
 }
 
-# @description Retry a command multiple times with optional delay
-# @arg $1 int Maximum number of attempts
-# @arg $2 int Delay in seconds between attempts (0 for no delay)
-# @arg $@ string The command and its arguments
-# @stdout Command output from the successful attempt (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command succeeded within max attempts
-# @exitcode 1 All attempts failed
+# @description Format seconds as human-readable duration
+# @arg $1 int Number of seconds
+# @arg $2 string Optional format: short (default), long, compact
+# @stdout Human-readable duration string
+# @exitcode 0 Always succeeds
 # @example
-#   shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
-#   shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
-shlib::cmd_retry() {
-    local max_attempts="$1"
-    local delay="$2"
-    shift 2
+#   shlib::time_duration 90061              # outputs: 1d 1h 1m 1s
+#   shlib::time_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
+#   shlib::time_duration 90061 compact      # outputs: 1d1h1m1s
+shlib::time_duration() {
+    local seconds="$1"
+    local format="${2:-short}"
+    local negative=""
 
-    # Validate max_attempts is a positive number
-    if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [[ "$max_attempts" -le 0 ]]; then
-        return 1
+    # Handle negative durations
+    if [[ $seconds -lt 0 ]]; then
+        negative="-"
+        seconds=$((-seconds))
     fi
 
-    # Validate delay is a non-negative number
-    if ! [[ "$delay" =~ ^[0-9]+$ ]]; then
-        return 1
+    local days=$((seconds / 86400))
+    local hours=$(((seconds % 86400) / 3600))
+    local mins=$(((seconds % 3600) / 60))
+    local secs=$((seconds % 60))
+
+    local output=""
+
+    case "$format" in
+        long)
+            local parts=()
+            [[ $days -gt 0 ]] && parts+=("$days day$([[ $days -ne 1 ]] && echo "s")")
+            [[ $hours -gt 0 ]] && parts+=("$hours hour$([[ $hours -ne 1 ]] && echo "s")")
+            [[ $mins -gt 0 ]] && parts+=("$mins minute$([[ $mins -ne 1 ]] && echo "s")")
+            [[ $secs -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("$secs second$([[ $secs -ne 1 ]] && echo "s")")
+
+            local i
+            for ((i = 0; i < ${#parts[@]}; i++)); do
+                [[ $i -gt 0 ]] && output+=", "
+                output+="${parts[$i]}"
+            done
+            ;;
+        compact)
+            [[ $days -gt 0 ]] && output+="${days}d"
+            [[ $hours -gt 0 ]] && output+="${hours}h"
+            [[ $mins -gt 0 ]] && output+="${mins}m"
+            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+            ;;
+        short | *)
+            [[ $days -gt 0 ]] && output+="${days}d "
+            [[ $hours -gt 0 ]] && output+="${hours}h "
+            [[ $mins -gt 0 ]] && output+="${mins}m "
+            [[ $secs -gt 0 || -z "$output" ]] && output+="${secs}s"
+            output="${output% }" # trim trailing space
+            ;;
+    esac
+
+    echo "${negative}${output}"
+}
+
+# @description Format elapsed time since start timestamp
+# @arg $1 int Start Unix timestamp
+# @arg $2 string Optional format: short (default), long, compact
+# @stdout Elapsed time as human-readable duration
+# @exitcode 0 Always succeeds
+# @example
+#   start=$(shlib::time_now)
+#   sleep 5
+#   shlib::time_elapsed "$start"  # outputs: 5s
+shlib::time_elapsed() {
+    local start="$1"
+    local format="${2:-short}"
+    local now
+    now=$(date +%s)
+    local elapsed=$((now - start))
+    shlib::time_duration "$elapsed" "$format"
+}
+
+# @description Format Unix timestamp with format string
+# @arg $1 int Unix timestamp
+# @arg $2 string Format string (strftime compatible)
+# @stdout Formatted date/time string
+# @exitcode 0 Success
+# @exitcode 1 Invalid timestamp or format
+# @example
+#   shlib::time_fromunix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
+#   shlib::time_fromunix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
+shlib::time_fromunix() {
+    local timestamp="$1"
+    local format="$2"
+
+    # Try BSD date first (macOS)
+    if date -r "$timestamp" +"$format" 2>/dev/null; then
+        return 0
     fi
 
-    local attempt=1
-    while [[ $attempt -le $max_attempts ]]; do
-        if "$@"; then
-            return 0
-        fi
-
-        if [[ $attempt -lt $max_attempts ]] && [[ $delay -gt 0 ]]; then
-            sleep "$delay"
-        fi
-
-        ((attempt++))
-    done
+    # Try GNU date (Linux)
+    if date -d "@$timestamp" +"$format" 2>/dev/null; then
+        return 0
+    fi
 
     return 1
 }
 
-# @description Run a command with a timeout
-# @arg $1 int Timeout in seconds
-# @arg $@ string The command and its arguments
-# @stdout Command output (if any)
-# @stderr Command errors (if any)
-# @exitcode 0 Command completed successfully within timeout
-# @exitcode 124 Command timed out
-# @exitcode * Command's exit code if it completed before timeout
+# @description Check if timestamp A is after timestamp B
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @exitcode 0 ts1 > ts2
+# @exitcode 1 ts1 <= ts2
 # @example
-#   shlib::cmd_timeout 5 sleep 2    # succeeds
-#   shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
-shlib::cmd_timeout() {
-    local timeout="$1"
-    shift
+#   shlib::time_isafter 1704153600 1704067200 && echo "later"
+shlib::time_isafter() {
+    [[ "$1" -gt "$2" ]]
+}
 
-    # Validate timeout is a positive number
-    if ! [[ "$timeout" =~ ^[0-9]+$ ]] || [[ "$timeout" -le 0 ]]; then
-        return 1
+# @description Check if timestamp A is before timestamp B
+# @arg $1 int First Unix timestamp
+# @arg $2 int Second Unix timestamp
+# @exitcode 0 ts1 < ts2
+# @exitcode 1 ts1 >= ts2
+# @example
+#   shlib::time_isbefore 1704067200 1704153600 && echo "earlier"
+shlib::time_isbefore() {
+    [[ "$1" -lt "$2" ]]
+}
+
+# @description Get current Unix timestamp
+# @stdout The current Unix timestamp in seconds
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::time_now  # outputs: 1704067200
+shlib::time_now() {
+    date +%s
+}
+
+# @description Get current datetime in ISO 8601 format
+# @arg $1 string Optional: "local" for local time, default is UTC
+# @stdout Current datetime in ISO 8601 format
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::time_nowiso         # outputs: 2024-01-01T12:00:00Z
+#   shlib::time_nowiso local   # outputs: 2024-01-01T07:00:00-05:00
+shlib::time_nowiso() {
+    local zone="${1:-}"
+    if [[ "$zone" == "local" ]]; then
+        date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/'
+    else
+        date -u +%Y-%m-%dT%H:%M:%SZ
     fi
+}
 
-    # Run command in background
-    "$@" &
-    local cmd_pid=$!
-
-    # Start a watchdog timer in background
-    (
-        sleep "$timeout"
-        kill -0 "$cmd_pid" 2>/dev/null && kill -TERM "$cmd_pid" 2>/dev/null
-    ) &
-    local watchdog_pid=$!
-
-    # Wait for command to complete
-    local exit_code
-    wait "$cmd_pid" 2>/dev/null
-    exit_code=$?
-
-    # Kill the watchdog if command finished first
-    kill -0 "$watchdog_pid" 2>/dev/null && kill "$watchdog_pid" 2>/dev/null
-    wait "$watchdog_pid" 2>/dev/null
-
-    # Check if command was killed by timeout (SIGTERM = 143, or we check if it was killed)
-    if [[ $exit_code -eq 143 ]] || [[ $exit_code -eq 137 ]]; then
-        return 124
-    fi
-
-    return $exit_code
+# @description Get current date as YYYY-MM-DD
+# @stdout Current date in YYYY-MM-DD format
+# @exitcode 0 Always succeeds
+# @example
+#   shlib::time_today  # outputs: 2024-01-01
+shlib::time_today() {
+    date +%Y-%m-%d
 }
 
 #######################################
@@ -1556,8 +1619,8 @@ shlib::cmd_timeout() {
 # @stdout The 256 color palette with standard colors, 216 colors, and grayscale
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_256_palette
-shlib::ansi_256_palette() {
+#   shlib::ui_ansi256palette
+shlib::ui_ansi256palette() {
     local i
 
     printf '\033[1m%s\033[0m\n' "256 Color Palette (\\033[38;5;Nm for FG, \\033[48;5;Nm for BG)"
@@ -1585,8 +1648,8 @@ shlib::ansi_256_palette() {
 # @stdout A formatted table showing background colors
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_bg_colors
-shlib::ansi_bg_colors() {
+#   shlib::ui_ansibgcolors
+shlib::ui_ansibgcolors() {
     local fg i
 
     printf '\033[1m%s\033[0m\n' "Background Colors"
@@ -1607,8 +1670,8 @@ shlib::ansi_bg_colors() {
 # @stdout A matrix of standard FG (30-37) x BG (40-47) combinations
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_color_matrix
-shlib::ansi_color_matrix() {
+#   shlib::ui_ansicolormatrix
+shlib::ui_ansicolormatrix() {
     local i j
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
@@ -1631,8 +1694,8 @@ shlib::ansi_color_matrix() {
 # @stdout A matrix of bright FG (90-97) x BG (100-107) combinations
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_color_matrix_bright
-shlib::ansi_color_matrix_bright() {
+#   shlib::ui_ansicolormatrix_bright
+shlib::ui_ansicolormatrix_bright() {
     local i j
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Bright Colors)"
@@ -1655,8 +1718,8 @@ shlib::ansi_color_matrix_bright() {
 # @stdout A formatted table showing foreground colors
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_fg_colors
-shlib::ansi_fg_colors() {
+#   shlib::ui_ansifgcolors
+shlib::ui_ansifgcolors() {
     local i
 
     printf '\033[1m%s\033[0m\n' "Foreground Colors"
@@ -1671,8 +1734,8 @@ shlib::ansi_fg_colors() {
 # @stdout A formatted table showing text styles
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::ansi_styles
-shlib::ansi_styles() {
+#   shlib::ui_ansistyles
+shlib::ui_ansistyles() {
     local i
 
     printf '\033[1m%s\033[0m\n' "Text Styles"
@@ -1688,8 +1751,8 @@ shlib::ansi_styles() {
 # @stdout ASCII art banner (toilet > figlet > builtin)
 # @exitcode 0 Always succeeds (falls back to builtin)
 # @example
-#   shlib::banner "HELLO"
-shlib::banner() {
+#   shlib::ui_banner "HELLO"
+shlib::ui_banner() {
     local text="$1"
 
     # Prefer toilet (supports colors), then figlet, then builtin
@@ -1698,7 +1761,7 @@ shlib::banner() {
     elif shlib::cmd_exists figlet; then
         figlet -- "$text"
     else
-        shlib::banner_builtin "$text"
+        shlib::ui_banner_builtin "$text"
     fi
 }
 
@@ -1707,9 +1770,9 @@ shlib::banner() {
 # @stdout Five lines of ASCII art block letters
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::banner_builtin "HELLO"
-#   shlib::banner_builtin "TEST 123"
-shlib::banner_builtin() {
+#   shlib::ui_banner_builtin "HELLO"
+#   shlib::ui_banner_builtin "TEST 123"
+shlib::ui_banner_builtin() {
     local text
     text=$(echo "$1" | tr '[:lower:]' '[:upper:]')
     local line1="" line2="" line3="" line4="" line5=""
@@ -1788,9 +1851,9 @@ shlib::banner_builtin() {
 # @exitcode 0 Success
 # @exitcode 1 figlet not installed
 # @example
-#   shlib::banner_figlet "Hello"
-#   shlib::banner_figlet "Hello" "banner"
-shlib::banner_figlet() {
+#   shlib::ui_banner_figlet "Hello"
+#   shlib::ui_banner_figlet "Hello" "banner"
+shlib::ui_banner_figlet() {
     local text="$1"
     local font="${2:-standard}"
 
@@ -1809,10 +1872,10 @@ shlib::banner_figlet() {
 # @exitcode 0 Success
 # @exitcode 1 toilet not installed
 # @example
-#   shlib::banner_toilet "Hello"
-#   shlib::banner_toilet "Hello" "mono12"
-#   shlib::banner_toilet "Hello" "mono12" "gay"
-shlib::banner_toilet() {
+#   shlib::ui_banner_toilet "Hello"
+#   shlib::ui_banner_toilet "Hello" "mono12"
+#   shlib::ui_banner_toilet "Hello" "mono12" "gay"
+shlib::ui_banner_toilet() {
     local text="$1"
     local font="${2:-}"
     local filter="${3:-}"
@@ -1834,8 +1897,8 @@ shlib::banner_toilet() {
 # @stdout The message in bold
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::header "Section Title"
-shlib::header() {
+#   shlib::ui_header "Section Title"
+shlib::ui_header() {
     printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
 }
 
@@ -1844,8 +1907,8 @@ shlib::header() {
 # @stdout The message in bold followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::headern "Section Title"
-shlib::headern() {
+#   shlib::ui_headern "Section Title"
+shlib::ui_headern() {
     printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
 }
 
@@ -1856,10 +1919,10 @@ shlib::headern() {
 # @stdout A horizontal divider line
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::hr
-#   shlib::hr "Section"
-#   shlib::hr "Title" 60 "="
-shlib::hr() {
+#   shlib::ui_hr
+#   shlib::ui_hr "Section"
+#   shlib::ui_hr "Title" 60 "="
+shlib::ui_hr() {
     local label="${1:-}"
     local width="${2:-40}"
     local char="${3:-─}"
@@ -1899,9 +1962,9 @@ shlib::hr() {
 # @stdout A horizontal divider line followed by newline
 # @exitcode 0 Always succeeds
 # @example
-#   shlib::hrn "Section Title"
-shlib::hrn() {
-    shlib::hr "$@"
+#   shlib::ui_hrn "Section Title"
+shlib::ui_hrn() {
+    shlib::ui_hr "$@"
     echo
 }
 
@@ -1911,9 +1974,9 @@ shlib::hrn() {
 # @stdout The spinner animation and message while running
 # @exitcode Returns the exit code of the executed command
 # @example
-#   shlib::spinner "Installing packages" apt-get install -y curl
-#   shlib::spinner "Building project" make -j4
-shlib::spinner() {
+#   shlib::ui_spinner "Installing packages" apt-get install -y curl
+#   shlib::ui_spinner "Building project" make -j4
+shlib::ui_spinner() {
     local message="$1"
     shift
     local -a spin_chars=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
@@ -1943,69 +2006,6 @@ shlib::spinner() {
     printf '\r\033[K\033[?25h'
 
     return $exit_code
-}
-
-# @description Print a failure status indicator (without newline)
-# @arg $@ string The message to print
-# @stdout Red X followed by message
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_fail "Task failed"
-shlib::status_fail() {
-    printf '\033[31m✖\033[0m  %s' "$*"
-}
-
-# @description Print a failure status indicator (with newline)
-# @arg $@ string The message to print
-# @stdout Red X followed by message and newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_failn "Task failed"
-shlib::status_failn() {
-    shlib::status_fail "$@"
-    echo
-}
-
-# @description Print a success status indicator (without newline)
-# @arg $@ string The message to print
-# @stdout Green checkmark followed by message
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_ok "Task completed"
-shlib::status_ok() {
-    printf '\033[32m✔\033[0m  %s' "$*"
-}
-
-# @description Print a success status indicator (with newline)
-# @arg $@ string The message to print
-# @stdout Green checkmark followed by message and newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_okn "Task completed"
-shlib::status_okn() {
-    shlib::status_ok "$@"
-    echo
-}
-
-# @description Print a pending status indicator (without newline)
-# @arg $@ string The message to print
-# @stdout Yellow hourglass followed by message
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_pending "Waiting..."
-shlib::status_pending() {
-    printf '\033[33m⏳\033[0m %s' "$*"
-}
-
-# @description Print a pending status indicator (with newline)
-# @arg $@ string The message to print
-# @stdout Yellow hourglass followed by message and newline
-# @exitcode 0 Always succeeds
-# @example
-#   shlib::status_pendingn "Waiting..."
-shlib::status_pendingn() {
-    shlib::status_pending "$@"
-    echo
 }
 #
 ########################################################################

@@ -17,13 +17,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/shlib.bash"
 
-shlib::banner_toilet "shlib" "" "gay"
+shlib::ui_banner "shlib" "" "gay"
 
-shlib::headern "shlib Examples"
+shlib::ui_headern "shlib Examples"
 echo
 
 # Example helpers
-_header() { shlib::headern "${1#shlib::}"; }
+_header() { shlib::ui_headern "${1#shlib::}"; }
 _run() {
     echo "> $*"
     "$@"
@@ -138,75 +138,58 @@ echo "After: (${readings[*]})"
 echo
 
 #######################################
-# dt
+# cmd
 #######################################
 
-_header shlib::dt_add
-base=1704067200 # Jan 1, 2024 00:00:00 UTC
-echo "Base: $base ($(shlib::dt_from_unix "$base" "%Y-%m-%d" 2>/dev/null || echo "2024-01-01"))"
-_eval shlib::dt_add "$base" 1 days
-_eval shlib::dt_add "$base" 12 hours
-_eval shlib::dt_add "$base" -1 weeks
-echo
-
-_header shlib::dt_diff
-ts1=1704153600 # Jan 2, 2024
-ts2=1704067200 # Jan 1, 2024
-echo "ts1=$ts1 (Jan 2), ts2=$ts2 (Jan 1)"
-_eval shlib::dt_diff "$ts1" "$ts2" seconds
-_eval shlib::dt_diff "$ts1" "$ts2" hours
-_eval shlib::dt_diff "$ts1" "$ts2" days
-echo
-
-_header shlib::dt_duration
-secs=90061 # 1 day, 1 hour, 1 minute, 1 second
-_eval shlib::dt_duration $secs
-_eval shlib::dt_duration $secs long
-_eval shlib::dt_duration $secs compact
-_eval shlib::dt_duration 3600
-echo
-
-_header shlib::dt_elapsed
-start=$(shlib::dt_now)
-sleep 1
-_eval shlib::dt_elapsed "$start"
-echo
-
-_header shlib::dt_from_unix
-ts=1704067200 # Jan 1, 2024
-_eval shlib::dt_from_unix "$ts" "%Y-%m-%d"
-_eval shlib::dt_from_unix "$ts" "%Y-%m-%d %H:%M:%S"
-echo
-
-_header shlib::dt_is_after
-ts1=1704153600 # Jan 2, 2024
-ts2=1704067200 # Jan 1, 2024
-_show shlib::dt_is_after "$ts1" "$ts2"
-if shlib::dt_is_after "$ts1" "$ts2"; then
-    echo "true"
+_header shlib::cmd_exists
+_show shlib::cmd_exists git
+if shlib::cmd_exists git; then
+    shlib::msg_cinfon "git is installed"
+else
+    shlib::msg_cwarnn "git is not installed"
+fi
+_show shlib::cmd_exists nonexistent_cmd
+if ! shlib::cmd_exists nonexistent_cmd; then
+    shlib::msg_cwarnn "nonexistent_cmd not found (expected)"
 fi
 echo
 
-_header shlib::dt_is_before
-ts1=1704067200 # Jan 1, 2024
-ts2=1704153600 # Jan 2, 2024
-_show shlib::dt_is_before "$ts1" "$ts2"
-if shlib::dt_is_before "$ts1" "$ts2"; then
-    echo "true"
+_header shlib::cmd_locked
+lockfile=$(mktemp -u)
+_show shlib::cmd_locked "$lockfile" 0 echo "Protected operation"
+if shlib::cmd_locked "$lockfile" 0 echo "Protected operation"; then
+    shlib::msg_cinfon "Locked command executed successfully"
+fi
+# Demonstrate lock contention
+mkdir "${lockfile}.lock"
+echo $$ >"${lockfile}.lock/pid"
+_show shlib::cmd_locked "$lockfile" 0 true
+if ! shlib::cmd_locked "$lockfile" 0 true; then
+    shlib::msg_cwarnn "Lock already held (expected)"
+fi
+rm -rf "${lockfile}.lock"
+echo
+
+_header shlib::cmd_retry
+_show shlib::cmd_retry 3 0 true
+if shlib::cmd_retry 3 0 true; then
+    shlib::msg_cinfon "Command succeeded on first attempt"
+fi
+_show shlib::cmd_retry 2 0 false
+if ! shlib::cmd_retry 2 0 false; then
+    shlib::msg_cwarnn "Command failed after 2 attempts (expected)"
 fi
 echo
 
-_header shlib::dt_now
-_eval shlib::dt_now
-echo
-
-_header shlib::dt_now_iso
-_eval shlib::dt_now_iso
-_eval shlib::dt_now_iso local
-echo
-
-_header shlib::dt_today
-_eval shlib::dt_today
+_header shlib::cmd_timeout
+_show shlib::cmd_timeout 2 sleep 1
+if shlib::cmd_timeout 2 sleep 1; then
+    shlib::msg_cinfon "Command completed within timeout"
+fi
+_show shlib::cmd_timeout 1 sleep 5
+if ! shlib::cmd_timeout 1 sleep 5; then
+    shlib::msg_cwarnn "Command timed out (expected)"
+fi
 echo
 
 #######################################
@@ -273,22 +256,22 @@ _eval shlib::kv_get telescope "aperture"
 _eval shlib::kv_get telescope "filter"
 echo
 
-_header shlib::kv_get_default
+_header shlib::kv_getdefault
 declare -A telescope
 telescope[aperture]="200mm"
-_eval shlib::kv_get_default telescope "aperture" "100mm"
-_eval shlib::kv_get_default telescope "tracking" "off"
+_eval shlib::kv_getdefault telescope "aperture" "100mm"
+_eval shlib::kv_getdefault telescope "tracking" "off"
 echo
 
-_header shlib::kv_has_value
+_header shlib::kv_hasvalue
 declare -A spectral_class
 spectral_class[Sirius]="A"
 spectral_class[Vega]="A"
 spectral_class[Betelgeuse]="M"
-_show shlib::kv_has_value spectral_class "A"
-shlib::kv_has_value spectral_class "A" && echo "true" || echo "false"
-_show shlib::kv_has_value spectral_class "G"
-shlib::kv_has_value spectral_class "G" && echo "true" || echo "false"
+_show shlib::kv_hasvalue spectral_class "A"
+shlib::kv_hasvalue spectral_class "A" && echo "true" || echo "false"
+_show shlib::kv_hasvalue spectral_class "G"
+shlib::kv_hasvalue spectral_class "G" && echo "true" || echo "false"
 echo
 
 _header shlib::kv_keys
@@ -373,60 +356,72 @@ echo "Result: (${distances[*]})"
 echo
 
 #######################################
-# logging
+# msg
 #######################################
 
-_header shlib::cerror
-_run shlib::cerrorn "CCD temperature out of range"
-_run shlib::cerror "Guider lost lock on reference star"
+_header shlib::msg_cerror
+_run shlib::msg_cerrorn "CCD temperature out of range"
+_run shlib::msg_cerror "Guider lost lock on reference star"
 echo " <- no newline variant" >&2
 echo
 
-_header shlib::cinfo
-_run shlib::cinfon "Filter wheel moved to H-alpha"
-_run shlib::cinfo "Dome rotation complete"
+_header shlib::msg_cinfo
+_run shlib::msg_cinfon "Filter wheel moved to H-alpha"
+_run shlib::msg_cinfo "Dome rotation complete"
 echo " <- no newline variant"
 echo
 
-_header shlib::cwarn
-_run shlib::cwarnn "Moon illumination above 80%"
-_run shlib::cwarn "Humidity rising"
+_header shlib::msg_cwarn
+_run shlib::msg_cwarnn "Moon illumination above 80%"
+_run shlib::msg_cwarn "Humidity rising"
 echo " <- no newline variant"
 echo
 
-_header shlib::eerror
-_run shlib::eerrorn "Mount connection lost"
-_run shlib::eerror "Flat frame acquisition failed"
+_header shlib::msg_eerror
+_run shlib::msg_eerrorn "Mount connection lost"
+_run shlib::msg_eerror "Flat frame acquisition failed"
 echo " <- no newline variant" >&2
 echo
 
-_header shlib::einfo
-_run shlib::einfon "Dark frame calibration complete"
-_run shlib::einfo "Image saved to FITS"
+_header shlib::msg_einfo
+_run shlib::msg_einfon "Dark frame calibration complete"
+_run shlib::msg_einfo "Image saved to FITS"
 echo " <- no newline variant"
 echo
 
-_header shlib::error
-_run shlib::errorn "Stellar parallax calculation failed"
-_run shlib::error "Sensor calibration error"
+_header shlib::msg_error
+_run shlib::msg_errorn "Stellar parallax calculation failed"
+_run shlib::msg_error "Sensor calibration error"
 echo " <- no newline variant" >&2
 echo
 
-_header shlib::ewarn
-_run shlib::ewarnn "Cloud cover increasing"
-_run shlib::ewarn "Battery below 20%"
+_header shlib::msg_ewarn
+_run shlib::msg_ewarnn "Cloud cover increasing"
+_run shlib::msg_ewarn "Battery below 20%"
 echo " <- no newline variant"
 echo
 
-_header shlib::info
-_run shlib::infon "Telescope aligned to Polaris"
-_run shlib::info "Exposure started"
+_header shlib::msg_info
+_run shlib::msg_infon "Telescope aligned to Polaris"
+_run shlib::msg_info "Exposure started"
 echo " <- no newline variant"
 echo
 
-_header shlib::warn
-_run shlib::warnn "Atmospheric seeing degraded to 3 arcsec"
-_run shlib::warn "Tracking drift detected"
+_header shlib::msg_statusfail
+_run shlib::msg_statusfailn "Sensor readout failed"
+echo
+
+_header shlib::msg_statusok
+_run shlib::msg_statusokn "Calibration complete"
+echo
+
+_header shlib::msg_statuspending
+_run shlib::msg_statuspendingn "Awaiting dark frames..."
+echo
+
+_header shlib::msg_warn
+_run shlib::msg_warnn "Atmospheric seeing degraded to 3 arcsec"
+_run shlib::msg_warn "Tracking drift detected"
 echo " <- no newline variant"
 echo
 
@@ -456,13 +451,13 @@ if ! shlib::str_endswith "supernova.fits" ".csv"; then
 fi
 echo
 
-_header shlib::str_is_empty
-_show shlib::str_is_empty "   "
-if shlib::str_is_empty "   "; then
+_header shlib::str_isempty
+_show shlib::str_isempty "   "
+if shlib::str_isempty "   "; then
     echo "true (whitespace only)"
 fi
-_show shlib::str_is_empty "quasar"
-if ! shlib::str_is_empty "quasar"; then
+_show shlib::str_isempty "quasar"
+if ! shlib::str_isempty "quasar"; then
     echo "false"
 fi
 echo
@@ -523,12 +518,12 @@ if ! shlib::str_startswith "NGC 4321" "IC"; then
 fi
 echo
 
-_header shlib::str_to_lower
-_eval shlib::str_to_lower "SUPERNOVA"
+_header shlib::str_tolower
+_eval shlib::str_tolower "SUPERNOVA"
 echo
 
-_header shlib::str_to_upper
-_eval shlib::str_to_upper "pulsar"
+_header shlib::str_toupper
+_eval shlib::str_toupper "pulsar"
 echo
 
 _header shlib::str_trim
@@ -539,147 +534,152 @@ echo "After: [$(shlib::str_trim "$raw")]"
 echo
 
 #######################################
-# system
+# time
 #######################################
 
-_header shlib::cmd_exists
-_show shlib::cmd_exists git
-if shlib::cmd_exists git; then
-    shlib::cinfon "git is installed"
-else
-    shlib::cwarnn "git is not installed"
-fi
-_show shlib::cmd_exists nonexistent_cmd
-if ! shlib::cmd_exists nonexistent_cmd; then
-    shlib::cwarnn "nonexistent_cmd not found (expected)"
+_header shlib::time_add
+base=1704067200 # Jan 1, 2024 00:00:00 UTC
+echo "Base: $base ($(shlib::time_fromunix "$base" "%Y-%m-%d" 2>/dev/null || echo "2024-01-01"))"
+_eval shlib::time_add "$base" 1 days
+_eval shlib::time_add "$base" 12 hours
+_eval shlib::time_add "$base" -1 weeks
+echo
+
+_header shlib::time_diff
+ts1=1704153600 # Jan 2, 2024
+ts2=1704067200 # Jan 1, 2024
+echo "ts1=$ts1 (Jan 2), ts2=$ts2 (Jan 1)"
+_eval shlib::time_diff "$ts1" "$ts2" seconds
+_eval shlib::time_diff "$ts1" "$ts2" hours
+_eval shlib::time_diff "$ts1" "$ts2" days
+echo
+
+_header shlib::time_duration
+secs=90061 # 1 day, 1 hour, 1 minute, 1 second
+_eval shlib::time_duration $secs
+_eval shlib::time_duration $secs long
+_eval shlib::time_duration $secs compact
+_eval shlib::time_duration 3600
+echo
+
+_header shlib::time_elapsed
+start=$(shlib::time_now)
+sleep 1
+_eval shlib::time_elapsed "$start"
+echo
+
+_header shlib::time_fromunix
+ts=1704067200 # Jan 1, 2024
+_eval shlib::time_fromunix "$ts" "%Y-%m-%d"
+_eval shlib::time_fromunix "$ts" "%Y-%m-%d %H:%M:%S"
+echo
+
+_header shlib::time_isafter
+ts1=1704153600 # Jan 2, 2024
+ts2=1704067200 # Jan 1, 2024
+_show shlib::time_isafter "$ts1" "$ts2"
+if shlib::time_isafter "$ts1" "$ts2"; then
+    echo "true"
 fi
 echo
 
-_header shlib::cmd_locked
-lockfile=$(mktemp -u)
-_show shlib::cmd_locked "$lockfile" 0 echo "Protected operation"
-if shlib::cmd_locked "$lockfile" 0 echo "Protected operation"; then
-    shlib::cinfon "Locked command executed successfully"
-fi
-# Demonstrate lock contention
-mkdir "${lockfile}.lock"
-echo $$ >"${lockfile}.lock/pid"
-_show shlib::cmd_locked "$lockfile" 0 true
-if ! shlib::cmd_locked "$lockfile" 0 true; then
-    shlib::cwarnn "Lock already held (expected)"
-fi
-rm -rf "${lockfile}.lock"
-echo
-
-_header shlib::cmd_retry
-_show shlib::cmd_retry 3 0 true
-if shlib::cmd_retry 3 0 true; then
-    shlib::cinfon "Command succeeded on first attempt"
-fi
-_show shlib::cmd_retry 2 0 false
-if ! shlib::cmd_retry 2 0 false; then
-    shlib::cwarnn "Command failed after 2 attempts (expected)"
+_header shlib::time_isbefore
+ts1=1704067200 # Jan 1, 2024
+ts2=1704153600 # Jan 2, 2024
+_show shlib::time_isbefore "$ts1" "$ts2"
+if shlib::time_isbefore "$ts1" "$ts2"; then
+    echo "true"
 fi
 echo
 
-_header shlib::cmd_timeout
-_show shlib::cmd_timeout 2 sleep 1
-if shlib::cmd_timeout 2 sleep 1; then
-    shlib::cinfon "Command completed within timeout"
-fi
-_show shlib::cmd_timeout 1 sleep 5
-if ! shlib::cmd_timeout 1 sleep 5; then
-    shlib::cwarnn "Command timed out (expected)"
-fi
+_header shlib::time_now
+_eval shlib::time_now
+echo
+
+_header shlib::time_nowiso
+_eval shlib::time_nowiso
+_eval shlib::time_nowiso local
+echo
+
+_header shlib::time_today
+_eval shlib::time_today
 echo
 
 #######################################
 # ui
 #######################################
 
-_header shlib::ansi_256_palette
-_run shlib::ansi_256_palette
+_header shlib::ui_ansi256palette
+_run shlib::ui_ansi256palette
 echo
 
-_header shlib::ansi_bg_colors
-_run shlib::ansi_bg_colors
+_header shlib::ui_ansibgcolors
+_run shlib::ui_ansibgcolors
 echo
 
-_header shlib::ansi_color_matrix
-_run shlib::ansi_color_matrix
+_header shlib::ui_ansicolormatrix
+_run shlib::ui_ansicolormatrix
 echo
 
-_header shlib::ansi_color_matrix_bright
-_run shlib::ansi_color_matrix_bright
+_header shlib::ui_ansicolormatrix_bright
+_run shlib::ui_ansicolormatrix_bright
 echo
 
-_header shlib::ansi_fg_colors
-_run shlib::ansi_fg_colors
+_header shlib::ui_ansifgcolors
+_run shlib::ui_ansifgcolors
 echo
 
-_header shlib::ansi_styles
-_run shlib::ansi_styles
+_header shlib::ui_ansistyles
+_run shlib::ui_ansistyles
 echo
 
-_header shlib::banner
-_run shlib::banner "COSMOS"
+_header shlib::ui_banner
+_run shlib::ui_banner "COSMOS"
 echo
 
-_header shlib::banner_builtin
-_run shlib::banner_builtin "NOVA"
+_header shlib::ui_banner_builtin
+_run shlib::ui_banner_builtin "NOVA"
 echo
 
-_header shlib::banner_figlet
+_header shlib::ui_banner_figlet
 if shlib::cmd_exists figlet; then
-    _run shlib::banner_figlet "PULSAR"
+    _run shlib::ui_banner_figlet "PULSAR"
 else
     echo "(figlet not installed, skipping)"
 fi
 echo
 
-_header shlib::banner_toilet
+_header shlib::ui_banner_toilet
 if shlib::cmd_exists toilet; then
-    _run shlib::banner_toilet "QUASAR" "" "gay"
+    _run shlib::ui_banner_toilet "QUASAR" "" "gay"
 else
     echo "(toilet not installed, skipping)"
 fi
 echo
 
-_header shlib::header
-_run shlib::header "Observation Log"
+_header shlib::ui_header
+_run shlib::ui_header "Observation Log"
 echo " <- no newline variant"
 echo
 
-_header shlib::headern
-_run shlib::headern "Observation Log"
+_header shlib::ui_headern
+_run shlib::ui_headern "Observation Log"
 echo
 
-_header shlib::hr
-_run shlib::hrn
-_run shlib::hrn "Telemetry" 40 "="
+_header shlib::ui_hr
+_run shlib::ui_hrn
+_run shlib::ui_hrn "Telemetry" 40 "="
 echo
 
-_header shlib::hrn
-_run shlib::hrn "Session Start"
-_run shlib::hrn "" 50 "─"
+_header shlib::ui_hrn
+_run shlib::ui_hrn "Session Start"
+_run shlib::ui_hrn "" 50 "─"
 echo
 
-_header shlib::spinner
-_show shlib::spinner "Processing star field" sleep 2
-if shlib::spinner "Processing star field" sleep 2; then
-    shlib::einfon "Processing complete"
+_header shlib::ui_spinner
+_show shlib::ui_spinner "Processing star field" sleep 2
+if shlib::ui_spinner "Processing star field" sleep 2; then
+    shlib::msg_einfon "Processing complete"
 fi
-echo
-
-_header shlib::status_fail
-_run shlib::status_failn "Sensor readout failed"
-echo
-
-_header shlib::status_ok
-_run shlib::status_okn "Calibration complete"
-echo
-
-_header shlib::status_pending
-_run shlib::status_pendingn "Awaiting dark frames..."
 echo
 # End of File

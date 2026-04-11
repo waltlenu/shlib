@@ -120,7 +120,7 @@ setup() {
 @test "shlib::list_functions output is sorted" {
     run shlib::list_functions
     first_line="${lines[0]}"
-    [[ "$first_line" == "shlib::ansi_256_palette" ]]
+    [[ "$first_line" == "shlib::arr_append" ]]
 }
 
 @test "shlib::list_functions returns function names" {
@@ -614,517 +614,229 @@ setup() {
 }
 
 #######################################
-# dt
+# cmd
 #######################################
 
-@test "shlib::dt_add adds days" {
-    run shlib::dt_add 1000 1 days
-    [[ "$output" == "87400" ]]
+@test "shlib::cmd_exists finds builtin command (echo)" {
+    shlib::cmd_exists echo
 }
 
-@test "shlib::dt_add adds hours" {
-    run shlib::dt_add 1000 1 hours
-    [[ "$output" == "4600" ]]
+@test "shlib::cmd_exists finds command with absolute path" {
+    shlib::cmd_exists /bin/ls
 }
 
-@test "shlib::dt_add adds minutes" {
-    run shlib::dt_add 1000 1 minutes
-    [[ "$output" == "1060" ]]
+@test "shlib::cmd_exists finds existing command" {
+    shlib::cmd_exists bash
 }
 
-@test "shlib::dt_add adds seconds" {
-    run shlib::dt_add 1000 60 seconds
-    [[ "$output" == "1060" ]]
-}
-
-@test "shlib::dt_add adds weeks" {
-    run shlib::dt_add 1000 1 weeks
-    [[ "$output" == "605800" ]]
-}
-
-@test "shlib::dt_add handles singular unit: day" {
-    run shlib::dt_add 1000 1 day
-    [[ "$output" == "87400" ]]
-}
-
-@test "shlib::dt_add handles singular unit: hour" {
-    run shlib::dt_add 1000 1 hour
-    [[ "$output" == "4600" ]]
-}
-
-@test "shlib::dt_add handles singular unit: minute" {
-    run shlib::dt_add 1000 1 minute
-    [[ "$output" == "1060" ]]
-}
-
-@test "shlib::dt_add handles singular unit: second" {
-    run shlib::dt_add 1000 60 second
-    [[ "$output" == "1060" ]]
-}
-
-@test "shlib::dt_add handles singular unit: week" {
-    run shlib::dt_add 1000 1 week
-    [[ "$output" == "605800" ]]
-}
-
-@test "shlib::dt_add subtracts with negative amount" {
-    run shlib::dt_add 1000 -1 hours
-    [[ "$output" == "-2600" ]]
-}
-
-@test "shlib::dt_add unknown unit defaults to seconds" {
-    run shlib::dt_add 1000 60 unknown
-    [[ "$output" == "1060" ]]
-}
-
-@test "shlib::dt_add with large amounts" {
-    run shlib::dt_add 0 365 days
-    [[ "$output" == "31536000" ]]
-}
-
-@test "shlib::dt_add with zero amount" {
-    run shlib::dt_add 1000 0 days
-    [[ "$output" == "1000" ]]
-}
-
-@test "shlib::dt_diff handles negative differences" {
-    run shlib::dt_diff 1000 2000
-    [[ "$output" == "-1000" ]]
-}
-
-@test "shlib::dt_diff handles singular unit: day" {
-    run shlib::dt_diff 172800 0 day
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff handles singular unit: hour" {
-    run shlib::dt_diff 7200 0 hour
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff handles singular unit: minute" {
-    run shlib::dt_diff 120 0 minute
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff handles singular unit: second" {
-    run shlib::dt_diff 2000 1000 second
-    [[ "$output" == "1000" ]]
-}
-
-@test "shlib::dt_diff handles singular unit: week" {
-    run shlib::dt_diff 1209600 0 week
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff negative difference in days" {
-    run shlib::dt_diff 0 172800 days
-    [[ "$output" == "-2" ]]
-}
-
-@test "shlib::dt_diff performs integer division" {
-    run shlib::dt_diff 90 0 minutes
-    [[ "$output" == "1" ]]
-}
-
-@test "shlib::dt_diff returns difference in days" {
-    run shlib::dt_diff 172800 0 days
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff returns difference in hours" {
-    run shlib::dt_diff 7200 0 hours
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff returns difference in minutes" {
-    run shlib::dt_diff 120 0 minutes
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff returns difference in seconds by default" {
-    run shlib::dt_diff 2000 1000
-    [[ "$output" == "1000" ]]
-}
-
-@test "shlib::dt_diff returns difference in weeks" {
-    run shlib::dt_diff 1209600 0 weeks
-    [[ "$output" == "2" ]]
-}
-
-@test "shlib::dt_diff unknown unit defaults to seconds" {
-    run shlib::dt_diff 2000 1000 unknown
-    [[ "$output" == "1000" ]]
-}
-
-@test "shlib::dt_diff with zero difference" {
-    run shlib::dt_diff 1000 1000
-    [[ "$output" == "0" ]]
-}
-
-@test "shlib::dt_duration compact format" {
-    run shlib::dt_duration 90061 compact
-    [[ "$output" == "1d1h1m1s" ]]
-}
-
-@test "shlib::dt_duration days and minutes no hours" {
-    # 1 day + 1 minute = 86460 seconds
-    run shlib::dt_duration 86460
-    [[ "$output" == "1d 1m" ]]
-}
-
-@test "shlib::dt_duration days and seconds only" {
-    # 1 day + 1 second = 86401 seconds
-    run shlib::dt_duration 86401
-    [[ "$output" == "1d 1s" ]]
-}
-
-@test "shlib::dt_duration days only long format" {
-    run shlib::dt_duration 172800 long
-    [[ "$output" == "2 days" ]]
-}
-
-@test "shlib::dt_duration formats days" {
-    run shlib::dt_duration 90061
-    [[ "$output" == "1d 1h 1m 1s" ]]
-}
-
-@test "shlib::dt_duration formats hours" {
-    run shlib::dt_duration 3661
-    [[ "$output" == "1h 1m 1s" ]]
-}
-
-@test "shlib::dt_duration formats minutes and seconds" {
-    run shlib::dt_duration 90
-    [[ "$output" == "1m 30s" ]]
-}
-
-@test "shlib::dt_duration formats seconds only" {
-    run shlib::dt_duration 45
-    [[ "$output" == "45s" ]]
-}
-
-@test "shlib::dt_duration handles exactly one day" {
-    run shlib::dt_duration 86400
-    [[ "$output" == "1d" ]]
-}
-
-@test "shlib::dt_duration handles exactly one hour" {
-    run shlib::dt_duration 3600
-    [[ "$output" == "1h" ]]
-}
-
-@test "shlib::dt_duration handles exactly one minute" {
-    run shlib::dt_duration 60
-    [[ "$output" == "1m" ]]
-}
-
-@test "shlib::dt_duration handles large values (weeks)" {
-    run shlib::dt_duration 694861
-    # 8 days, 1 hour, 1 minute, 1 second
-    [[ "$output" == "8d 1h 1m 1s" ]]
-}
-
-@test "shlib::dt_duration handles negative values compact" {
-    run shlib::dt_duration -90 compact
-    [[ "$output" == "-1m30s" ]]
-}
-
-@test "shlib::dt_duration handles negative values long" {
-    run shlib::dt_duration -90 long
-    [[ "$output" == "-1 minute, 30 seconds" ]]
-}
-
-@test "shlib::dt_duration handles negative values short" {
-    run shlib::dt_duration -90
-    [[ "$output" == "-1m 30s" ]]
-}
-
-@test "shlib::dt_duration handles zero compact" {
-    run shlib::dt_duration 0 compact
-    [[ "$output" == "0s" ]]
-}
-
-@test "shlib::dt_duration handles zero long" {
-    run shlib::dt_duration 0 long
-    [[ "$output" == "0 seconds" ]]
-}
-
-@test "shlib::dt_duration handles zero short" {
-    run shlib::dt_duration 0
-    [[ "$output" == "0s" ]]
-}
-
-@test "shlib::dt_duration hours and seconds no minutes" {
-    # 1 hour + 1 second = 3601 seconds
-    run shlib::dt_duration 3601
-    [[ "$output" == "1h 1s" ]]
-}
-
-@test "shlib::dt_duration hours and seconds no minutes long" {
-    run shlib::dt_duration 3601 long
-    [[ "$output" == "1 hour, 1 second" ]]
-}
-
-@test "shlib::dt_duration long format singular" {
-    run shlib::dt_duration 90061 long
-    [[ "$output" == "1 day, 1 hour, 1 minute, 1 second" ]]
-}
-
-@test "shlib::dt_duration long format with plurals" {
-    run shlib::dt_duration 180122 long
-    [[ "$output" == "2 days, 2 hours, 2 minutes, 2 seconds" ]]
-}
-
-@test "shlib::dt_duration minutes only long format" {
-    run shlib::dt_duration 120 long
-    [[ "$output" == "2 minutes" ]]
-}
-
-@test "shlib::dt_duration omits zero components compact" {
-    run shlib::dt_duration 3600 compact
-    [[ "$output" == "1h" ]]
-}
-
-@test "shlib::dt_duration omits zero components long" {
-    run shlib::dt_duration 3600 long
-    [[ "$output" == "1 hour" ]]
-}
-
-@test "shlib::dt_duration omits zero components short" {
-    run shlib::dt_duration 3600
-    [[ "$output" == "1h" ]]
-}
-
-@test "shlib::dt_duration one second" {
-    run shlib::dt_duration 1
-    [[ "$output" == "1s" ]]
-}
-
-@test "shlib::dt_duration one second long format" {
-    run shlib::dt_duration 1 long
-    [[ "$output" == "1 second" ]]
-}
-
-@test "shlib::dt_duration unknown format defaults to short" {
-    run shlib::dt_duration 90 unknown
-    [[ "$output" == "1m 30s" ]]
-}
-
-@test "shlib::dt_duration with huge value (multiple years)" {
-    # 2 years = 63072000 seconds
-    run shlib::dt_duration 63072000
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "730d" ]]
-}
-
-@test "shlib::dt_duration with very large seconds value" {
-    # 1 year worth of seconds = 31536000
-    run shlib::dt_duration 31536000
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "365d" ]]
-}
-
-@test "shlib::dt_elapsed returns elapsed time short format" {
-    local start
-    start=$(shlib::dt_now)
-    run shlib::dt_elapsed "$start"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+s$ ]]
-}
-
-@test "shlib::dt_elapsed with compact format" {
-    local start
-    start=$(shlib::dt_now)
-    run shlib::dt_elapsed "$start" compact
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+s$ ]]
-}
-
-@test "shlib::dt_elapsed with future timestamp long format" {
-    local start
-    start=$(($(shlib::dt_now) + 90))
-    run shlib::dt_elapsed "$start" long
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "-1 minute, 30 seconds" ]]
-}
-
-@test "shlib::dt_elapsed with future timestamp shows negative" {
-    local start
-    start=$(($(shlib::dt_now) + 90))
-    run shlib::dt_elapsed "$start"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "-1m 30s" ]]
-}
-
-@test "shlib::dt_elapsed with long format" {
-    local start
-    start=$(shlib::dt_now)
-    run shlib::dt_elapsed "$start" long
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ second ]]
-}
-
-@test "shlib::dt_elapsed with past timestamp" {
-    local start
-    start=$(($(shlib::dt_now) - 3661))
-    run shlib::dt_elapsed "$start"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "1h 1m 1s" ]]
-}
-
-@test "shlib::dt_from_unix formats timestamp as date" {
-    run shlib::dt_from_unix 1704067200 "%Y-%m-%d"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
-}
-
-@test "shlib::dt_from_unix handles epoch zero" {
-    run shlib::dt_from_unix 0 "%Y"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "1970" ]]
-}
-
-@test "shlib::dt_from_unix handles full datetime format" {
-    run shlib::dt_from_unix 1704067200 "%Y-%m-%d %H:%M:%S"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]
-}
-
-@test "shlib::dt_from_unix handles hour format" {
-    run shlib::dt_from_unix 1704067200 "%H"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{2}$ ]]
-}
-
-@test "shlib::dt_from_unix handles month name format" {
-    run shlib::dt_from_unix 1704067200 "%B"
-    [[ "$status" -eq 0 ]]
-    [[ -n "$output" ]]
-}
-
-@test "shlib::dt_from_unix handles negative timestamp" {
-    run shlib::dt_from_unix -86400 "%Y"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "1969" ]]
-}
-
-@test "shlib::dt_from_unix handles weekday format" {
-    run shlib::dt_from_unix 1704067200 "%A"
-    [[ "$status" -eq 0 ]]
-    [[ -n "$output" ]]
-}
-
-@test "shlib::dt_from_unix returns error for invalid timestamp" {
+@test "shlib::cmd_exists returns false for empty string" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_from_unix "invalid" "%Y-%m-%d"
+    run ! shlib::cmd_exists ""
 }
 
-@test "shlib::dt_from_unix with very large future timestamp" {
-    # Year 2100: 4102444800
-    run shlib::dt_from_unix 4102444800 "%Y"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == "2100" ]]
-}
-
-@test "shlib::dt_is_after returns 0 when ts1 > ts2" {
-    shlib::dt_is_after 2000 1000
-}
-
-@test "shlib::dt_is_after returns 1 when equal" {
+@test "shlib::cmd_exists returns false for missing command" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_after 1000 1000
+    run ! shlib::cmd_exists nonexistent_command_12345
 }
 
-@test "shlib::dt_is_after returns 1 when ts1 < ts2" {
+@test "shlib::cmd_locked captures stdout" {
+    lockfile=$(mktemp -u)
+    run shlib::cmd_locked "$lockfile" 0 echo "locked output"
+    [ "$status" -eq 0 ]
+    [ "$output" = "locked output" ]
+}
+
+@test "shlib::cmd_locked detects and removes stale lock" {
+    lockfile=$(mktemp -u)
+
+    # Create stale lock with non-existent PID
+    mkdir "${lockfile}.lock"
+    echo 999999 >"${lockfile}.lock/pid"
+
+    # Should succeed by detecting stale lock
+    run shlib::cmd_locked "$lockfile" 0 true
+    [ "$status" -eq 0 ]
+}
+
+@test "shlib::cmd_locked fails with empty lockfile path" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_after 1000 2000
+    run ! shlib::cmd_locked "" 0 true
 }
 
-@test "shlib::dt_is_after with negative timestamps" {
-    shlib::dt_is_after 0 -100
-}
-
-@test "shlib::dt_is_after with zero timestamps" {
-    shlib::dt_is_after 1 0
-}
-
-@test "shlib::dt_is_before returns 0 when ts1 < ts2" {
-    shlib::dt_is_before 1000 2000
-}
-
-@test "shlib::dt_is_before returns 1 when equal" {
+@test "shlib::cmd_locked fails with invalid timeout" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_before 1000 1000
+    lockfile=$(mktemp -u)
+    run ! shlib::cmd_locked "$lockfile" abc true
 }
 
-@test "shlib::dt_is_before returns 1 when ts1 > ts2" {
+@test "shlib::cmd_locked fails with no command" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::dt_is_before 2000 1000
+    lockfile=$(mktemp -u)
+    run ! shlib::cmd_locked "$lockfile" 0
 }
 
-@test "shlib::dt_is_before with negative timestamps" {
-    shlib::dt_is_before -100 0
+@test "shlib::cmd_locked fails with non-blocking when already locked" {
+    bats_require_minimum_version "1.5.0"
+    lockfile=$(mktemp -u)
+
+    # Create lock manually
+    mkdir "${lockfile}.lock"
+    echo $$ >"${lockfile}.lock/pid"
+
+    # Should fail immediately with timeout=0
+    run ! shlib::cmd_locked "$lockfile" 0 true
+
+    # Cleanup
+    rm -rf "${lockfile}.lock"
 }
 
-@test "shlib::dt_is_before with zero timestamps" {
-    shlib::dt_is_before 0 1
+@test "shlib::cmd_locked releases lock after command failure" {
+    lockfile=$(mktemp -u)
+    run shlib::cmd_locked "$lockfile" 0 false
+    [ "$status" -eq 1 ]
+    # Lock should be released even though command failed
+    [ ! -d "${lockfile}.lock" ]
 }
 
-@test "shlib::dt_now and dt_now_iso return consistent timestamps" {
-    local unix_ts iso_ts
-    unix_ts=$(shlib::dt_now)
-    iso_ts=$(shlib::dt_now_iso)
-    # Both should be from the same second (or very close)
-    [[ -n "$unix_ts" ]]
-    [[ -n "$iso_ts" ]]
-    # ISO format should contain current year
-    local year
-    year=$(date +%Y)
-    [[ "$iso_ts" == "$year"* ]]
+@test "shlib::cmd_locked returns command exit code" {
+    lockfile=$(mktemp -u)
+    run shlib::cmd_locked "$lockfile" 0 bash -c 'exit 42'
+    [ "$status" -eq 42 ]
 }
 
-@test "shlib::dt_now_iso ignores invalid argument and returns UTC" {
-    run shlib::dt_now_iso invalid
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
+@test "shlib::cmd_locked runs command with lock" {
+    lockfile=$(mktemp -u)
+    run shlib::cmd_locked "$lockfile" 0 true
+    [ "$status" -eq 0 ]
+    # Lock should be released
+    [ ! -d "${lockfile}.lock" ]
 }
 
-@test "shlib::dt_now_iso local returns local ISO format" {
-    run shlib::dt_now_iso local
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:[0-9]{2}$ ]]
+@test "shlib::cmd_locked times out when lock held too long" {
+    bats_require_minimum_version "1.5.0"
+    lockfile=$(mktemp -u)
+
+    # Create lock held by current process
+    mkdir "${lockfile}.lock"
+    echo $$ >"${lockfile}.lock/pid"
+
+    # Should timeout after 1 second
+    run ! shlib::cmd_locked "$lockfile" 1 true
+
+    # Cleanup
+    rm -rf "${lockfile}.lock"
 }
 
-@test "shlib::dt_now_iso returns UTC ISO format" {
-    run shlib::dt_now_iso
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
+@test "shlib::cmd_locked waits for lock with positive timeout" {
+    lockfile=$(mktemp -u)
+
+    # Create lock that will be released after 1 second
+    mkdir "${lockfile}.lock"
+    echo $$ >"${lockfile}.lock/pid"
+    (
+        sleep 1
+        rm -rf "${lockfile}.lock"
+    ) &
+
+    # Should succeed after lock is released (within 5s timeout)
+    run shlib::cmd_locked "$lockfile" 5 true
+    [ "$status" -eq 0 ]
 }
 
-@test "shlib::dt_now returns a timestamp" {
-    run shlib::dt_now
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]+$ ]]
+@test "shlib::cmd_locked with infinite wait (-1) acquires lock" {
+    lockfile=$(mktemp -u)
+
+    # Create lock that will be released quickly
+    mkdir "${lockfile}.lock"
+    echo $$ >"${lockfile}.lock/pid"
+    (
+        sleep 0.5
+        rm -rf "${lockfile}.lock"
+    ) &
+
+    # Should wait and succeed
+    run shlib::cmd_locked "$lockfile" -1 true
+    [ "$status" -eq 0 ]
 }
 
-@test "shlib::dt_now returns reasonable timestamp" {
-    run shlib::dt_now
-    # Should be after Jan 1, 2020 (1577836800)
-    [[ "$output" -gt 1577836800 ]]
+@test "shlib::cmd_retry captures stdout from successful attempt" {
+    run shlib::cmd_retry 3 0 echo "success"
+    [ "$status" -eq 0 ]
+    [ "$output" = "success" ]
 }
 
-@test "shlib::dt_today matches current date" {
-    run shlib::dt_today
-    local expected
-    expected=$(date +%Y-%m-%d)
-    [[ "$output" == "$expected" ]]
+@test "shlib::cmd_retry fails after max attempts" {
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::cmd_retry 3 0 false
 }
 
-@test "shlib::dt_today returns YYYY-MM-DD format" {
-    run shlib::dt_today
-    [[ "$status" -eq 0 ]]
-    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+@test "shlib::cmd_retry fails with invalid delay" {
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::cmd_retry 3 -1 true
+    run ! shlib::cmd_retry 3 abc true
+}
+
+@test "shlib::cmd_retry fails with invalid max_attempts" {
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::cmd_retry 0 0 true
+    run ! shlib::cmd_retry -1 0 true
+    run ! shlib::cmd_retry abc 0 true
+}
+
+@test "shlib::cmd_retry succeeds on first attempt" {
+    run shlib::cmd_retry 3 0 true
+    [ "$status" -eq 0 ]
+}
+
+@test "shlib::cmd_retry succeeds on later attempt" {
+    # Create a temp file to track attempts
+    tmpfile=$(mktemp)
+    echo "0" >"$tmpfile"
+
+    # Command that fails twice then succeeds
+    # shellcheck disable=SC2016
+    run shlib::cmd_retry 3 0 bash -c '
+        count=$(cat "'"$tmpfile"'")
+        count=$((count + 1))
+        echo "$count" > "'"$tmpfile"'"
+        [ "$count" -ge 3 ]
+    '
+
+    [ "$status" -eq 0 ]
+    rm -f "$tmpfile"
+}
+
+@test "shlib::cmd_timeout captures stdout" {
+    run shlib::cmd_timeout 5 echo "hello"
+    [ "$status" -eq 0 ]
+    [ "$output" = "hello" ]
+}
+
+@test "shlib::cmd_timeout fails with invalid timeout" {
+    bats_require_minimum_version "1.5.0"
+    run ! shlib::cmd_timeout 0 true
+    run ! shlib::cmd_timeout -1 true
+    run ! shlib::cmd_timeout abc true
+}
+
+@test "shlib::cmd_timeout returns 124 when command times out" {
+    run shlib::cmd_timeout 1 sleep 10
+    [ "$status" -eq 124 ]
+}
+
+@test "shlib::cmd_timeout returns command exit code on failure" {
+    run shlib::cmd_timeout 5 bash -c 'exit 42'
+    [ "$status" -eq 42 ]
+}
+
+@test "shlib::cmd_timeout returns command exit code on success" {
+    run shlib::cmd_timeout 5 bash -c 'exit 0'
+    [ "$status" -eq 0 ]
+}
+
+@test "shlib::cmd_timeout runs command that completes before timeout" {
+    run shlib::cmd_timeout 5 true
+    [ "$status" -eq 0 ]
 }
 
 #######################################
@@ -1290,29 +1002,29 @@ setup() {
     [[ ${#result[@]} -eq 2 ]]
 }
 
-@test "shlib::kv_get_default handles default with spaces" {
+@test "shlib::kv_getdefault handles default with spaces" {
     declare -A kv
-    run shlib::kv_get_default kv "missing" "hello world"
+    run shlib::kv_getdefault kv "missing" "hello world"
     [[ "${output}" == "hello world" ]]
 }
 
-@test "shlib::kv_get_default returns default when key missing" {
+@test "shlib::kv_getdefault returns default when key missing" {
     declare -A kv
-    run shlib::kv_get_default kv "port" "8080"
+    run shlib::kv_getdefault kv "port" "8080"
     [[ "${output}" == "8080" ]]
 }
 
-@test "shlib::kv_get_default returns empty value over default" {
+@test "shlib::kv_getdefault returns empty value over default" {
     declare -A kv
     kv[empty]=""
-    run shlib::kv_get_default kv "empty" "default"
+    run shlib::kv_getdefault kv "empty" "default"
     [[ "${output}" == "" ]]
 }
 
-@test "shlib::kv_get_default returns value when key exists" {
+@test "shlib::kv_getdefault returns value when key exists" {
     declare -A kv
     kv[port]="3000"
-    run shlib::kv_get_default kv "port" "8080"
+    run shlib::kv_getdefault kv "port" "8080"
     [[ "${output}" == "3000" ]]
 }
 
@@ -1353,42 +1065,42 @@ setup() {
     [[ "${output}" == "numeric value" ]]
 }
 
-@test "shlib::kv_has_value finds empty string value" {
+@test "shlib::kv_hasvalue finds empty string value" {
     declare -A kv
     kv[empty]=""
-    shlib::kv_has_value kv ""
+    shlib::kv_hasvalue kv ""
 }
 
-@test "shlib::kv_has_value handles duplicate values" {
+@test "shlib::kv_hasvalue handles duplicate values" {
     declare -A kv
     kv[a]="same"
     kv[b]="same"
-    shlib::kv_has_value kv "same"
+    shlib::kv_hasvalue kv "same"
 }
 
-@test "shlib::kv_has_value handles empty array" {
+@test "shlib::kv_hasvalue handles empty array" {
     declare -A kv
-    run shlib::kv_has_value kv "value"
+    run shlib::kv_hasvalue kv "value"
     [[ "${status}" -eq 1 ]]
 }
 
-@test "shlib::kv_has_value returns 0 when value exists" {
+@test "shlib::kv_hasvalue returns 0 when value exists" {
     declare -A kv
     kv[host]="localhost"
-    shlib::kv_has_value kv "localhost"
+    shlib::kv_hasvalue kv "localhost"
 }
 
-@test "shlib::kv_has_value returns 1 when value missing" {
+@test "shlib::kv_hasvalue returns 1 when value missing" {
     declare -A kv
     kv[host]="localhost"
-    run shlib::kv_has_value kv "missing"
+    run shlib::kv_hasvalue kv "missing"
     [[ "${status}" -eq 1 ]]
 }
 
-@test "shlib::kv_has_value with value containing special chars" {
+@test "shlib::kv_hasvalue with value containing special chars" {
     declare -A kv
     kv[special]='value*with[chars]'
-    shlib::kv_has_value kv 'value*with[chars]'
+    shlib::kv_hasvalue kv 'value*with[chars]'
 }
 
 @test "shlib::kv_keys extracts all keys" {
@@ -1694,7 +1406,7 @@ setup() {
 }
 
 #######################################
-# logging
+# msg
 #######################################
 
 check_timestamp_prefix() {
@@ -1702,182 +1414,236 @@ check_timestamp_prefix() {
     [[ "$output" =~ ^\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:[0-9]{2}\] ]]
 }
 
-@test "shlib::cerror outputs colorized error with timestamp to stderr" {
-    run shlib::cerror "test message"
+@test "shlib::msg_cerror outputs colorized error with timestamp to stderr" {
+    run shlib::msg_cerror "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[31merror:\033[0m test message' ]]
 }
 
-@test "shlib::cerror with empty message" {
-    run shlib::cerror ""
+@test "shlib::msg_cerror with empty message" {
+    run shlib::msg_cerror ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[31merror:\033[0m ' ]]
 }
 
-@test "shlib::cerrorn outputs colorized error with timestamp to stderr" {
-    run shlib::cerrorn "test message"
+@test "shlib::msg_cerrorn outputs colorized error with timestamp to stderr" {
+    run shlib::msg_cerrorn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[31merror:\033[0m test message' ]]
 }
 
-@test "shlib::cinfo outputs colorized info with timestamp" {
-    run shlib::cinfo "test message"
+@test "shlib::msg_cinfo outputs colorized info with timestamp" {
+    run shlib::msg_cinfo "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[34minfo:\033[0m test message' ]]
 }
 
-@test "shlib::cinfo with empty message" {
-    run shlib::cinfo ""
+@test "shlib::msg_cinfo with empty message" {
+    run shlib::msg_cinfo ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[34minfo:\033[0m ' ]]
 }
 
-@test "shlib::cinfon outputs colorized info with timestamp" {
-    run shlib::cinfon "test message"
+@test "shlib::msg_cinfon outputs colorized info with timestamp" {
+    run shlib::msg_cinfon "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[34minfo:\033[0m test message' ]]
 }
 
-@test "shlib::cwarn outputs colorized warning with timestamp" {
-    run shlib::cwarn "test message"
+@test "shlib::msg_cwarn outputs colorized warning with timestamp" {
+    run shlib::msg_cwarn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[33mwarning:\033[0m test message' ]]
 }
 
-@test "shlib::cwarn with empty message" {
-    run shlib::cwarn ""
+@test "shlib::msg_cwarn with empty message" {
+    run shlib::msg_cwarn ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[33mwarning:\033[0m ' ]]
 }
 
-@test "shlib::cwarnn outputs colorized warning with timestamp" {
-    run shlib::cwarnn "test message"
+@test "shlib::msg_cwarnn outputs colorized warning with timestamp" {
+    run shlib::msg_cwarnn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *$'] \033[33mwarning:\033[0m test message' ]]
 }
 
-@test "shlib::eerror outputs emoji error with timestamp to stderr" {
-    run shlib::eerror "test message"
+@test "shlib::msg_eerror outputs emoji error with timestamp to stderr" {
+    run shlib::msg_eerror "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ❌️  test message" ]]
 }
 
-@test "shlib::eerror with empty message" {
-    run shlib::eerror ""
+@test "shlib::msg_eerror with empty message" {
+    run shlib::msg_eerror ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ❌️  " ]]
 }
 
-@test "shlib::eerrorn outputs emoji error with timestamp to stderr" {
-    run shlib::eerrorn "test message"
+@test "shlib::msg_eerrorn outputs emoji error with timestamp to stderr" {
+    run shlib::msg_eerrorn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ❌️  test message" ]]
 }
 
-@test "shlib::einfo outputs emoji info with timestamp" {
-    run shlib::einfo "test message"
+@test "shlib::msg_einfo outputs emoji info with timestamp" {
+    run shlib::msg_einfo "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ℹ️  test message" ]]
 }
 
-@test "shlib::einfon outputs emoji info with timestamp" {
-    run shlib::einfon "test message"
+@test "shlib::msg_einfon outputs emoji info with timestamp" {
+    run shlib::msg_einfon "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ℹ️  test message" ]]
 }
 
-@test "shlib::error outputs with timestamp to stderr" {
-    run shlib::error "test message"
+@test "shlib::msg_error outputs with timestamp to stderr" {
+    run shlib::msg_error "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] error: test message" ]]
 }
 
-@test "shlib::error with empty message" {
-    run shlib::error ""
+@test "shlib::msg_error with empty message" {
+    run shlib::msg_error ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] error: " ]]
 }
 
-@test "shlib::error with multiple arguments concatenates" {
-    run shlib::error "a" "b" "c"
+@test "shlib::msg_error with multiple arguments concatenates" {
+    run shlib::msg_error "a" "b" "c"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] error: a b c" ]]
 }
 
-@test "shlib::error with special characters" {
-    run shlib::error "line1\nline2"
+@test "shlib::msg_error with special characters" {
+    run shlib::msg_error "line1\nline2"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"line1"* ]]
 }
 
-@test "shlib::errorn outputs with timestamp to stderr" {
-    run shlib::errorn "test message"
+@test "shlib::msg_errorn outputs with timestamp to stderr" {
+    run shlib::msg_errorn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] error: test message" ]]
 }
 
-@test "shlib::ewarn outputs emoji warning with timestamp" {
-    run shlib::ewarn "test message"
+@test "shlib::msg_ewarn outputs emoji warning with timestamp" {
+    run shlib::msg_ewarn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ⚠️  test message" ]]
 }
 
-@test "shlib::ewarnn outputs emoji warning with timestamp" {
-    run shlib::ewarnn "test message"
+@test "shlib::msg_ewarnn outputs emoji warning with timestamp" {
+    run shlib::msg_ewarnn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] ⚠️  test message" ]]
 }
 
-@test "shlib::info outputs message with timestamp" {
-    run shlib::info "test message"
+@test "shlib::msg_info outputs message with timestamp" {
+    run shlib::msg_info "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] info: test message" ]]
 }
 
-@test "shlib::info with empty message" {
-    run shlib::info ""
+@test "shlib::msg_info with empty message" {
+    run shlib::msg_info ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] info: " ]]
 }
 
-@test "shlib::info with multiple arguments concatenates" {
-    run shlib::info "a" "b" "c"
+@test "shlib::msg_info with multiple arguments concatenates" {
+    run shlib::msg_info "a" "b" "c"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] info: a b c" ]]
 }
 
-@test "shlib::info with tab character" {
-    run shlib::info $'tab\there'
+@test "shlib::msg_info with tab character" {
+    run shlib::msg_info $'tab\there'
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] info: tab	here" ]]
 }
 
-@test "shlib::infon outputs message with timestamp" {
-    run shlib::infon "test message"
+@test "shlib::msg_infon outputs message with timestamp" {
+    run shlib::msg_infon "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] info: test message" ]]
 }
 
-@test "shlib::warn outputs with timestamp to stderr" {
-    run shlib::warn "test message"
+@test "shlib::msg_statusfail shows red X" {
+    run shlib::msg_statusfail "Error"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✖"* ]]
+    [[ "$output" == *"Error"* ]]
+}
+
+@test "shlib::msg_statusfail with empty message" {
+    run shlib::msg_statusfail ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✖"* ]]
+}
+
+@test "shlib::msg_statusfailn adds newline" {
+    line_count=$(shlib::msg_statusfailn "Error" | wc -l)
+    [[ "$line_count" -eq 1 ]]
+}
+
+@test "shlib::msg_statusok shows green checkmark" {
+    run shlib::msg_statusok "Done"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✔"* ]]
+    [[ "$output" == *"Done"* ]]
+}
+
+@test "shlib::msg_statusok with empty message" {
+    run shlib::msg_statusok ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"✔"* ]]
+}
+
+@test "shlib::msg_statusokn adds newline" {
+    line_count=$(shlib::msg_statusokn "Done" | wc -l)
+    [[ "$line_count" -eq 1 ]]
+}
+
+@test "shlib::msg_statuspending shows hourglass" {
+    run shlib::msg_statuspending "Waiting"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"⏳"* ]]
+    [[ "$output" == *"Waiting"* ]]
+}
+
+@test "shlib::msg_statuspending with empty message" {
+    run shlib::msg_statuspending ""
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"⏳"* ]]
+}
+
+@test "shlib::msg_statuspendingn adds newline" {
+    line_count=$(shlib::msg_statuspendingn "Waiting" | wc -l)
+    [[ "$line_count" -eq 1 ]]
+}
+
+@test "shlib::msg_warn outputs with timestamp to stderr" {
+    run shlib::msg_warn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] warning: test message" ]]
 }
 
-@test "shlib::warn with empty message" {
-    run shlib::warn ""
+@test "shlib::msg_warn with empty message" {
+    run shlib::msg_warn ""
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] warning: " ]]
 }
 
-@test "shlib::warn with multiple arguments concatenates" {
-    run shlib::warn "a" "b" "c"
+@test "shlib::msg_warn with multiple arguments concatenates" {
+    run shlib::msg_warn "a" "b" "c"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] warning: a b c" ]]
 }
 
-@test "shlib::warnn outputs with timestamp to stderr" {
-    run shlib::warnn "test message"
+@test "shlib::msg_warnn outputs with timestamp to stderr" {
+    run shlib::msg_warnn "test message"
     check_timestamp_prefix "$output"
     [[ "${output}" == *"] warning: test message" ]]
 }
@@ -1924,30 +1690,30 @@ check_timestamp_prefix() {
     run ! shlib::str_endswith "hello world" "hello"
 }
 
-@test "shlib::str_is_empty returns 0 for empty string" {
-    shlib::str_is_empty ""
+@test "shlib::str_isempty returns 0 for empty string" {
+    shlib::str_isempty ""
 }
 
-@test "shlib::str_is_empty returns 0 for mixed tabs and spaces" {
-    shlib::str_is_empty $'\t  \t  \t'
+@test "shlib::str_isempty returns 0 for mixed tabs and spaces" {
+    shlib::str_isempty $'\t  \t  \t'
 }
 
-@test "shlib::str_is_empty returns 0 for tabs only" {
-    shlib::str_is_empty $'\t\t'
+@test "shlib::str_isempty returns 0 for tabs only" {
+    shlib::str_isempty $'\t\t'
 }
 
-@test "shlib::str_is_empty returns 0 for whitespace-only string" {
-    shlib::str_is_empty "   "
+@test "shlib::str_isempty returns 0 for whitespace-only string" {
+    shlib::str_isempty "   "
 }
 
-@test "shlib::str_is_empty returns 1 for non-empty string" {
+@test "shlib::str_isempty returns 1 for non-empty string" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::str_is_empty "hello"
+    run ! shlib::str_isempty "hello"
 }
 
-@test "shlib::str_is_empty returns 1 for string with content and whitespace" {
+@test "shlib::str_isempty returns 1 for string with content and whitespace" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::str_is_empty "  hello  "
+    run ! shlib::str_isempty "  hello  "
 }
 
 @test "shlib::str_len counts byte length (not unicode codepoints)" {
@@ -2188,43 +1954,43 @@ check_timestamp_prefix() {
     run ! shlib::str_startswith "hello world" "world"
 }
 
-@test "shlib::str_to_lower converts to lowercase" {
-    run shlib::str_to_lower "HELLO"
+@test "shlib::str_tolower converts to lowercase" {
+    run shlib::str_tolower "HELLO"
     [[ "${output}" == "hello" ]]
 }
 
-@test "shlib::str_to_lower handles mixed case" {
-    run shlib::str_to_lower "HeLLo WoRLd"
+@test "shlib::str_tolower handles mixed case" {
+    run shlib::str_tolower "HeLLo WoRLd"
     [[ "${output}" == "hello world" ]]
 }
 
-@test "shlib::str_to_lower preserves non-alpha characters" {
-    run shlib::str_to_lower "HELLO123!"
+@test "shlib::str_tolower preserves non-alpha characters" {
+    run shlib::str_tolower "HELLO123!"
     [[ "${output}" == "hello123!" ]]
 }
 
-@test "shlib::str_to_lower with empty string" {
-    run shlib::str_to_lower ""
+@test "shlib::str_tolower with empty string" {
+    run shlib::str_tolower ""
     [[ "${output}" == "" ]]
 }
 
-@test "shlib::str_to_upper converts to uppercase" {
-    run shlib::str_to_upper "hello"
+@test "shlib::str_toupper converts to uppercase" {
+    run shlib::str_toupper "hello"
     [[ "${output}" == "HELLO" ]]
 }
 
-@test "shlib::str_to_upper handles mixed case" {
-    run shlib::str_to_upper "HeLLo WoRLd"
+@test "shlib::str_toupper handles mixed case" {
+    run shlib::str_toupper "HeLLo WoRLd"
     [[ "${output}" == "HELLO WORLD" ]]
 }
 
-@test "shlib::str_to_upper preserves non-alpha characters" {
-    run shlib::str_to_upper "hello123!"
+@test "shlib::str_toupper preserves non-alpha characters" {
+    run shlib::str_toupper "hello123!"
     [[ "${output}" == "HELLO123!" ]]
 }
 
-@test "shlib::str_to_upper with empty string" {
-    run shlib::str_to_upper ""
+@test "shlib::str_toupper with empty string" {
+    run shlib::str_toupper ""
     [[ "${output}" == "" ]]
 }
 
@@ -2249,237 +2015,525 @@ check_timestamp_prefix() {
 }
 
 #######################################
-# system
+# time
 #######################################
 
-@test "shlib::cmd_exists finds builtin command (echo)" {
-    shlib::cmd_exists echo
+@test "shlib::time_add adds days" {
+    run shlib::time_add 1000 1 days
+    [[ "$output" == "87400" ]]
 }
 
-@test "shlib::cmd_exists finds command with absolute path" {
-    shlib::cmd_exists /bin/ls
+@test "shlib::time_add adds hours" {
+    run shlib::time_add 1000 1 hours
+    [[ "$output" == "4600" ]]
 }
 
-@test "shlib::cmd_exists finds existing command" {
-    shlib::cmd_exists bash
+@test "shlib::time_add adds minutes" {
+    run shlib::time_add 1000 1 minutes
+    [[ "$output" == "1060" ]]
 }
 
-@test "shlib::cmd_exists returns false for empty string" {
+@test "shlib::time_add adds seconds" {
+    run shlib::time_add 1000 60 seconds
+    [[ "$output" == "1060" ]]
+}
+
+@test "shlib::time_add adds weeks" {
+    run shlib::time_add 1000 1 weeks
+    [[ "$output" == "605800" ]]
+}
+
+@test "shlib::time_add handles singular unit: day" {
+    run shlib::time_add 1000 1 day
+    [[ "$output" == "87400" ]]
+}
+
+@test "shlib::time_add handles singular unit: hour" {
+    run shlib::time_add 1000 1 hour
+    [[ "$output" == "4600" ]]
+}
+
+@test "shlib::time_add handles singular unit: minute" {
+    run shlib::time_add 1000 1 minute
+    [[ "$output" == "1060" ]]
+}
+
+@test "shlib::time_add handles singular unit: second" {
+    run shlib::time_add 1000 60 second
+    [[ "$output" == "1060" ]]
+}
+
+@test "shlib::time_add handles singular unit: week" {
+    run shlib::time_add 1000 1 week
+    [[ "$output" == "605800" ]]
+}
+
+@test "shlib::time_add subtracts with negative amount" {
+    run shlib::time_add 1000 -1 hours
+    [[ "$output" == "-2600" ]]
+}
+
+@test "shlib::time_add unknown unit defaults to seconds" {
+    run shlib::time_add 1000 60 unknown
+    [[ "$output" == "1060" ]]
+}
+
+@test "shlib::time_add with large amounts" {
+    run shlib::time_add 0 365 days
+    [[ "$output" == "31536000" ]]
+}
+
+@test "shlib::time_add with zero amount" {
+    run shlib::time_add 1000 0 days
+    [[ "$output" == "1000" ]]
+}
+
+@test "shlib::time_diff handles negative differences" {
+    run shlib::time_diff 1000 2000
+    [[ "$output" == "-1000" ]]
+}
+
+@test "shlib::time_diff handles singular unit: day" {
+    run shlib::time_diff 172800 0 day
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff handles singular unit: hour" {
+    run shlib::time_diff 7200 0 hour
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff handles singular unit: minute" {
+    run shlib::time_diff 120 0 minute
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff handles singular unit: second" {
+    run shlib::time_diff 2000 1000 second
+    [[ "$output" == "1000" ]]
+}
+
+@test "shlib::time_diff handles singular unit: week" {
+    run shlib::time_diff 1209600 0 week
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff negative difference in days" {
+    run shlib::time_diff 0 172800 days
+    [[ "$output" == "-2" ]]
+}
+
+@test "shlib::time_diff performs integer division" {
+    run shlib::time_diff 90 0 minutes
+    [[ "$output" == "1" ]]
+}
+
+@test "shlib::time_diff returns difference in days" {
+    run shlib::time_diff 172800 0 days
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff returns difference in hours" {
+    run shlib::time_diff 7200 0 hours
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff returns difference in minutes" {
+    run shlib::time_diff 120 0 minutes
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff returns difference in seconds by default" {
+    run shlib::time_diff 2000 1000
+    [[ "$output" == "1000" ]]
+}
+
+@test "shlib::time_diff returns difference in weeks" {
+    run shlib::time_diff 1209600 0 weeks
+    [[ "$output" == "2" ]]
+}
+
+@test "shlib::time_diff unknown unit defaults to seconds" {
+    run shlib::time_diff 2000 1000 unknown
+    [[ "$output" == "1000" ]]
+}
+
+@test "shlib::time_diff with zero difference" {
+    run shlib::time_diff 1000 1000
+    [[ "$output" == "0" ]]
+}
+
+@test "shlib::time_duration compact format" {
+    run shlib::time_duration 90061 compact
+    [[ "$output" == "1d1h1m1s" ]]
+}
+
+@test "shlib::time_duration days and minutes no hours" {
+    # 1 day + 1 minute = 86460 seconds
+    run shlib::time_duration 86460
+    [[ "$output" == "1d 1m" ]]
+}
+
+@test "shlib::time_duration days and seconds only" {
+    # 1 day + 1 second = 86401 seconds
+    run shlib::time_duration 86401
+    [[ "$output" == "1d 1s" ]]
+}
+
+@test "shlib::time_duration days only long format" {
+    run shlib::time_duration 172800 long
+    [[ "$output" == "2 days" ]]
+}
+
+@test "shlib::time_duration formats days" {
+    run shlib::time_duration 90061
+    [[ "$output" == "1d 1h 1m 1s" ]]
+}
+
+@test "shlib::time_duration formats hours" {
+    run shlib::time_duration 3661
+    [[ "$output" == "1h 1m 1s" ]]
+}
+
+@test "shlib::time_duration formats minutes and seconds" {
+    run shlib::time_duration 90
+    [[ "$output" == "1m 30s" ]]
+}
+
+@test "shlib::time_duration formats seconds only" {
+    run shlib::time_duration 45
+    [[ "$output" == "45s" ]]
+}
+
+@test "shlib::time_duration handles exactly one day" {
+    run shlib::time_duration 86400
+    [[ "$output" == "1d" ]]
+}
+
+@test "shlib::time_duration handles exactly one hour" {
+    run shlib::time_duration 3600
+    [[ "$output" == "1h" ]]
+}
+
+@test "shlib::time_duration handles exactly one minute" {
+    run shlib::time_duration 60
+    [[ "$output" == "1m" ]]
+}
+
+@test "shlib::time_duration handles large values (weeks)" {
+    run shlib::time_duration 694861
+    # 8 days, 1 hour, 1 minute, 1 second
+    [[ "$output" == "8d 1h 1m 1s" ]]
+}
+
+@test "shlib::time_duration handles negative values compact" {
+    run shlib::time_duration -90 compact
+    [[ "$output" == "-1m30s" ]]
+}
+
+@test "shlib::time_duration handles negative values long" {
+    run shlib::time_duration -90 long
+    [[ "$output" == "-1 minute, 30 seconds" ]]
+}
+
+@test "shlib::time_duration handles negative values short" {
+    run shlib::time_duration -90
+    [[ "$output" == "-1m 30s" ]]
+}
+
+@test "shlib::time_duration handles zero compact" {
+    run shlib::time_duration 0 compact
+    [[ "$output" == "0s" ]]
+}
+
+@test "shlib::time_duration handles zero long" {
+    run shlib::time_duration 0 long
+    [[ "$output" == "0 seconds" ]]
+}
+
+@test "shlib::time_duration handles zero short" {
+    run shlib::time_duration 0
+    [[ "$output" == "0s" ]]
+}
+
+@test "shlib::time_duration hours and seconds no minutes" {
+    # 1 hour + 1 second = 3601 seconds
+    run shlib::time_duration 3601
+    [[ "$output" == "1h 1s" ]]
+}
+
+@test "shlib::time_duration hours and seconds no minutes long" {
+    run shlib::time_duration 3601 long
+    [[ "$output" == "1 hour, 1 second" ]]
+}
+
+@test "shlib::time_duration long format singular" {
+    run shlib::time_duration 90061 long
+    [[ "$output" == "1 day, 1 hour, 1 minute, 1 second" ]]
+}
+
+@test "shlib::time_duration long format with plurals" {
+    run shlib::time_duration 180122 long
+    [[ "$output" == "2 days, 2 hours, 2 minutes, 2 seconds" ]]
+}
+
+@test "shlib::time_duration minutes only long format" {
+    run shlib::time_duration 120 long
+    [[ "$output" == "2 minutes" ]]
+}
+
+@test "shlib::time_duration omits zero components compact" {
+    run shlib::time_duration 3600 compact
+    [[ "$output" == "1h" ]]
+}
+
+@test "shlib::time_duration omits zero components long" {
+    run shlib::time_duration 3600 long
+    [[ "$output" == "1 hour" ]]
+}
+
+@test "shlib::time_duration omits zero components short" {
+    run shlib::time_duration 3600
+    [[ "$output" == "1h" ]]
+}
+
+@test "shlib::time_duration one second" {
+    run shlib::time_duration 1
+    [[ "$output" == "1s" ]]
+}
+
+@test "shlib::time_duration one second long format" {
+    run shlib::time_duration 1 long
+    [[ "$output" == "1 second" ]]
+}
+
+@test "shlib::time_duration unknown format defaults to short" {
+    run shlib::time_duration 90 unknown
+    [[ "$output" == "1m 30s" ]]
+}
+
+@test "shlib::time_duration with huge value (multiple years)" {
+    # 2 years = 63072000 seconds
+    run shlib::time_duration 63072000
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "730d" ]]
+}
+
+@test "shlib::time_duration with very large seconds value" {
+    # 1 year worth of seconds = 31536000
+    run shlib::time_duration 31536000
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "365d" ]]
+}
+
+@test "shlib::time_elapsed returns elapsed time short format" {
+    local start
+    start=$(shlib::time_now)
+    run shlib::time_elapsed "$start"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]+s$ ]]
+}
+
+@test "shlib::time_elapsed with compact format" {
+    local start
+    start=$(shlib::time_now)
+    run shlib::time_elapsed "$start" compact
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]+s$ ]]
+}
+
+@test "shlib::time_elapsed with future timestamp long format" {
+    local start
+    start=$(($(shlib::time_now) + 90))
+    run shlib::time_elapsed "$start" long
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "-1 minute, 30 seconds" ]]
+}
+
+@test "shlib::time_elapsed with future timestamp shows negative" {
+    local start
+    start=$(($(shlib::time_now) + 90))
+    run shlib::time_elapsed "$start"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "-1m 30s" ]]
+}
+
+@test "shlib::time_elapsed with long format" {
+    local start
+    start=$(shlib::time_now)
+    run shlib::time_elapsed "$start" long
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ second ]]
+}
+
+@test "shlib::time_elapsed with past timestamp" {
+    local start
+    start=$(($(shlib::time_now) - 3661))
+    run shlib::time_elapsed "$start"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "1h 1m 1s" ]]
+}
+
+@test "shlib::time_fromunix formats timestamp as date" {
+    run shlib::time_fromunix 1704067200 "%Y-%m-%d"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+}
+
+@test "shlib::time_fromunix handles epoch zero" {
+    run shlib::time_fromunix 0 "%Y"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "1970" ]]
+}
+
+@test "shlib::time_fromunix handles full datetime format" {
+    run shlib::time_fromunix 1704067200 "%Y-%m-%d %H:%M:%S"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]
+}
+
+@test "shlib::time_fromunix handles hour format" {
+    run shlib::time_fromunix 1704067200 "%H"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{2}$ ]]
+}
+
+@test "shlib::time_fromunix handles month name format" {
+    run shlib::time_fromunix 1704067200 "%B"
+    [[ "$status" -eq 0 ]]
+    [[ -n "$output" ]]
+}
+
+@test "shlib::time_fromunix handles negative timestamp" {
+    run shlib::time_fromunix -86400 "%Y"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "1969" ]]
+}
+
+@test "shlib::time_fromunix handles weekday format" {
+    run shlib::time_fromunix 1704067200 "%A"
+    [[ "$status" -eq 0 ]]
+    [[ -n "$output" ]]
+}
+
+@test "shlib::time_fromunix returns error for invalid timestamp" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_exists ""
+    run ! shlib::time_fromunix "invalid" "%Y-%m-%d"
 }
 
-@test "shlib::cmd_exists returns false for missing command" {
+@test "shlib::time_fromunix with very large future timestamp" {
+    # Year 2100: 4102444800
+    run shlib::time_fromunix 4102444800 "%Y"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "2100" ]]
+}
+
+@test "shlib::time_isafter returns 0 when ts1 > ts2" {
+    shlib::time_isafter 2000 1000
+}
+
+@test "shlib::time_isafter returns 1 when equal" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_exists nonexistent_command_12345
+    run ! shlib::time_isafter 1000 1000
 }
 
-@test "shlib::cmd_locked captures stdout" {
-    lockfile=$(mktemp -u)
-    run shlib::cmd_locked "$lockfile" 0 echo "locked output"
-    [ "$status" -eq 0 ]
-    [ "$output" = "locked output" ]
-}
-
-@test "shlib::cmd_locked detects and removes stale lock" {
-    lockfile=$(mktemp -u)
-
-    # Create stale lock with non-existent PID
-    mkdir "${lockfile}.lock"
-    echo 999999 >"${lockfile}.lock/pid"
-
-    # Should succeed by detecting stale lock
-    run shlib::cmd_locked "$lockfile" 0 true
-    [ "$status" -eq 0 ]
-}
-
-@test "shlib::cmd_locked fails with empty lockfile path" {
+@test "shlib::time_isafter returns 1 when ts1 < ts2" {
     bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_locked "" 0 true
+    run ! shlib::time_isafter 1000 2000
 }
 
-@test "shlib::cmd_locked fails with invalid timeout" {
+@test "shlib::time_isafter with negative timestamps" {
+    shlib::time_isafter 0 -100
+}
+
+@test "shlib::time_isafter with zero timestamps" {
+    shlib::time_isafter 1 0
+}
+
+@test "shlib::time_isbefore returns 0 when ts1 < ts2" {
+    shlib::time_isbefore 1000 2000
+}
+
+@test "shlib::time_isbefore returns 1 when equal" {
     bats_require_minimum_version "1.5.0"
-    lockfile=$(mktemp -u)
-    run ! shlib::cmd_locked "$lockfile" abc true
+    run ! shlib::time_isbefore 1000 1000
 }
 
-@test "shlib::cmd_locked fails with no command" {
+@test "shlib::time_isbefore returns 1 when ts1 > ts2" {
     bats_require_minimum_version "1.5.0"
-    lockfile=$(mktemp -u)
-    run ! shlib::cmd_locked "$lockfile" 0
+    run ! shlib::time_isbefore 2000 1000
 }
 
-@test "shlib::cmd_locked fails with non-blocking when already locked" {
-    bats_require_minimum_version "1.5.0"
-    lockfile=$(mktemp -u)
-
-    # Create lock manually
-    mkdir "${lockfile}.lock"
-    echo $$ >"${lockfile}.lock/pid"
-
-    # Should fail immediately with timeout=0
-    run ! shlib::cmd_locked "$lockfile" 0 true
-
-    # Cleanup
-    rm -rf "${lockfile}.lock"
+@test "shlib::time_isbefore with negative timestamps" {
+    shlib::time_isbefore -100 0
 }
 
-@test "shlib::cmd_locked releases lock after command failure" {
-    lockfile=$(mktemp -u)
-    run shlib::cmd_locked "$lockfile" 0 false
-    [ "$status" -eq 1 ]
-    # Lock should be released even though command failed
-    [ ! -d "${lockfile}.lock" ]
+@test "shlib::time_isbefore with zero timestamps" {
+    shlib::time_isbefore 0 1
 }
 
-@test "shlib::cmd_locked returns command exit code" {
-    lockfile=$(mktemp -u)
-    run shlib::cmd_locked "$lockfile" 0 bash -c 'exit 42'
-    [ "$status" -eq 42 ]
+@test "shlib::time_now returns a timestamp" {
+    run shlib::time_now
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]+$ ]]
 }
 
-@test "shlib::cmd_locked runs command with lock" {
-    lockfile=$(mktemp -u)
-    run shlib::cmd_locked "$lockfile" 0 true
-    [ "$status" -eq 0 ]
-    # Lock should be released
-    [ ! -d "${lockfile}.lock" ]
+@test "shlib::time_now returns reasonable timestamp" {
+    run shlib::time_now
+    # Should be after Jan 1, 2020 (1577836800)
+    [[ "$output" -gt 1577836800 ]]
 }
 
-@test "shlib::cmd_locked times out when lock held too long" {
-    bats_require_minimum_version "1.5.0"
-    lockfile=$(mktemp -u)
-
-    # Create lock held by current process
-    mkdir "${lockfile}.lock"
-    echo $$ >"${lockfile}.lock/pid"
-
-    # Should timeout after 1 second
-    run ! shlib::cmd_locked "$lockfile" 1 true
-
-    # Cleanup
-    rm -rf "${lockfile}.lock"
+@test "shlib::time_now and time_nowiso return consistent timestamps" {
+    local unix_ts iso_ts
+    unix_ts=$(shlib::time_now)
+    iso_ts=$(shlib::time_nowiso)
+    # Both should be from the same second (or very close)
+    [[ -n "$unix_ts" ]]
+    [[ -n "$iso_ts" ]]
+    # ISO format should contain current year
+    local year
+    year=$(date +%Y)
+    [[ "$iso_ts" == "$year"* ]]
 }
 
-@test "shlib::cmd_locked waits for lock with positive timeout" {
-    lockfile=$(mktemp -u)
-
-    # Create lock that will be released after 1 second
-    mkdir "${lockfile}.lock"
-    echo $$ >"${lockfile}.lock/pid"
-    (
-        sleep 1
-        rm -rf "${lockfile}.lock"
-    ) &
-
-    # Should succeed after lock is released (within 5s timeout)
-    run shlib::cmd_locked "$lockfile" 5 true
-    [ "$status" -eq 0 ]
+@test "shlib::time_nowiso ignores invalid argument and returns UTC" {
+    run shlib::time_nowiso invalid
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
 }
 
-@test "shlib::cmd_locked with infinite wait (-1) acquires lock" {
-    lockfile=$(mktemp -u)
-
-    # Create lock that will be released quickly
-    mkdir "${lockfile}.lock"
-    echo $$ >"${lockfile}.lock/pid"
-    (
-        sleep 0.5
-        rm -rf "${lockfile}.lock"
-    ) &
-
-    # Should wait and succeed
-    run shlib::cmd_locked "$lockfile" -1 true
-    [ "$status" -eq 0 ]
+@test "shlib::time_nowiso local returns local ISO format" {
+    run shlib::time_nowiso local
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:[0-9]{2}$ ]]
 }
 
-@test "shlib::cmd_retry captures stdout from successful attempt" {
-    run shlib::cmd_retry 3 0 echo "success"
-    [ "$status" -eq 0 ]
-    [ "$output" = "success" ]
+@test "shlib::time_nowiso returns UTC ISO format" {
+    run shlib::time_nowiso
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
 }
 
-@test "shlib::cmd_retry fails after max attempts" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_retry 3 0 false
+@test "shlib::time_today matches current date" {
+    run shlib::time_today
+    local expected
+    expected=$(date +%Y-%m-%d)
+    [[ "$output" == "$expected" ]]
 }
 
-@test "shlib::cmd_retry fails with invalid delay" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_retry 3 -1 true
-    run ! shlib::cmd_retry 3 abc true
-}
-
-@test "shlib::cmd_retry fails with invalid max_attempts" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_retry 0 0 true
-    run ! shlib::cmd_retry -1 0 true
-    run ! shlib::cmd_retry abc 0 true
-}
-
-@test "shlib::cmd_retry succeeds on first attempt" {
-    run shlib::cmd_retry 3 0 true
-    [ "$status" -eq 0 ]
-}
-
-@test "shlib::cmd_retry succeeds on later attempt" {
-    # Create a temp file to track attempts
-    tmpfile=$(mktemp)
-    echo "0" >"$tmpfile"
-
-    # Command that fails twice then succeeds
-    # shellcheck disable=SC2016
-    run shlib::cmd_retry 3 0 bash -c '
-        count=$(cat "'"$tmpfile"'")
-        count=$((count + 1))
-        echo "$count" > "'"$tmpfile"'"
-        [ "$count" -ge 3 ]
-    '
-
-    [ "$status" -eq 0 ]
-    rm -f "$tmpfile"
-}
-
-@test "shlib::cmd_timeout captures stdout" {
-    run shlib::cmd_timeout 5 echo "hello"
-    [ "$status" -eq 0 ]
-    [ "$output" = "hello" ]
-}
-
-@test "shlib::cmd_timeout fails with invalid timeout" {
-    bats_require_minimum_version "1.5.0"
-    run ! shlib::cmd_timeout 0 true
-    run ! shlib::cmd_timeout -1 true
-    run ! shlib::cmd_timeout abc true
-}
-
-@test "shlib::cmd_timeout returns 124 when command times out" {
-    run shlib::cmd_timeout 1 sleep 10
-    [ "$status" -eq 124 ]
-}
-
-@test "shlib::cmd_timeout returns command exit code on failure" {
-    run shlib::cmd_timeout 5 bash -c 'exit 42'
-    [ "$status" -eq 42 ]
-}
-
-@test "shlib::cmd_timeout returns command exit code on success" {
-    run shlib::cmd_timeout 5 bash -c 'exit 0'
-    [ "$status" -eq 0 ]
-}
-
-@test "shlib::cmd_timeout runs command that completes before timeout" {
-    run shlib::cmd_timeout 5 true
-    [ "$status" -eq 0 ]
+@test "shlib::time_today returns YYYY-MM-DD format" {
+    run shlib::time_today
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
 }
 
 #######################################
 # ui
 #######################################
 
-@test "shlib::ansi_256_palette outputs 256 color palette" {
-    run shlib::ansi_256_palette
+@test "shlib::ui_ansi256palette outputs 256 color palette" {
+    run shlib::ui_ansi256palette
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"256 Color Palette"* ]]
     [[ "$output" == *"Standard Colors (0-15)"* ]]
@@ -2487,39 +2541,39 @@ check_timestamp_prefix() {
     [[ "$output" == *"Grayscale (232-255)"* ]]
 }
 
-@test "shlib::ansi_bg_colors outputs background colors" {
-    run shlib::ansi_bg_colors
+@test "shlib::ui_ansibgcolors outputs background colors" {
+    run shlib::ui_ansibgcolors
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Background Colors"* ]]
     [[ "$output" == *"Red"* ]]
     [[ "$output" == *"Blue"* ]]
 }
 
-@test "shlib::ansi_bg_colors produces non-empty output" {
-    run shlib::ansi_bg_colors
+@test "shlib::ui_ansibgcolors produces non-empty output" {
+    run shlib::ui_ansibgcolors
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
     [[ ${#output} -gt 100 ]]
 }
 
-@test "shlib::ansi_color_matrix_bright outputs bright color combinations" {
-    run shlib::ansi_color_matrix_bright
+@test "shlib::ui_ansicolormatrix_bright outputs bright color combinations" {
+    run shlib::ui_ansicolormatrix_bright
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Foreground / Background Combinations (Bright Colors)"* ]]
     [[ "$output" == *"100"* ]]
     [[ "$output" == *"90"* ]]
 }
 
-@test "shlib::ansi_color_matrix outputs standard color combinations" {
-    run shlib::ansi_color_matrix
+@test "shlib::ui_ansicolormatrix outputs standard color combinations" {
+    run shlib::ui_ansicolormatrix
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Foreground / Background Combinations (Standard Colors)"* ]]
     [[ "$output" == *"40"* ]]
     [[ "$output" == *"30"* ]]
 }
 
-@test "shlib::ansi_fg_colors outputs foreground colors" {
-    run shlib::ansi_fg_colors
+@test "shlib::ui_ansifgcolors outputs foreground colors" {
+    run shlib::ui_ansifgcolors
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Foreground Colors"* ]]
     [[ "$output" == *"Red"* ]]
@@ -2527,15 +2581,15 @@ check_timestamp_prefix() {
     [[ "$output" == *"Bright White"* ]]
 }
 
-@test "shlib::ansi_fg_colors produces non-empty output" {
-    run shlib::ansi_fg_colors
+@test "shlib::ui_ansifgcolors produces non-empty output" {
+    run shlib::ui_ansifgcolors
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
     [[ ${#output} -gt 100 ]]
 }
 
-@test "shlib::ansi_styles outputs text styles" {
-    run shlib::ansi_styles
+@test "shlib::ui_ansistyles outputs text styles" {
+    run shlib::ui_ansistyles
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Text Styles"* ]]
     [[ "$output" == *"Bold"* ]]
@@ -2543,46 +2597,46 @@ check_timestamp_prefix() {
     [[ "$output" == *"Italic"* ]]
 }
 
-@test "shlib::ansi_styles produces non-empty output" {
-    run shlib::ansi_styles
+@test "shlib::ui_ansistyles produces non-empty output" {
+    run shlib::ui_ansistyles
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
     [[ ${#output} -gt 100 ]]
 }
 
-@test "shlib::banner always succeeds with builtin fallback" {
-    run shlib::banner "TEST"
+@test "shlib::ui_banner always succeeds with builtin fallback" {
+    run shlib::ui_banner "TEST"
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
 }
 
-@test "shlib::banner_builtin converts lowercase to uppercase" {
-    run shlib::banner_builtin "hello"
+@test "shlib::ui_banner_builtin converts lowercase to uppercase" {
+    run shlib::ui_banner_builtin "hello"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_builtin handles empty string" {
-    run shlib::banner_builtin ""
+@test "shlib::ui_banner_builtin handles empty string" {
+    run shlib::ui_banner_builtin ""
     [[ "$status" -eq 0 ]]
 }
 
-@test "shlib::banner_builtin handles punctuation" {
-    run shlib::banner_builtin "HI!"
+@test "shlib::ui_banner_builtin handles punctuation" {
+    run shlib::ui_banner_builtin "HI!"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_builtin handles space character" {
-    run shlib::banner_builtin "A B"
+@test "shlib::ui_banner_builtin handles space character" {
+    run shlib::ui_banner_builtin "A B"
     [[ "$status" -eq 0 ]]
     local lines
     lines=$(echo "$output" | wc -l | tr -d ' ')
     [[ "$lines" -eq 5 ]]
 }
 
-@test "shlib::banner_builtin renders 5 lines" {
-    run shlib::banner_builtin "HI"
+@test "shlib::ui_banner_builtin renders 5 lines" {
+    run shlib::ui_banner_builtin "HI"
     [[ "$status" -eq 0 ]]
     # Count lines in output
     local lines
@@ -2590,59 +2644,59 @@ check_timestamp_prefix() {
     [[ "$lines" -eq 5 ]]
 }
 
-@test "shlib::banner_builtin renders all digits 0-9" {
-    run shlib::banner_builtin "0123456789"
+@test "shlib::ui_banner_builtin renders all digits 0-9" {
+    run shlib::ui_banner_builtin "0123456789"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_builtin renders all letters A-Z" {
-    run shlib::banner_builtin "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+@test "shlib::ui_banner_builtin renders all letters A-Z" {
+    run shlib::ui_banner_builtin "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_builtin renders numbers" {
-    run shlib::banner_builtin "123"
+@test "shlib::ui_banner_builtin renders numbers" {
+    run shlib::ui_banner_builtin "123"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_builtin renders supported punctuation" {
-    run shlib::banner_builtin "!?.-:_"
+@test "shlib::ui_banner_builtin renders supported punctuation" {
+    run shlib::ui_banner_builtin "!?.-:_"
     [[ "$status" -eq 0 ]]
     local lines
     lines=$(echo "$output" | wc -l | tr -d ' ')
     [[ "$lines" -eq 5 ]]
 }
 
-@test "shlib::banner_builtin renders uppercase letters" {
-    run shlib::banner_builtin "HELLO"
+@test "shlib::ui_banner_builtin renders uppercase letters" {
+    run shlib::ui_banner_builtin "HELLO"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"█"* ]]
 }
 
-@test "shlib::banner_figlet fails without figlet" {
+@test "shlib::ui_banner_figlet fails without figlet" {
     # Skip if figlet is installed
     if command -v figlet &>/dev/null; then
         skip "figlet is installed"
     fi
-    run shlib::banner_figlet "TEST"
+    run shlib::ui_banner_figlet "TEST"
     [[ "$status" -eq 1 ]]
 }
 
-@test "shlib::banner_figlet works when figlet installed" {
+@test "shlib::ui_banner_figlet works when figlet installed" {
     # Skip if figlet is not installed
     if ! command -v figlet &>/dev/null; then
         skip "figlet is not installed"
     fi
-    run shlib::banner_figlet "TEST"
+    run shlib::ui_banner_figlet "TEST"
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
 }
 
-@test "shlib::banner output contains expected content" {
-    run shlib::banner "HI"
+@test "shlib::ui_banner output contains expected content" {
+    run shlib::ui_banner "HI"
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
     # Output should have multiple lines
@@ -2651,193 +2705,139 @@ check_timestamp_prefix() {
     [[ "$lines" -ge 1 ]]
 }
 
-@test "shlib::banner_toilet fails without toilet" {
+@test "shlib::ui_banner_toilet fails without toilet" {
     # Skip if toilet is installed
     if command -v toilet &>/dev/null; then
         skip "toilet is installed"
     fi
-    run shlib::banner_toilet "TEST"
+    run shlib::ui_banner_toilet "TEST"
     [[ "$status" -eq 1 ]]
 }
 
-@test "shlib::banner_toilet works when toilet installed" {
+@test "shlib::ui_banner_toilet works when toilet installed" {
     # Skip if toilet is not installed
     if ! command -v toilet &>/dev/null; then
         skip "toilet is not installed"
     fi
-    run shlib::banner_toilet "TEST"
+    run shlib::ui_banner_toilet "TEST"
     [[ "$status" -eq 0 ]]
     [[ -n "$output" ]]
 }
 
-@test "shlib::header outputs bold message" {
-    run shlib::header "test header"
+@test "shlib::ui_header outputs bold message" {
+    run shlib::ui_header "test header"
     [[ "${output}" == $'\033[1mtest header\033[0m' ]]
 }
 
-@test "shlib::header with empty string" {
-    run shlib::header ""
+@test "shlib::ui_header with empty string" {
+    run shlib::ui_header ""
     [[ "$status" -eq 0 ]]
     # Output should just be the ANSI codes with empty content
     [[ "${output}" == $'\033[1m\033[0m' ]]
 }
 
-@test "shlib::headern outputs bold message" {
-    run shlib::headern "test header"
+@test "shlib::ui_headern outputs bold message" {
+    run shlib::ui_headern "test header"
     [[ "${output}" == $'\033[1mtest header\033[0m' ]]
 }
 
-@test "shlib::headern with empty string" {
-    run shlib::headern ""
+@test "shlib::ui_headern with empty string" {
+    run shlib::ui_headern ""
     [[ "$status" -eq 0 ]]
 }
 
-@test "shlib::hr draws horizontal rule" {
-    run shlib::hr
+@test "shlib::ui_hr draws horizontal rule" {
+    run shlib::ui_hr
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"─"* ]]
 }
 
-@test "shlib::hr draws rule with label" {
-    run shlib::hr "Test"
+@test "shlib::ui_hr draws rule with label" {
+    run shlib::ui_hr "Test"
     [[ "$status" -eq 0 ]]
     [[ "$output" == *"Test"* ]]
     [[ "$output" == *"─"* ]]
 }
 
-@test "shlib::hr respects custom width" {
-    run shlib::hr "" 20
+@test "shlib::ui_hr respects custom width" {
+    run shlib::ui_hr "" 20
     [[ "$status" -eq 0 ]]
     [[ ${#output} -eq 20 ]]
 }
 
-@test "shlib::hr uses custom character" {
-    run shlib::hr "" 10 "="
+@test "shlib::ui_hr uses custom character" {
+    run shlib::ui_hr "" 10 "="
     [[ "$status" -eq 0 ]]
     [[ "$output" == "==========" ]]
 }
 
-@test "shlib::hr with label and very narrow width" {
-    run shlib::hr "Hi" 6 "-"
+@test "shlib::ui_hr with label and very narrow width" {
+    run shlib::ui_hr "Hi" 6 "-"
     [[ "$status" -eq 0 ]]
     # Label centered: should contain "Hi" surrounded by separator
     [[ "${output}" == *"Hi"* ]]
 }
 
-@test "shlib::hr with label longer than width" {
-    run shlib::hr "VeryLongLabel" 5 "-"
+@test "shlib::ui_hr with label longer than width" {
+    run shlib::ui_hr "VeryLongLabel" 5 "-"
     [[ "$status" -eq 0 ]]
     # The label should still be present even if wider than width
     [[ "${output}" == *"VeryLongLabel"* ]]
 }
 
-@test "shlib::hr with very small width" {
-    run shlib::hr "" 1
+@test "shlib::ui_hr with very small width" {
+    run shlib::ui_hr "" 1
     [[ "$status" -eq 0 ]]
     [[ ${#output} -eq 1 ]]
 }
 
-@test "shlib::hr with width of 2" {
-    run shlib::hr "" 2 "-"
+@test "shlib::ui_hr with width of 2" {
+    run shlib::ui_hr "" 2 "-"
     [[ "$status" -eq 0 ]]
     [[ "${output}" == "--" ]]
 }
 
-@test "shlib::hrn adds newline" {
-    line_count=$(shlib::hrn "" 5 "-" | wc -l)
+@test "shlib::ui_hrn adds newline" {
+    line_count=$(shlib::ui_hrn "" 5 "-" | wc -l)
     [[ "$line_count" -eq 1 ]]
 }
 
-@test "shlib::spinner handles command with multiple arguments" {
+@test "shlib::ui_spinner handles command with multiple arguments" {
     local tmpfile
     tmpfile=$(mktemp)
-    shlib::spinner "Testing" bash -c "echo one two three > '$tmpfile'"
+    shlib::ui_spinner "Testing" bash -c "echo one two three > '$tmpfile'"
     run cat "$tmpfile"
     [[ "$output" == "one two three" ]]
     rm -f "$tmpfile"
 }
 
-@test "shlib::spinner passes arguments to command" {
+@test "shlib::ui_spinner passes arguments to command" {
     local tmpfile
     tmpfile=$(mktemp)
-    shlib::spinner "Writing" bash -c "echo 'hello' > '$tmpfile'"
+    shlib::ui_spinner "Writing" bash -c "echo 'hello' > '$tmpfile'"
     run cat "$tmpfile"
     [[ "$output" == "hello" ]]
     rm -f "$tmpfile"
 }
 
-@test "shlib::spinner returns command exit code on failure" {
-    run shlib::spinner "Testing" false
+@test "shlib::ui_spinner returns command exit code on failure" {
+    run shlib::ui_spinner "Testing" false
     [[ "$status" -eq 1 ]]
 }
 
-@test "shlib::spinner returns command exit code on success" {
-    run shlib::spinner "Testing" true
+@test "shlib::ui_spinner returns command exit code on success" {
+    run shlib::ui_spinner "Testing" true
     [[ "$status" -eq 0 ]]
 }
 
-@test "shlib::spinner runs command successfully" {
-    run shlib::spinner "Testing" sleep 0.2
+@test "shlib::ui_spinner runs command successfully" {
+    run shlib::ui_spinner "Testing" sleep 0.2
     [[ "$status" -eq 0 ]]
 }
 
-@test "shlib::spinner with command that writes to stderr" {
-    run shlib::spinner "Testing" bash -c 'echo stderr_output >&2; exit 0'
+@test "shlib::ui_spinner with command that writes to stderr" {
+    run shlib::ui_spinner "Testing" bash -c 'echo stderr_output >&2; exit 0'
     [[ "$status" -eq 0 ]]
-}
-
-@test "shlib::status_fail shows red X" {
-    run shlib::status_fail "Error"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"✖"* ]]
-    [[ "$output" == *"Error"* ]]
-}
-
-@test "shlib::status_fail with empty message" {
-    run shlib::status_fail ""
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"✖"* ]]
-}
-
-@test "shlib::status_failn adds newline" {
-    line_count=$(shlib::status_failn "Error" | wc -l)
-    [[ "$line_count" -eq 1 ]]
-}
-
-@test "shlib::status_ok shows green checkmark" {
-    run shlib::status_ok "Done"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"✔"* ]]
-    [[ "$output" == *"Done"* ]]
-}
-
-@test "shlib::status_ok with empty message" {
-    run shlib::status_ok ""
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"✔"* ]]
-}
-
-@test "shlib::status_okn adds newline" {
-    line_count=$(shlib::status_okn "Done" | wc -l)
-    [[ "$line_count" -eq 1 ]]
-}
-
-@test "shlib::status_pending shows hourglass" {
-    run shlib::status_pending "Waiting"
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"⏳"* ]]
-    [[ "$output" == *"Waiting"* ]]
-}
-
-@test "shlib::status_pending with empty message" {
-    run shlib::status_pending ""
-    [[ "$status" -eq 0 ]]
-    [[ "$output" == *"⏳"* ]]
-}
-
-@test "shlib::status_pendingn adds newline" {
-    line_count=$(shlib::status_pendingn "Waiting" | wc -l)
-    [[ "$line_count" -eq 1 ]]
 }
 #
 ########################################################################

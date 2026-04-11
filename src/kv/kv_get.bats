@@ -1,26 +1,26 @@
-@test "shlib::kv_get_default handles default with spaces" {
+@test "shlib::kv_getdefault handles default with spaces" {
     declare -A kv
-    run shlib::kv_get_default kv "missing" "hello world"
+    run shlib::kv_getdefault kv "missing" "hello world"
     [[ "${output}" == "hello world" ]]
 }
 
-@test "shlib::kv_get_default returns default when key missing" {
+@test "shlib::kv_getdefault returns default when key missing" {
     declare -A kv
-    run shlib::kv_get_default kv "port" "8080"
+    run shlib::kv_getdefault kv "port" "8080"
     [[ "${output}" == "8080" ]]
 }
 
-@test "shlib::kv_get_default returns empty value over default" {
+@test "shlib::kv_getdefault returns empty value over default" {
     declare -A kv
     kv[empty]=""
-    run shlib::kv_get_default kv "empty" "default"
+    run shlib::kv_getdefault kv "empty" "default"
     [[ "${output}" == "" ]]
 }
 
-@test "shlib::kv_get_default returns value when key exists" {
+@test "shlib::kv_getdefault returns value when key exists" {
     declare -A kv
     kv[port]="3000"
-    run shlib::kv_get_default kv "port" "8080"
+    run shlib::kv_getdefault kv "port" "8080"
     [[ "${output}" == "3000" ]]
 }
 

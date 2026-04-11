@@ -8,7 +8,7 @@
 @test "shlib::list_functions output is sorted" {
     run shlib::list_functions
     first_line="${lines[0]}"
-    [[ "$first_line" == "shlib::ansi_256_palette" ]]
+    [[ "$first_line" == "shlib::arr_append" ]]
 }
 
 @test "shlib::list_functions returns function names" {

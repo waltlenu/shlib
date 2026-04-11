@@ -351,264 +351,138 @@ shlib::arr_uniq my_array
 .fi
 .RE
 
-.SH DT
-.SS shlib::dt_add
-.BI "shlib::dt_add " "int" " " "int" " " "string"
+.SH CMD
+.SS shlib::cmd_exists
+.BI "shlib::cmd_exists " "string"
 .PP
-Add time units to timestamp
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-Unix timestamp
-.TP
-\fI$2\fR (int)
-Amount to add (can be negative)
-.TP
-\fI$3\fR (string)
-Unit: seconds, minutes, hours, days, weeks
-.PP
-\fBStdout:\fR New Unix timestamp
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_add 1704067200 1 days    # add 1 day
-shlib::dt_add 1704067200 -2 hours  # subtract 2 hours
-.fi
-.RE
-.SS shlib::dt_diff
-.BI "shlib::dt_diff " "int" " " "int" " " "string"
-.PP
-Calculate difference between timestamps
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-First Unix timestamp
-.TP
-\fI$2\fR (int)
-Second Unix timestamp
-.TP
-\fI$3\fR (string)
-Optional unit: seconds (default), minutes, hours, days, weeks
-.PP
-\fBStdout:\fR Difference (ts1 - ts2) in specified unit (integer division)
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_diff 1704153600 1704067200          # outputs: 86400 (seconds)
-shlib::dt_diff 1704153600 1704067200 hours    # outputs: 24
-shlib::dt_diff 1704153600 1704067200 days     # outputs: 1
-.fi
-.RE
-.SS shlib::dt_duration
-.BI "shlib::dt_duration " "int" " " "string"
-.PP
-Format seconds as human-readable duration
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-Number of seconds
-.TP
-\fI$2\fR (string)
-Optional format: short (default), long, compact
-.PP
-\fBStdout:\fR Human-readable duration string
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_duration 90061              # outputs: 1d 1h 1m 1s
-shlib::dt_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
-shlib::dt_duration 90061 compact      # outputs: 1d1h1m1s
-.fi
-.RE
-.SS shlib::dt_elapsed
-.BI "shlib::dt_elapsed " "int" " " "string"
-.PP
-Format elapsed time since start timestamp
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-Start Unix timestamp
-.TP
-\fI$2\fR (string)
-Optional format: short (default), long, compact
-.PP
-\fBStdout:\fR Elapsed time as human-readable duration
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-start=$(shlib::dt_now)
-sleep 5
-shlib::dt_elapsed "$start"  # outputs: 5s
-.fi
-.RE
-.SS shlib::dt_from_unix
-.BI "shlib::dt_from_unix " "int" " " "string"
-.PP
-Format Unix timestamp with format string
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-Unix timestamp
-.TP
-\fI$2\fR (string)
-Format string (strftime compatible)
-.PP
-\fBStdout:\fR Formatted date/time string
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Success
-.TP
-\fB1\fR
-Invalid timestamp or format
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_from_unix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
-shlib::dt_from_unix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
-.fi
-.RE
-.SS shlib::dt_is_after
-.BI "shlib::dt_is_after " "int" " " "int"
-.PP
-Check if timestamp A is after timestamp B
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-First Unix timestamp
-.TP
-\fI$2\fR (int)
-Second Unix timestamp
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-ts1 > ts2
-.TP
-\fB1\fR
-ts1 <= ts2
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_is_after 1704153600 1704067200 && echo "later"
-.fi
-.RE
-.SS shlib::dt_is_before
-.BI "shlib::dt_is_before " "int" " " "int"
-.PP
-Check if timestamp A is before timestamp B
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (int)
-First Unix timestamp
-.TP
-\fI$2\fR (int)
-Second Unix timestamp
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-ts1 < ts2
-.TP
-\fB1\fR
-ts1 >= ts2
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_is_before 1704067200 1704153600 && echo "earlier"
-.fi
-.RE
-.SS shlib::dt_now
-.PP
-Get current Unix timestamp
-.PP
-\fBStdout:\fR The current Unix timestamp in seconds
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::dt_now  # outputs: 1704067200
-.fi
-.RE
-.SS shlib::dt_now_iso
-.BI "shlib::dt_now_iso " "string"
-.PP
-Get current datetime in ISO 8601 format
+Check if a command exists in PATH
 .PP
 \fBArguments:\fR
 .TP
 \fI$1\fR (string)
-Optional: "local" for local time, default is UTC
-.PP
-\fBStdout:\fR Current datetime in ISO 8601 format
+The command name to check
 .PP
 \fBExit codes:\fR
 .TP
 \fB0\fR
-Always succeeds
+Command exists
+.TP
+\fB1\fR
+Command not found
 .PP
 \fBExample:\fR
 .RS
 .nf
-shlib::dt_now_iso         # outputs: 2024-01-01T12:00:00Z
-shlib::dt_now_iso local   # outputs: 2024-01-01T07:00:00-05:00
+shlib::cmd_exists git
 .fi
 .RE
-.SS shlib::dt_today
+.SS shlib::cmd_locked
+.BI "shlib::cmd_locked " "string" " " "int" " " "string"
 .PP
-Get current date as YYYY-MM-DD
+Run a command protected by file-based locking
 .PP
-\fBStdout:\fR Current date in YYYY-MM-DD format
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Path to the lock file (a .lock directory will be created)
+.TP
+\fI$2\fR (int)
+Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
 .PP
 \fBExit codes:\fR
 .TP
 \fB0\fR
-Always succeeds
+Command completed successfully
+.TP
+\fB1\fR
+Failed to acquire lock within timeout, or invalid arguments
+.TP
+\fB*\fR
+Command's exit code if lock was acquired
 .PP
 \fBExample:\fR
 .RS
 .nf
-shlib::dt_today  # outputs: 2024-01-01
+shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
+shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
+shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
+.fi
+.RE
+.SS shlib::cmd_retry
+.BI "shlib::cmd_retry " "int" " " "int" " " "string"
+.PP
+Retry a command multiple times with optional delay
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Maximum number of attempts
+.TP
+\fI$2\fR (int)
+Delay in seconds between attempts (0 for no delay)
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output from the successful attempt (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command succeeded within max attempts
+.TP
+\fB1\fR
+All attempts failed
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
+shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+.fi
+.RE
+.SS shlib::cmd_timeout
+.BI "shlib::cmd_timeout " "int" " " "string"
+.PP
+Run a command with a timeout
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Timeout in seconds
+.TP
+\fI$@\fR (string)
+The command and its arguments
+.PP
+\fBStdout:\fR Command output (if any)
+.PP
+\fBStderr:\fR Command errors (if any)
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Command completed successfully within timeout
+.TP
+\fB124\fR
+Command timed out
+.TP
+\fB*\fR
+Command's exit code if it completed before timeout
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::cmd_timeout 5 sleep 2    # succeeds
+shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
 .fi
 .RE
 
@@ -782,8 +656,8 @@ config[host]="localhost"
 shlib::kv_get config "host"  # outputs: localhost
 .fi
 .RE
-.SS shlib::kv_get_default
-.BI "shlib::kv_get_default " "string" " " "string" " " "string"
+.SS shlib::kv_getdefault
+.BI "shlib::kv_getdefault " "string" " " "string" " " "string"
 .PP
 Get a value by key with a fallback default
 .PP
@@ -809,11 +683,11 @@ Always succeeds
 .RS
 .nf
 declare -A config
-shlib::kv_get_default config "port" "8080"  # outputs: 8080
+shlib::kv_getdefault config "port" "8080"  # outputs: 8080
 .fi
 .RE
-.SS shlib::kv_has_value
-.BI "shlib::kv_has_value " "string" " " "string"
+.SS shlib::kv_hasvalue
+.BI "shlib::kv_hasvalue " "string" " " "string"
 .PP
 Check if a value exists in an associative array
 .PP
@@ -838,7 +712,7 @@ Value does not exist
 .nf
 declare -A config
 config[host]="localhost"
-shlib::kv_has_value config "localhost" && echo "found"
+shlib::kv_hasvalue config "localhost" && echo "found"
 .fi
 .RE
 .SS shlib::kv_keys
@@ -1076,9 +950,9 @@ shlib::kv_values values config
 .fi
 .RE
 
-.SH LOGGING
-.SS shlib::cerror
-.BI "shlib::cerror " "string"
+.SH MSG
+.SS shlib::msg_cerror
+.BI "shlib::msg_cerror " "string"
 .PP
 Print a colorized error message to stderr (without newline)
 .PP
@@ -1097,12 +971,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cerror "Something went wrong"
+shlib::msg_cerror "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 .fi
 .RE
-.SS shlib::cerrorn
-.BI "shlib::cerrorn " "string"
+.SS shlib::msg_cerrorn
+.BI "shlib::msg_cerrorn " "string"
 .PP
 Print a colorized error message to stderr (with newline)
 .PP
@@ -1121,12 +995,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cerrorn "Something went wrong"
+shlib::msg_cerrorn "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 .fi
 .RE
-.SS shlib::cinfo
-.BI "shlib::cinfo " "string"
+.SS shlib::msg_cinfo
+.BI "shlib::msg_cinfo " "string"
 .PP
 Print a colorized info message to stdout (without newline)
 .PP
@@ -1145,12 +1019,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cinfo "Processing file"
+shlib::msg_cinfo "Processing file"
 # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
 .fi
 .RE
-.SS shlib::cinfon
-.BI "shlib::cinfon " "string"
+.SS shlib::msg_cinfon
+.BI "shlib::msg_cinfon " "string"
 .PP
 Print a colorized info message to stdout (with newline)
 .PP
@@ -1169,12 +1043,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cinfon "Processing complete"
+shlib::msg_cinfon "Processing complete"
 # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
 .fi
 .RE
-.SS shlib::cwarn
-.BI "shlib::cwarn " "string"
+.SS shlib::msg_cwarn
+.BI "shlib::msg_cwarn " "string"
 .PP
 Print a colorized warning message to stdout (without newline)
 .PP
@@ -1193,12 +1067,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cwarn "This might cause issues"
+shlib::msg_cwarn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 .fi
 .RE
-.SS shlib::cwarnn
-.BI "shlib::cwarnn " "string"
+.SS shlib::msg_cwarnn
+.BI "shlib::msg_cwarnn " "string"
 .PP
 Print a colorized warning message to stdout (with newline)
 .PP
@@ -1217,12 +1091,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::cwarnn "This might cause issues"
+shlib::msg_cwarnn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 .fi
 .RE
-.SS shlib::eerror
-.BI "shlib::eerror " "string"
+.SS shlib::msg_eerror
+.BI "shlib::msg_eerror " "string"
 .PP
 Print an emoji error message to stderr (without newline)
 .PP
@@ -1241,12 +1115,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::eerror "Something went wrong"
+shlib::msg_eerror "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
 .fi
 .RE
-.SS shlib::eerrorn
-.BI "shlib::eerrorn " "string"
+.SS shlib::msg_eerrorn
+.BI "shlib::msg_eerrorn " "string"
 .PP
 Print an emoji error message to stderr (with newline)
 .PP
@@ -1265,12 +1139,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::eerrorn "Something went wrong"
+shlib::msg_eerrorn "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] ❌️  Something went wrong
 .fi
 .RE
-.SS shlib::einfo
-.BI "shlib::einfo " "string"
+.SS shlib::msg_einfo
+.BI "shlib::msg_einfo " "string"
 .PP
 Print an emoji info message to stdout (without newline)
 .PP
@@ -1289,12 +1163,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::einfo "Processing file"
+shlib::msg_einfo "Processing file"
 # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing file
 .fi
 .RE
-.SS shlib::einfon
-.BI "shlib::einfon " "string"
+.SS shlib::msg_einfon
+.BI "shlib::msg_einfon " "string"
 .PP
 Print an emoji info message to stdout (with newline)
 .PP
@@ -1313,12 +1187,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::einfon "Processing complete"
+shlib::msg_einfon "Processing complete"
 # outputs: [2024-01-01T12:00:00-05:00] ℹ️  Processing complete
 .fi
 .RE
-.SS shlib::error
-.BI "shlib::error " "string"
+.SS shlib::msg_error
+.BI "shlib::msg_error " "string"
 .PP
 Print an error message to stderr (without newline)
 .PP
@@ -1337,12 +1211,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::error "Something went wrong"
+shlib::msg_error "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 .fi
 .RE
-.SS shlib::errorn
-.BI "shlib::errorn " "string"
+.SS shlib::msg_errorn
+.BI "shlib::msg_errorn " "string"
 .PP
 Print an error message to stderr (with newline)
 .PP
@@ -1361,12 +1235,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::errorn "Something went wrong"
+shlib::msg_errorn "Something went wrong"
 # outputs: [2024-01-01T12:00:00-05:00] error: Something went wrong
 .fi
 .RE
-.SS shlib::ewarn
-.BI "shlib::ewarn " "string"
+.SS shlib::msg_ewarn
+.BI "shlib::msg_ewarn " "string"
 .PP
 Print an emoji warning message to stdout (without newline)
 .PP
@@ -1385,12 +1259,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ewarn "This might cause issues"
+shlib::msg_ewarn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
 .fi
 .RE
-.SS shlib::ewarnn
-.BI "shlib::ewarnn " "string"
+.SS shlib::msg_ewarnn
+.BI "shlib::msg_ewarnn " "string"
 .PP
 Print an emoji warning message to stdout (with newline)
 .PP
@@ -1409,12 +1283,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ewarnn "This might cause issues"
+shlib::msg_ewarnn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] ⚠️  This might cause issues
 .fi
 .RE
-.SS shlib::info
-.BI "shlib::info " "string"
+.SS shlib::msg_info
+.BI "shlib::msg_info " "string"
 .PP
 Print an info message to stdout (without newline)
 .PP
@@ -1433,12 +1307,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::info "Processing file"
+shlib::msg_info "Processing file"
 # outputs: [2024-01-01T12:00:00-05:00] info: Processing file
 .fi
 .RE
-.SS shlib::infon
-.BI "shlib::infon " "string"
+.SS shlib::msg_infon
+.BI "shlib::msg_infon " "string"
 .PP
 Print an info message to stdout (with newline)
 .PP
@@ -1457,12 +1331,150 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::infon "Processing complete"
+shlib::msg_infon "Processing complete"
 # outputs: [2024-01-01T12:00:00-05:00] info: Processing complete
 .fi
 .RE
-.SS shlib::warn
-.BI "shlib::warn " "string"
+.SS shlib::msg_statusfail
+.BI "shlib::msg_statusfail " "string"
+.PP
+Print a failure status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Red X followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statusfail "Task failed"
+.fi
+.RE
+.SS shlib::msg_statusfailn
+.BI "shlib::msg_statusfailn " "string"
+.PP
+Print a failure status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Red X followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statusfailn "Task failed"
+.fi
+.RE
+.SS shlib::msg_statusok
+.BI "shlib::msg_statusok " "string"
+.PP
+Print a success status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Green checkmark followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statusok "Task completed"
+.fi
+.RE
+.SS shlib::msg_statusokn
+.BI "shlib::msg_statusokn " "string"
+.PP
+Print a success status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Green checkmark followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statusokn "Task completed"
+.fi
+.RE
+.SS shlib::msg_statuspending
+.BI "shlib::msg_statuspending " "string"
+.PP
+Print a pending status indicator (without newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Yellow hourglass followed by message
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statuspending "Waiting..."
+.fi
+.RE
+.SS shlib::msg_statuspendingn
+.BI "shlib::msg_statuspendingn " "string"
+.PP
+Print a pending status indicator (with newline)
+.PP
+\fBArguments:\fR
+.TP
+\fI$@\fR (string)
+The message to print
+.PP
+\fBStdout:\fR Yellow hourglass followed by message and newline
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::msg_statuspendingn "Waiting..."
+.fi
+.RE
+.SS shlib::msg_warn
+.BI "shlib::msg_warn " "string"
 .PP
 Print a warning message to stdout (without newline)
 .PP
@@ -1481,12 +1493,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::warn "This might cause issues"
+shlib::msg_warn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 .fi
 .RE
-.SS shlib::warnn
-.BI "shlib::warnn " "string"
+.SS shlib::msg_warnn
+.BI "shlib::msg_warnn " "string"
 .PP
 Print a warning message to stdout (with newline)
 .PP
@@ -1505,7 +1517,7 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::warnn "This might cause issues"
+shlib::msg_warnn "This might cause issues"
 # outputs: [2024-01-01T12:00:00-05:00] warning: This might cause issues
 .fi
 .RE
@@ -1565,8 +1577,8 @@ String does not end with suffix
 shlib::str_endswith "hello world" "world" && echo "yes"
 .fi
 .RE
-.SS shlib::str_is_empty
-.BI "shlib::str_is_empty " "string"
+.SS shlib::str_isempty
+.BI "shlib::str_isempty " "string"
 .PP
 Check if a string is empty or contains only whitespace
 .PP
@@ -1586,7 +1598,7 @@ String contains non-whitespace characters
 \fBExample:\fR
 .RS
 .nf
-shlib::str_is_empty "   " && echo "empty"
+shlib::str_isempty "   " && echo "empty"
 .fi
 .RE
 .SS shlib::str_len
@@ -1798,8 +1810,8 @@ String does not start with prefix
 shlib::str_startswith "hello world" "hello" && echo "yes"
 .fi
 .RE
-.SS shlib::str_to_lower
-.BI "shlib::str_to_lower " "string"
+.SS shlib::str_tolower
+.BI "shlib::str_tolower " "string"
 .PP
 Convert a string to lowercase
 .PP
@@ -1818,11 +1830,11 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::str_to_lower "HELLO"
+shlib::str_tolower "HELLO"
 .fi
 .RE
-.SS shlib::str_to_upper
-.BI "shlib::str_to_upper " "string"
+.SS shlib::str_toupper
+.BI "shlib::str_toupper " "string"
 .PP
 Convert a string to uppercase
 .PP
@@ -1841,7 +1853,7 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::str_to_upper "hello"
+shlib::str_toupper "hello"
 .fi
 .RE
 .SS shlib::str_trim
@@ -1868,143 +1880,269 @@ shlib::str_trim "  hello world  "
 .fi
 .RE
 
-.SH SYSTEM
-.SS shlib::cmd_exists
-.BI "shlib::cmd_exists " "string"
+.SH TIME
+.SS shlib::time_add
+.BI "shlib::time_add " "int" " " "int" " " "string"
 .PP
-Check if a command exists in PATH
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (string)
-The command name to check
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Command exists
-.TP
-\fB1\fR
-Command not found
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::cmd_exists git
-.fi
-.RE
-.SS shlib::cmd_locked
-.BI "shlib::cmd_locked " "string" " " "int" " " "string"
-.PP
-Run a command protected by file-based locking
-.PP
-\fBArguments:\fR
-.TP
-\fI$1\fR (string)
-Path to the lock file (a .lock directory will be created)
-.TP
-\fI$2\fR (int)
-Timeout in seconds to acquire lock (0=non-blocking, -1=wait forever)
-.TP
-\fI$@\fR (string)
-The command and its arguments
-.PP
-\fBStdout:\fR Command output (if any)
-.PP
-\fBStderr:\fR Command errors (if any)
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Command completed successfully
-.TP
-\fB1\fR
-Failed to acquire lock within timeout, or invalid arguments
-.TP
-\fB*\fR
-Command's exit code if lock was acquired
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::cmd_locked /tmp/myapp 5 ./deploy.sh      # wait up to 5s for lock
-shlib::cmd_locked /tmp/myapp 0 ./critical.sh    # fail immediately if locked
-shlib::cmd_locked /tmp/myapp -1 ./process.sh    # wait forever for lock
-.fi
-.RE
-.SS shlib::cmd_retry
-.BI "shlib::cmd_retry " "int" " " "int" " " "string"
-.PP
-Retry a command multiple times with optional delay
+Add time units to timestamp
 .PP
 \fBArguments:\fR
 .TP
 \fI$1\fR (int)
-Maximum number of attempts
+Unix timestamp
 .TP
 \fI$2\fR (int)
-Delay in seconds between attempts (0 for no delay)
+Amount to add (can be negative)
 .TP
-\fI$@\fR (string)
-The command and its arguments
+\fI$3\fR (string)
+Unit: seconds, minutes, hours, days, weeks
 .PP
-\fBStdout:\fR Command output from the successful attempt (if any)
-.PP
-\fBStderr:\fR Command errors (if any)
+\fBStdout:\fR New Unix timestamp
 .PP
 \fBExit codes:\fR
 .TP
 \fB0\fR
-Command succeeded within max attempts
-.TP
-\fB1\fR
-All attempts failed
+Always succeeds
 .PP
 \fBExample:\fR
 .RS
 .nf
-shlib::cmd_retry 3 1 curl -f http://example.com   # retry 3 times, 1s delay
-shlib::cmd_retry 5 0 test -f /path/to/file        # retry 5 times, no delay
+shlib::time_add 1704067200 1 days    # add 1 day
+shlib::time_add 1704067200 -2 hours  # subtract 2 hours
 .fi
 .RE
-.SS shlib::cmd_timeout
-.BI "shlib::cmd_timeout " "int" " " "string"
+.SS shlib::time_diff
+.BI "shlib::time_diff " "int" " " "int" " " "string"
 .PP
-Run a command with a timeout
+Calculate difference between timestamps
 .PP
 \fBArguments:\fR
 .TP
 \fI$1\fR (int)
-Timeout in seconds
+First Unix timestamp
 .TP
-\fI$@\fR (string)
-The command and its arguments
+\fI$2\fR (int)
+Second Unix timestamp
+.TP
+\fI$3\fR (string)
+Optional unit: seconds (default), minutes, hours, days, weeks
 .PP
-\fBStdout:\fR Command output (if any)
-.PP
-\fBStderr:\fR Command errors (if any)
+\fBStdout:\fR Difference (ts1 - ts2) in specified unit (integer division)
 .PP
 \fBExit codes:\fR
 .TP
 \fB0\fR
-Command completed successfully within timeout
-.TP
-\fB124\fR
-Command timed out
-.TP
-\fB*\fR
-Command's exit code if it completed before timeout
+Always succeeds
 .PP
 \fBExample:\fR
 .RS
 .nf
-shlib::cmd_timeout 5 sleep 2    # succeeds
-shlib::cmd_timeout 1 sleep 10   # times out with exit code 124
+shlib::time_diff 1704153600 1704067200          # outputs: 86400 (seconds)
+shlib::time_diff 1704153600 1704067200 hours    # outputs: 24
+shlib::time_diff 1704153600 1704067200 days     # outputs: 1
+.fi
+.RE
+.SS shlib::time_duration
+.BI "shlib::time_duration " "int" " " "string"
+.PP
+Format seconds as human-readable duration
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Number of seconds
+.TP
+\fI$2\fR (string)
+Optional format: short (default), long, compact
+.PP
+\fBStdout:\fR Human-readable duration string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_duration 90061              # outputs: 1d 1h 1m 1s
+shlib::time_duration 90061 long         # outputs: 1 day, 1 hour, 1 minute, 1 second
+shlib::time_duration 90061 compact      # outputs: 1d1h1m1s
+.fi
+.RE
+.SS shlib::time_elapsed
+.BI "shlib::time_elapsed " "int" " " "string"
+.PP
+Format elapsed time since start timestamp
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Start Unix timestamp
+.TP
+\fI$2\fR (string)
+Optional format: short (default), long, compact
+.PP
+\fBStdout:\fR Elapsed time as human-readable duration
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+start=$(shlib::time_now)
+sleep 5
+shlib::time_elapsed "$start"  # outputs: 5s
+.fi
+.RE
+.SS shlib::time_fromunix
+.BI "shlib::time_fromunix " "int" " " "string"
+.PP
+Format Unix timestamp with format string
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+Unix timestamp
+.TP
+\fI$2\fR (string)
+Format string (strftime compatible)
+.PP
+\fBStdout:\fR Formatted date/time string
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Success
+.TP
+\fB1\fR
+Invalid timestamp or format
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_fromunix 1704067200 "%Y-%m-%d"  # outputs: 2024-01-01
+shlib::time_fromunix 1704067200 "%H:%M:%S"  # outputs: 12:00:00
+.fi
+.RE
+.SS shlib::time_isafter
+.BI "shlib::time_isafter " "int" " " "int"
+.PP
+Check if timestamp A is after timestamp B
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+First Unix timestamp
+.TP
+\fI$2\fR (int)
+Second Unix timestamp
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+ts1 > ts2
+.TP
+\fB1\fR
+ts1 <= ts2
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_isafter 1704153600 1704067200 && echo "later"
+.fi
+.RE
+.SS shlib::time_isbefore
+.BI "shlib::time_isbefore " "int" " " "int"
+.PP
+Check if timestamp A is before timestamp B
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (int)
+First Unix timestamp
+.TP
+\fI$2\fR (int)
+Second Unix timestamp
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+ts1 < ts2
+.TP
+\fB1\fR
+ts1 >= ts2
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_isbefore 1704067200 1704153600 && echo "earlier"
+.fi
+.RE
+.SS shlib::time_now
+.PP
+Get current Unix timestamp
+.PP
+\fBStdout:\fR The current Unix timestamp in seconds
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_now  # outputs: 1704067200
+.fi
+.RE
+.SS shlib::time_nowiso
+.BI "shlib::time_nowiso " "string"
+.PP
+Get current datetime in ISO 8601 format
+.PP
+\fBArguments:\fR
+.TP
+\fI$1\fR (string)
+Optional: "local" for local time, default is UTC
+.PP
+\fBStdout:\fR Current datetime in ISO 8601 format
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_nowiso         # outputs: 2024-01-01T12:00:00Z
+shlib::time_nowiso local   # outputs: 2024-01-01T07:00:00-05:00
+.fi
+.RE
+.SS shlib::time_today
+.PP
+Get current date as YYYY-MM-DD
+.PP
+\fBStdout:\fR Current date in YYYY-MM-DD format
+.PP
+\fBExit codes:\fR
+.TP
+\fB0\fR
+Always succeeds
+.PP
+\fBExample:\fR
+.RS
+.nf
+shlib::time_today  # outputs: 2024-01-01
 .fi
 .RE
 
 .SH UI
-.SS shlib::ansi_256_palette
+.SS shlib::ui_ansi256palette
 .PP
 Display the 256 color palette
 .PP
@@ -2018,10 +2156,10 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_256_palette
+shlib::ui_ansi256palette
 .fi
 .RE
-.SS shlib::ansi_bg_colors
+.SS shlib::ui_ansibgcolors
 .PP
 Display 16 background ANSI color codes (40-47, 100-107)
 .PP
@@ -2035,10 +2173,10 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_bg_colors
+shlib::ui_ansibgcolors
 .fi
 .RE
-.SS shlib::ansi_color_matrix
+.SS shlib::ui_ansicolormatrix
 .PP
 Display standard foreground/background color combinations matrix
 .PP
@@ -2052,10 +2190,10 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_color_matrix
+shlib::ui_ansicolormatrix
 .fi
 .RE
-.SS shlib::ansi_color_matrix_bright
+.SS shlib::ui_ansicolormatrix_bright
 .PP
 Display bright foreground/background color combinations matrix
 .PP
@@ -2069,10 +2207,10 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_color_matrix_bright
+shlib::ui_ansicolormatrix_bright
 .fi
 .RE
-.SS shlib::ansi_fg_colors
+.SS shlib::ui_ansifgcolors
 .PP
 Display 16 foreground ANSI color codes (30-37, 90-97)
 .PP
@@ -2086,10 +2224,10 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_fg_colors
+shlib::ui_ansifgcolors
 .fi
 .RE
-.SS shlib::ansi_styles
+.SS shlib::ui_ansistyles
 .PP
 Display ANSI text styles with codes and examples
 .PP
@@ -2103,11 +2241,11 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::ansi_styles
+shlib::ui_ansistyles
 .fi
 .RE
-.SS shlib::banner
-.BI "shlib::banner " "string"
+.SS shlib::ui_banner
+.BI "shlib::ui_banner " "string"
 .PP
 Render text as ASCII art banner using best available method
 .PP
@@ -2126,11 +2264,11 @@ Always succeeds (falls back to builtin)
 \fBExample:\fR
 .RS
 .nf
-shlib::banner "HELLO"
+shlib::ui_banner "HELLO"
 .fi
 .RE
-.SS shlib::banner_builtin
-.BI "shlib::banner_builtin " "string"
+.SS shlib::ui_banner_builtin
+.BI "shlib::ui_banner_builtin " "string"
 .PP
 Render text as ASCII art banner using pure bash 5x5 block font
 .PP
@@ -2149,12 +2287,12 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::banner_builtin "HELLO"
-shlib::banner_builtin "TEST 123"
+shlib::ui_banner_builtin "HELLO"
+shlib::ui_banner_builtin "TEST 123"
 .fi
 .RE
-.SS shlib::banner_figlet
-.BI "shlib::banner_figlet " "string" " " "string"
+.SS shlib::ui_banner_figlet
+.BI "shlib::ui_banner_figlet " "string" " " "string"
 .PP
 Render text as ASCII art banner using figlet
 .PP
@@ -2179,12 +2317,12 @@ figlet not installed
 \fBExample:\fR
 .RS
 .nf
-shlib::banner_figlet "Hello"
-shlib::banner_figlet "Hello" "banner"
+shlib::ui_banner_figlet "Hello"
+shlib::ui_banner_figlet "Hello" "banner"
 .fi
 .RE
-.SS shlib::banner_toilet
-.BI "shlib::banner_toilet " "string" " " "string" " " "string"
+.SS shlib::ui_banner_toilet
+.BI "shlib::ui_banner_toilet " "string" " " "string" " " "string"
 .PP
 Render text as ASCII art banner using toilet
 .PP
@@ -2212,13 +2350,13 @@ toilet not installed
 \fBExample:\fR
 .RS
 .nf
-shlib::banner_toilet "Hello"
-shlib::banner_toilet "Hello" "mono12"
-shlib::banner_toilet "Hello" "mono12" "gay"
+shlib::ui_banner_toilet "Hello"
+shlib::ui_banner_toilet "Hello" "mono12"
+shlib::ui_banner_toilet "Hello" "mono12" "gay"
 .fi
 .RE
-.SS shlib::header
-.BI "shlib::header " "string"
+.SS shlib::ui_header
+.BI "shlib::ui_header " "string"
 .PP
 Print a bold header message to stdout (without newline)
 .PP
@@ -2237,11 +2375,11 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::header "Section Title"
+shlib::ui_header "Section Title"
 .fi
 .RE
-.SS shlib::headern
-.BI "shlib::headern " "string"
+.SS shlib::ui_headern
+.BI "shlib::ui_headern " "string"
 .PP
 Print a bold header message to stdout (with newline)
 .PP
@@ -2260,11 +2398,11 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::headern "Section Title"
+shlib::ui_headern "Section Title"
 .fi
 .RE
-.SS shlib::hr
-.BI "shlib::hr " "string" " " "int" " " "string"
+.SS shlib::ui_hr
+.BI "shlib::ui_hr " "string" " " "int" " " "string"
 .PP
 Draw a horizontal rule/divider line
 .PP
@@ -2289,13 +2427,13 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::hr
-shlib::hr "Section"
-shlib::hr "Title" 60 "="
+shlib::ui_hr
+shlib::ui_hr "Section"
+shlib::ui_hr "Title" 60 "="
 .fi
 .RE
-.SS shlib::hrn
-.BI "shlib::hrn " "string" " " "int" " " "string"
+.SS shlib::ui_hrn
+.BI "shlib::ui_hrn " "string" " " "int" " " "string"
 .PP
 Draw a horizontal rule with newline
 .PP
@@ -2320,11 +2458,11 @@ Always succeeds
 \fBExample:\fR
 .RS
 .nf
-shlib::hrn "Section Title"
+shlib::ui_hrn "Section Title"
 .fi
 .RE
-.SS shlib::spinner
-.BI "shlib::spinner " "string" " " "string"
+.SS shlib::ui_spinner
+.BI "shlib::ui_spinner " "string" " " "string"
 .PP
 Run a command with a spinner animation
 .PP
@@ -2346,146 +2484,8 @@ the exit code of the executed command
 \fBExample:\fR
 .RS
 .nf
-shlib::spinner "Installing packages" apt-get install -y curl
-shlib::spinner "Building project" make -j4
-.fi
-.RE
-.SS shlib::status_fail
-.BI "shlib::status_fail " "string"
-.PP
-Print a failure status indicator (without newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Red X followed by message
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_fail "Task failed"
-.fi
-.RE
-.SS shlib::status_failn
-.BI "shlib::status_failn " "string"
-.PP
-Print a failure status indicator (with newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Red X followed by message and newline
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_failn "Task failed"
-.fi
-.RE
-.SS shlib::status_ok
-.BI "shlib::status_ok " "string"
-.PP
-Print a success status indicator (without newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Green checkmark followed by message
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_ok "Task completed"
-.fi
-.RE
-.SS shlib::status_okn
-.BI "shlib::status_okn " "string"
-.PP
-Print a success status indicator (with newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Green checkmark followed by message and newline
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_okn "Task completed"
-.fi
-.RE
-.SS shlib::status_pending
-.BI "shlib::status_pending " "string"
-.PP
-Print a pending status indicator (without newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Yellow hourglass followed by message
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_pending "Waiting..."
-.fi
-.RE
-.SS shlib::status_pendingn
-.BI "shlib::status_pendingn " "string"
-.PP
-Print a pending status indicator (with newline)
-.PP
-\fBArguments:\fR
-.TP
-\fI$@\fR (string)
-The message to print
-.PP
-\fBStdout:\fR Yellow hourglass followed by message and newline
-.PP
-\fBExit codes:\fR
-.TP
-\fB0\fR
-Always succeeds
-.PP
-\fBExample:\fR
-.RS
-.nf
-shlib::status_pendingn "Waiting..."
+shlib::ui_spinner "Installing packages" apt-get install -y curl
+shlib::ui_spinner "Building project" make -j4
 .fi
 .RE
 .SH EXAMPLES

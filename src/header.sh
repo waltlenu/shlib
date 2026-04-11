@@ -17,13 +17,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/shlib.bash"
 
-shlib::banner_toilet "shlib" "" "gay"
+shlib::ui_banner "shlib" "" "gay"
 
-shlib::headern "shlib Examples"
+shlib::ui_headern "shlib Examples"
 echo
 
 # Example helpers
-_header() { shlib::headern "${1#shlib::}"; }
+_header() { shlib::ui_headern "${1#shlib::}"; }
 _run() {
     echo "> $*"
     "$@"

@@ -1,0 +1,2 @@
+_header shlib::ui_ansicolormatrix_bright
+_run shlib::ui_ansicolormatrix_bright
