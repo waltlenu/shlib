@@ -8,14 +8,14 @@ shlib::ui_ansicolormatrix() {
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
     printf '%-8s' ""
-    for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
+    for j in "${SHLIB_ANSI_BGCODES[@]:0:8}"; do
         printf ' %-5s' "$j"
     done
     echo
     printf '%s\n' "--------------------------------------------------------"
-    for i in "${SHLIB_ANSI_FG_CODES[@]:0:8}"; do
+    for i in "${SHLIB_ANSI_FGCODES[@]:0:8}"; do
         printf '%-8s' "$i"
-        for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
+        for j in "${SHLIB_ANSI_BGCODES[@]:0:8}"; do
             printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
         done
         echo

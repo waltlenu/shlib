@@ -5,5 +5,5 @@
 # @example
 #   shlib::ui_headern "Section Title"
 shlib::ui_headern() {
-    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
+    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLECODES[1]}" "$*" "${SHLIB_ANSI_STYLECODES[0]}"
 }

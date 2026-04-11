@@ -40,31 +40,31 @@ readonly SHLIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #######################################
 
 # 16 standard color names (8 normal + 8 bright)
-SHLIB_ANSI_COLOR_NAMES=(
+SHLIB_ANSI_COLORNAMES=(
     "Black" "Red" "Green" "Yellow" "Blue" "Magenta" "Cyan" "White"
     "Bright Black" "Bright Red" "Bright Green" "Bright Yellow"
     "Bright Blue" "Bright Magenta" "Bright Cyan" "Bright White"
 )
-readonly SHLIB_ANSI_COLOR_NAMES
+readonly SHLIB_ANSI_COLORNAMES
 
 # Foreground color codes (30-37 normal, 90-97 bright)
-SHLIB_ANSI_FG_CODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
-readonly SHLIB_ANSI_FG_CODES
+SHLIB_ANSI_FGCODES=(30 31 32 33 34 35 36 37 90 91 92 93 94 95 96 97)
+readonly SHLIB_ANSI_FGCODES
 
 # Background color codes (40-47 normal, 100-107 bright)
-SHLIB_ANSI_BG_CODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
-readonly SHLIB_ANSI_BG_CODES
+SHLIB_ANSI_BGCODES=(40 41 42 43 44 45 46 47 100 101 102 103 104 105 106 107)
+readonly SHLIB_ANSI_BGCODES
 
 # Text style codes
-SHLIB_ANSI_STYLE_CODES=(0 1 2 3 4 5 7 8 9)
-readonly SHLIB_ANSI_STYLE_CODES
+SHLIB_ANSI_STYLECODES=(0 1 2 3 4 5 7 8 9)
+readonly SHLIB_ANSI_STYLECODES
 
 # Text style names
-SHLIB_ANSI_STYLE_NAMES=(
+SHLIB_ANSI_STYLENAMES=(
     "Normal" "Bold" "Dim" "Italic" "Underline"
     "Blink" "Reverse" "Hidden" "Strikethrough"
 )
-readonly SHLIB_ANSI_STYLE_NAMES
+readonly SHLIB_ANSI_STYLENAMES
 
 #######################################
 # _core
@@ -886,7 +886,7 @@ shlib::kv_values() {
 shlib::msg_cerror() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FGCODES[1]}" "error:" "${SHLIB_ANSI_STYLECODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized error message to stderr (with newline)
@@ -899,7 +899,7 @@ shlib::msg_cerror() {
 shlib::msg_cerrorn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[1]}" "error:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*" >&2
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FGCODES[1]}" "error:" "${SHLIB_ANSI_STYLECODES[0]}" "$*" >&2
 }
 
 # @description Print a colorized info message to stdout (without newline)
@@ -912,7 +912,7 @@ shlib::msg_cerrorn() {
 shlib::msg_cinfo() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FGCODES[4]}" "info:" "${SHLIB_ANSI_STYLECODES[0]}" "$*"
 }
 
 # @description Print a colorized info message to stdout (with newline)
@@ -925,7 +925,7 @@ shlib::msg_cinfo() {
 shlib::msg_cinfon() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[4]}" "info:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FGCODES[4]}" "info:" "${SHLIB_ANSI_STYLECODES[0]}" "$*"
 }
 
 # @description Print a colorized warning message to stdout (without newline)
@@ -938,7 +938,7 @@ shlib::msg_cinfon() {
 shlib::msg_cwarn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    printf '[%s] \033[%sm%s\033[%sm %s' "$ts" "${SHLIB_ANSI_FGCODES[3]}" "warning:" "${SHLIB_ANSI_STYLECODES[0]}" "$*"
 }
 
 # @description Print a colorized warning message to stdout (with newline)
@@ -951,7 +951,7 @@ shlib::msg_cwarn() {
 shlib::msg_cwarnn() {
     local ts
     ts=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\([+-][0-9][0-9]\)\([0-9][0-9]\)$/\1:\2/')
-    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FG_CODES[3]}" "warning:" "${SHLIB_ANSI_STYLE_CODES[0]}" "$*"
+    printf '[%s] \033[%sm%s\033[%sm %s\n' "$ts" "${SHLIB_ANSI_FGCODES[3]}" "warning:" "${SHLIB_ANSI_STYLECODES[0]}" "$*"
 }
 
 # @description Print an emoji error message to stderr (without newline)
@@ -1655,14 +1655,14 @@ shlib::ui_ansibgcolors() {
     printf '\033[1m%s\033[0m\n' "Background Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
-    for i in "${!SHLIB_ANSI_BG_CODES[@]}"; do
+    for i in "${!SHLIB_ANSI_BGCODES[@]}"; do
         # Use contrasting foreground for visibility
-        if [[ ${SHLIB_ANSI_BG_CODES[$i]} -lt 44 ]] || [[ ${SHLIB_ANSI_BG_CODES[$i]} -ge 100 && ${SHLIB_ANSI_BG_CODES[$i]} -lt 104 ]]; then
+        if [[ ${SHLIB_ANSI_BGCODES[$i]} -lt 44 ]] || [[ ${SHLIB_ANSI_BGCODES[$i]} -ge 100 && ${SHLIB_ANSI_BGCODES[$i]} -lt 104 ]]; then
             fg=97 # Bright white for dark backgrounds
         else
             fg=30 # Black for light backgrounds
         fi
-        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${SHLIB_ANSI_COLOR_NAMES[$i]}" "${SHLIB_ANSI_BG_CODES[$i]}" "${SHLIB_ANSI_BG_CODES[$i]}" "$fg" " Sample Text "
+        printf '%-20s \\033[%-5sm \033[%s;%sm%s\033[0m\n' "${SHLIB_ANSI_COLORNAMES[$i]}" "${SHLIB_ANSI_BGCODES[$i]}" "${SHLIB_ANSI_BGCODES[$i]}" "$fg" " Sample Text "
     done
 }
 
@@ -1676,14 +1676,14 @@ shlib::ui_ansicolormatrix() {
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Standard Colors)"
     printf '%-8s' ""
-    for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
+    for j in "${SHLIB_ANSI_BGCODES[@]:0:8}"; do
         printf ' %-5s' "$j"
     done
     echo
     printf '%s\n' "--------------------------------------------------------"
-    for i in "${SHLIB_ANSI_FG_CODES[@]:0:8}"; do
+    for i in "${SHLIB_ANSI_FGCODES[@]:0:8}"; do
         printf '%-8s' "$i"
-        for j in "${SHLIB_ANSI_BG_CODES[@]:0:8}"; do
+        for j in "${SHLIB_ANSI_BGCODES[@]:0:8}"; do
             printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
         done
         echo
@@ -1700,14 +1700,14 @@ shlib::ui_ansicolormatrix_bright() {
 
     printf '\033[1m%s\033[0m\n' "Foreground / Background Combinations (Bright Colors)"
     printf '%-8s' ""
-    for j in "${SHLIB_ANSI_BG_CODES[@]:8:8}"; do
+    for j in "${SHLIB_ANSI_BGCODES[@]:8:8}"; do
         printf ' %-5s' "$j"
     done
     echo
     printf '%s\n' "----------------------------------------------------------------"
-    for i in "${SHLIB_ANSI_FG_CODES[@]:8:8}"; do
+    for i in "${SHLIB_ANSI_FGCODES[@]:8:8}"; do
         printf '%-8s' "$i"
-        for j in "${SHLIB_ANSI_BG_CODES[@]:8:8}"; do
+        for j in "${SHLIB_ANSI_BGCODES[@]:8:8}"; do
             printf ' \033[%s;%sm %-3s \033[0m' "$i" "$j" "Txt"
         done
         echo
@@ -1725,8 +1725,8 @@ shlib::ui_ansifgcolors() {
     printf '\033[1m%s\033[0m\n' "Foreground Colors"
     printf '%-20s %-10s %s\n' "Color" "Code" "Example"
     printf '%s\n' "-----------------------------------------------"
-    for i in "${!SHLIB_ANSI_FG_CODES[@]}"; do
-        printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_COLOR_NAMES[$i]}" "${SHLIB_ANSI_FG_CODES[$i]}" "${SHLIB_ANSI_FG_CODES[$i]}" "Sample Text"
+    for i in "${!SHLIB_ANSI_FGCODES[@]}"; do
+        printf '%-20s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_COLORNAMES[$i]}" "${SHLIB_ANSI_FGCODES[$i]}" "${SHLIB_ANSI_FGCODES[$i]}" "Sample Text"
     done
 }
 
@@ -1741,8 +1741,8 @@ shlib::ui_ansistyles() {
     printf '\033[1m%s\033[0m\n' "Text Styles"
     printf '%-15s %-10s %s\n' "Style" "Code" "Example"
     printf '%s\n' "---------------------------------------"
-    for i in "${!SHLIB_ANSI_STYLE_CODES[@]}"; do
-        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_STYLE_NAMES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "Sample Text"
+    for i in "${!SHLIB_ANSI_STYLECODES[@]}"; do
+        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_STYLENAMES[$i]}" "${SHLIB_ANSI_STYLECODES[$i]}" "${SHLIB_ANSI_STYLECODES[$i]}" "Sample Text"
     done
 }
 
@@ -1899,7 +1899,7 @@ shlib::ui_banner_toilet() {
 # @example
 #   shlib::ui_header "Section Title"
 shlib::ui_header() {
-    printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
+    printf '\033[%sm%s\033[%sm' "${SHLIB_ANSI_STYLECODES[1]}" "$*" "${SHLIB_ANSI_STYLECODES[0]}"
 }
 
 # @description Print a bold header message to stdout (with newline)
@@ -1909,7 +1909,7 @@ shlib::ui_header() {
 # @example
 #   shlib::ui_headern "Section Title"
 shlib::ui_headern() {
-    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLE_CODES[1]}" "$*" "${SHLIB_ANSI_STYLE_CODES[0]}"
+    printf '\033[%sm%s\033[%sm\n' "${SHLIB_ANSI_STYLECODES[1]}" "$*" "${SHLIB_ANSI_STYLECODES[0]}"
 }
 
 # @description Draw a horizontal rule/divider line

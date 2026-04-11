@@ -9,7 +9,7 @@ shlib::ui_ansistyles() {
     printf '\033[1m%s\033[0m\n' "Text Styles"
     printf '%-15s %-10s %s\n' "Style" "Code" "Example"
     printf '%s\n' "---------------------------------------"
-    for i in "${!SHLIB_ANSI_STYLE_CODES[@]}"; do
-        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_STYLE_NAMES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "${SHLIB_ANSI_STYLE_CODES[$i]}" "Sample Text"
+    for i in "${!SHLIB_ANSI_STYLECODES[@]}"; do
+        printf '%-15s \\033[%-5sm \033[%sm%s\033[0m\n' "${SHLIB_ANSI_STYLENAMES[$i]}" "${SHLIB_ANSI_STYLECODES[$i]}" "${SHLIB_ANSI_STYLECODES[$i]}" "Sample Text"
     done
 }

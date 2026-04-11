@@ -8,7 +8,7 @@
 @test "shlib::list_variables output is sorted" {
     run shlib::list_variables
     first_line="${lines[0]}"
-    [[ "$first_line" == "SHLIB_ANSI_BG_CODES" ]]
+    [[ "$first_line" == "SHLIB_ANSI_BGCODES" ]]
 }
 
 @test "shlib::list_variables returns variable names" {

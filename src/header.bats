@@ -53,55 +53,55 @@ setup() {
     [[ -f "${SHLIB_DIR}/shlib.bash" ]]
 }
 
-@test "SHLIB_ANSI_COLOR_NAMES has 16 elements" {
-    [[ "${#SHLIB_ANSI_COLOR_NAMES[@]}" -eq 16 ]]
+@test "SHLIB_ANSI_COLORNAMES has 16 elements" {
+    [[ "${#SHLIB_ANSI_COLORNAMES[@]}" -eq 16 ]]
 }
 
-@test "SHLIB_ANSI_COLOR_NAMES contains expected colors" {
-    [[ "${SHLIB_ANSI_COLOR_NAMES[0]}" == "Black" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[1]}" == "Red" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[7]}" == "White" ]]
-    [[ "${SHLIB_ANSI_COLOR_NAMES[15]}" == "Bright White" ]]
+@test "SHLIB_ANSI_COLORNAMES contains expected colors" {
+    [[ "${SHLIB_ANSI_COLORNAMES[0]}" == "Black" ]]
+    [[ "${SHLIB_ANSI_COLORNAMES[1]}" == "Red" ]]
+    [[ "${SHLIB_ANSI_COLORNAMES[7]}" == "White" ]]
+    [[ "${SHLIB_ANSI_COLORNAMES[15]}" == "Bright White" ]]
 }
 
-@test "SHLIB_ANSI_FG_CODES has 16 elements" {
-    [[ "${#SHLIB_ANSI_FG_CODES[@]}" -eq 16 ]]
+@test "SHLIB_ANSI_FGCODES has 16 elements" {
+    [[ "${#SHLIB_ANSI_FGCODES[@]}" -eq 16 ]]
 }
 
-@test "SHLIB_ANSI_FG_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_FG_CODES[0]}" -eq 30 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[7]}" -eq 37 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[8]}" -eq 90 ]]
-    [[ "${SHLIB_ANSI_FG_CODES[15]}" -eq 97 ]]
+@test "SHLIB_ANSI_FGCODES contains expected codes" {
+    [[ "${SHLIB_ANSI_FGCODES[0]}" -eq 30 ]]
+    [[ "${SHLIB_ANSI_FGCODES[7]}" -eq 37 ]]
+    [[ "${SHLIB_ANSI_FGCODES[8]}" -eq 90 ]]
+    [[ "${SHLIB_ANSI_FGCODES[15]}" -eq 97 ]]
 }
 
-@test "SHLIB_ANSI_BG_CODES has 16 elements" {
-    [[ "${#SHLIB_ANSI_BG_CODES[@]}" -eq 16 ]]
+@test "SHLIB_ANSI_BGCODES has 16 elements" {
+    [[ "${#SHLIB_ANSI_BGCODES[@]}" -eq 16 ]]
 }
 
-@test "SHLIB_ANSI_BG_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_BG_CODES[0]}" -eq 40 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[7]}" -eq 47 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[8]}" -eq 100 ]]
-    [[ "${SHLIB_ANSI_BG_CODES[15]}" -eq 107 ]]
+@test "SHLIB_ANSI_BGCODES contains expected codes" {
+    [[ "${SHLIB_ANSI_BGCODES[0]}" -eq 40 ]]
+    [[ "${SHLIB_ANSI_BGCODES[7]}" -eq 47 ]]
+    [[ "${SHLIB_ANSI_BGCODES[8]}" -eq 100 ]]
+    [[ "${SHLIB_ANSI_BGCODES[15]}" -eq 107 ]]
 }
 
-@test "SHLIB_ANSI_STYLE_CODES has 9 elements" {
-    [[ "${#SHLIB_ANSI_STYLE_CODES[@]}" -eq 9 ]]
+@test "SHLIB_ANSI_STYLECODES has 9 elements" {
+    [[ "${#SHLIB_ANSI_STYLECODES[@]}" -eq 9 ]]
 }
 
-@test "SHLIB_ANSI_STYLE_CODES contains expected codes" {
-    [[ "${SHLIB_ANSI_STYLE_CODES[0]}" -eq 0 ]]
-    [[ "${SHLIB_ANSI_STYLE_CODES[1]}" -eq 1 ]]
-    [[ "${SHLIB_ANSI_STYLE_CODES[4]}" -eq 4 ]]
+@test "SHLIB_ANSI_STYLECODES contains expected codes" {
+    [[ "${SHLIB_ANSI_STYLECODES[0]}" -eq 0 ]]
+    [[ "${SHLIB_ANSI_STYLECODES[1]}" -eq 1 ]]
+    [[ "${SHLIB_ANSI_STYLECODES[4]}" -eq 4 ]]
 }
 
-@test "SHLIB_ANSI_STYLE_NAMES has 9 elements" {
-    [[ "${#SHLIB_ANSI_STYLE_NAMES[@]}" -eq 9 ]]
+@test "SHLIB_ANSI_STYLENAMES has 9 elements" {
+    [[ "${#SHLIB_ANSI_STYLENAMES[@]}" -eq 9 ]]
 }
 
-@test "SHLIB_ANSI_STYLE_NAMES contains expected names" {
-    [[ "${SHLIB_ANSI_STYLE_NAMES[0]}" == "Normal" ]]
-    [[ "${SHLIB_ANSI_STYLE_NAMES[1]}" == "Bold" ]]
-    [[ "${SHLIB_ANSI_STYLE_NAMES[4]}" == "Underline" ]]
+@test "SHLIB_ANSI_STYLENAMES contains expected names" {
+    [[ "${SHLIB_ANSI_STYLENAMES[0]}" == "Normal" ]]
+    [[ "${SHLIB_ANSI_STYLENAMES[1]}" == "Bold" ]]
+    [[ "${SHLIB_ANSI_STYLENAMES[4]}" == "Underline" ]]
 }
